@@ -15,7 +15,7 @@ describe JiraApi do
   end
 
   describe "#search" do
-    let(:jql) { "project=EBL" }
+    let(:jql) { "project=FOO" }
 
     subject { JiraApi.new.search(jql) }
 
