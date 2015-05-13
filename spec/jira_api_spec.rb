@@ -1,12 +1,12 @@
 require "spec_helper"
-require "embulk/input/jira_api"
+require "jira/api"
 
-describe JiraApi do
+describe Jira::Api do
   describe ".setup" do
-    subject { JiraApi.setup {}  }
+    subject { Jira::Api.setup {}  }
 
-    it "returns JiraApi instance" do
-      expect(subject.is_a?(JiraApi)).to be_truthy
+    it "returns Jira::Api instance" do
+      expect(subject.is_a?(Jira::Api)).to be_truthy
     end
 
     it "calls Jiralicious.configure" do
@@ -17,7 +17,7 @@ describe JiraApi do
   describe "#search" do
     let(:jql) { "project=FOO" }
 
-    subject { JiraApi.new.search(jql) }
+    subject { Jira::Api.new.search(jql) }
 
     it do
       allow(Jiralicious).to receive(:search).with(jql)

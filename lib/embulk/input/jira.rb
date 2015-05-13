@@ -1,4 +1,4 @@
-require_relative "./jira_api.rb"
+require_relative "../../jira/api.rb"
 
 module Embulk
   module Input
@@ -42,7 +42,7 @@ module Embulk
 
       def init
         # initialization code:
-        @jira = JiraApi.setup do |config|
+        @jira = Jira::Api.setup do |config|
           config.username = task["username"]
           config.password = task["password"]
           config.uri = task["uri"]
