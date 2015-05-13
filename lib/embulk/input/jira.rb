@@ -1,4 +1,4 @@
-require "jiralicious"
+require_relative "./jira_api.rb"
 
 module Embulk
   module Input
@@ -42,20 +42,17 @@ module Embulk
 
       def init
         # initialization code:
-        Jiralicious.configure do |config|
-          # Leave out username and password
+        @jira = JiraApi.setup do |config|
           config.username = task["username"]
           config.password = task["password"]
           config.uri = task["uri"]
           config.api_version = "latest"
           config.auth_type = :basic
         end
-
-        @jql = task["jql"]
       end
 
       def run
-        Jiralicious.search(@jql).issues.each do |issue|
+        @jira.search(task["jql"]).issues.each do |issue|
           field = issue["fields"]
           page_builder.add([field["summary"], field["project"]["key"]])
         end
