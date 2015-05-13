@@ -2,7 +2,6 @@ require "jiralicious"
 
 module Embulk
   module Input
-
     class JiraInputPlugin < InputPlugin
       Plugin.register_input("jira", self)
 
