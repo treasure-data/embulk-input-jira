@@ -1,3 +1,5 @@
+require "jiralicious"
+
 module Embulk
   module Input
 
@@ -6,15 +8,17 @@ module Embulk
 
       def self.transaction(config, &control)
         # configuration code:
+
         task = {
-          "property1" => config.param("property1", :string),
-          "property2" => config.param("property2", :integer, default: 0),
+          "username" => config.param("username", :string),
+          "password" => config.param("password", :string),
+          "uri" => config.param("uri", :string),
+          "jql" => config.param("jql", :string),
         }
 
         columns = [
-          Column.new(0, "example", :string),
-          Column.new(1, "column", :long),
-          Column.new(2, "value", :double),
+          Column.new(0, "summary", :string),
+          Column.new(1, "project", :string),
         ]
 
         resume(task, columns, 1, &control)
@@ -39,19 +43,28 @@ module Embulk
 
       def init
         # initialization code:
-        @property1 = task["property1"]
-        @property2 = task["property2"]
+        Jiralicious.configure do |config|
+          # Leave out username and password
+          config.username = task["username"]
+          config.password = task["password"]
+          config.uri = task["uri"]
+          config.api_version = "latest"
+          config.auth_type = :basic
+        end
+
+        @jql = task["jql"]
       end
 
       def run
-        page_builder.add(["example-value", 1, 0.1])
-        page_builder.add(["example-value", 2, 0.2])
+        Jiralicious.search(@jql).issues.each do |issue|
+          field = issue["fields"]
+          page_builder.add([field["summary"], field["project"]["key"]])
+        end
         page_builder.finish
 
         commit_report = {}
         return commit_report
       end
     end
-
   end
 end

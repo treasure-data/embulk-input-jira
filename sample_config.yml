@@ -1,0 +1,11 @@
+in:
+  type: jira
+  username: 'USERNAME'
+  password: 'PASSWORD'
+  uri: 'https://treasure-data.atlassian.net'
+  # oauth_token:
+  # oauth_secret:
+  jql: "key=PLT-4048"
+out:
+  type: {stdout}
+exec: {}
