@@ -2,10 +2,10 @@
 Gem::Specification.new do |spec|
   spec.name          = "embulk-input-jira"
   spec.version       = "0.1.0"
-  spec.authors       = ["yoshihara"]
+  spec.authors       = ["uu59", "yoshihara"]
   spec.summary       = "Jira input plugin for Embulk"
   spec.description   = "Loads records from Jira."
-  spec.email         = ["h.yoshihara@everyleaf.com"]
+  spec.email         = ["k@uu59.org", "h.yoshihara@everyleaf.com"]
   spec.licenses      = ["MIT"]
   # TODO set this: spec.homepage      = "https://github.com/h.yoshihara/embulk-input-jira"
 
