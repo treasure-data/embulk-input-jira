@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/treasure-data/embulk-input-jira.svg)](https://travis-ci.org/treasure-data/embulk-input-jira)
+
 # Jira input plugin for Embulk
 
 TODO: Write short description here and embulk-input-jira.gemspec file.
