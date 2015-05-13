@@ -7,5 +7,5 @@ in:
   # oauth_secret:
   jql: "key=PLT-4048"
 out:
-  type: {stdout}
+  type: stdout
 exec: {}
