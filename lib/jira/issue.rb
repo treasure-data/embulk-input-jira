@@ -22,7 +22,7 @@ module Jira
     def [](attribute)
       case attribute
       when "summary"
-      @fields["summary"]
+        @fields["summary"]
       when "project"
         @fields["project"]["key"]
       end
