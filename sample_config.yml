@@ -6,8 +6,8 @@ in:
   # oauth_token:
   # oauth_secret:
   attributes:
-    summary: string
-    project: string
+    - summary
+    - project
   jql: "summary ~ P"
 out:
   type: stdout
