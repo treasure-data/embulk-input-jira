@@ -5,7 +5,10 @@ in:
   uri: 'https://treasure-data.atlassian.net'
   # oauth_token:
   # oauth_secret:
-  jql: "key=PLT-4048"
+  attributes:
+    - summary
+    - project
+  jql: "summary ~ P"
 out:
   type: stdout
 exec: {}
