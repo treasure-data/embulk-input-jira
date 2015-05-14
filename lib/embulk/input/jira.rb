@@ -42,12 +42,7 @@ module Embulk
       #end
 
       def self.extract_attributes(attribute_names)
-        unsupported_attributes = []
-        attribute_names.each do |attribute_name|
-          unless Jira::Issue::SUPPORTED_ATTRIBUTES.include?(attribute_name)
-            unsupported_attributes << attribute_name
-          end
-        end
+        unsupported_attributes = Jira::Issue::SUPPORTED_ATTRIBUTES - attribute_names
 
         unless unsupported_attributes.empty?
           unsupported_attribute_names =
