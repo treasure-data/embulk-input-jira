@@ -5,6 +5,15 @@ module Jira
 
     attr_reader :fields
 
+    def self.detect_attribute_type(attribute_name)
+      case attribute_name
+      when "summary", "project"
+        :string
+      else
+        raise "Unsupported attribute_name: #{attribute_name}."
+      end
+    end
+
     def initialize(raw)
       @raw = raw
       @fields = @raw.fetch("fields")

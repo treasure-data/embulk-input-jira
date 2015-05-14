@@ -7,7 +7,7 @@ module Embulk
 
       def self.transaction(config, &control)
         # configuration code:
-        attributes = extract_attributes(config.param("attributes", :hash))
+        attributes = extract_attributes(config.param("attributes", :array))
 
         task = {
           "username" => config.param("username", :string),
@@ -41,9 +41,9 @@ module Embulk
       #  return {"columns" => columns}
       #end
 
-      def self.extract_attributes(attributes)
+      def self.extract_attributes(attribute_names)
         unsupported_attributes = []
-        attributes.keys.each do |attribute_name|
+        attribute_names.each do |attribute_name|
           unless Jira::Issue::SUPPORTED_ATTRIBUTES.include?(attribute_name)
             unsupported_attributes << attribute_name
           end
@@ -59,7 +59,10 @@ We support #{Jira::Issue::SUPPORTED_ATTRIBUTE_NAMES}, but your config includes #
           MESSAGE
         end
 
-        attributes
+        attribute_names.map do |name|
+          type = Jira::Issue.detect_attribute_type(name)
+          [name, type]
+        end
       end
 
       def init
