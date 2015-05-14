@@ -2,7 +2,7 @@ require "spec_helper"
 require "jira/issue"
 
 describe Jira::Issue do
-  describe ".detect_attriute_type" do
+  describe ".detect_attribute_type" do
     subject { Jira::Issue.detect_attribute_type(attribute_name) }
 
     context 'summary' do
