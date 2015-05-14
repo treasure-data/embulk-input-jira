@@ -1,4 +1,4 @@
-require_relative "../../jira/api.rb"
+require "jira/api"
 
 module Embulk
   module Input
