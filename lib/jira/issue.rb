@@ -15,8 +15,7 @@ module Jira
     end
 
     def initialize(raw)
-      @raw = raw
-      @fields = @raw.fetch("fields")
+      @fields = raw.fetch("fields")
     end
 
     def [](attribute)
