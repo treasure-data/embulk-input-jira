@@ -31,15 +31,44 @@ module Embulk
         return next_config_diff
       end
 
-      # TODO
-      #def self.guess(config)
-      #  sample_records = [
-      #    {"example"=>"a", "column"=>1, "value"=>0.1},
-      #    {"example"=>"a", "column"=>2, "value"=>0.2},
-      #  ]
-      #  columns = Guess::SchemaGuess.from_hash_records(sample_records)
-      #  return {"columns" => columns}
-      #end
+      def self.guess(config)
+        jira = Jira::Api.setup do |jira_config|
+          jira_config.username = config.param("username", :string)
+          jira_config.password = config.param("password", :string)
+          jira_config.uri = config.param("uri", :string)
+          jira_config.api_version = "latest"
+          jira_config.auth_type = :basic
+        end
+
+        jql = config.param("jql", :string)
+
+        # TODO: we use 0..10 issues to guess config?
+        records = jira.search_issues(jql)[0..10].map do |issue|
+          fields = {}
+          issue.fields.each_pair do |key, value|
+            field_key = key.dup
+            field_value = value
+
+            if value.is_a?(Hash)
+              if value.keys.include?("name")
+                field_key << ".name"
+                field_value = value["name"]
+              else
+                field_key << ".id"
+                field_value = value["id"]
+              end
+            end
+
+            fields[field_key] = field_value
+          end
+
+          fields
+        end
+
+        columns = Guess::SchemaGuess.from_hash_records(records)
+
+        return {"columns" => columns}
+      end
 
       def self.extract_attributes(attribute_names)
         unsupported_attributes = attribute_names - Jira::Issue::SUPPORTED_ATTRIBUTES
