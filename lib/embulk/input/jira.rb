@@ -32,15 +32,22 @@ module Embulk
       end
 
       def self.guess(config)
-        jira = Jira::Api.setup do |jira_config|
-          jira_config.username = config.param("username", :string)
-          jira_config.password = config.param("password", :string)
-          jira_config.uri = config.param("uri", :string)
-          jira_config.api_version = "latest"
-          jira_config.auth_type = :basic
-        end
+        # TODO: api_version, and auth_type should be define as constant, or specified from config...
 
+        username = config.param("username", :string)
+        password = config.param("password", :string)
+        uri = config.param("uri", :string)
+        api_version = "latest"
+        auth_type = "basic"
         jql = config.param("jql", :string)
+
+        jira = Jira::Api.setup do |jira_config|
+          jira_config.username = username
+          jira_config.password = password
+          jira_config.uri = uri
+          jira_config.api_version = api_version
+          jira_config.auth_type = auth_type
+        end
 
         # TODO: we use 0..10 issues to guess config?
         records = jira.search_issues(jql)[0..10].map do |issue|
@@ -67,7 +74,16 @@ module Embulk
 
         columns = Guess::SchemaGuess.from_hash_records(records)
 
-        return {"columns" => columns}
+        guessed_config = {
+          "username" => username,
+          "password" => password,
+          "uri" => uri,
+          "api_version" => api_version,
+          "auth_type" => auth_type,
+          "columns" => columns,
+        }
+
+        return guessed_config
       end
 
       def self.extract_attributes(attribute_names)
