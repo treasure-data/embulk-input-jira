@@ -63,28 +63,16 @@ module Embulk
             else
 
               # TODO: refactor...
-              case key
-              when "watches"
-                field_key = "watches.watchCount"
-                field_value = value["watchCount"]
-              when "comment"
-                field_key = "comment.total"
-                field_value = value["total"]
-              when "votes"
-                field_key = "votes.votes"
-                field_value = value["votes"]
-              else
-                if value.is_a?(Hash)
-                  if value.keys.include?("name")
-                    field_key << ".name"
-                    field_value = value["name"]
-                  else
-                    field_key << ".id"
-                    field_value = value["id"]
-                  end
+              if value.is_a?(Hash)
+                if value.keys.include?("name")
+                  field_key << ".name"
+                  field_value = value["name"]
                 else
-                  field_value = value.to_json.to_s
+                  field_key << ".id"
+                  field_value = value["id"]
                 end
+              else
+                field_value = value.to_json.to_s
               end
             end
 
