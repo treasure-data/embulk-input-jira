@@ -67,9 +67,11 @@ module Embulk
                 if value.keys.include?("name")
                   field_key << ".name"
                   field_value = value["name"]
-                else
+                elsif value.keys.include?("id")
                   field_key << ".id"
                   field_value = value["id"]
+                else
+                  field_value = value.to_json.to_s
                 end
               else
                 field_value = value.to_json.to_s
