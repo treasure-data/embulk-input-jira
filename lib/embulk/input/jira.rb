@@ -127,6 +127,8 @@ module Embulk
         @jira.search_issues(task["jql"]).each do |issue|
           values = @attributes.map do |(attribute_name, type)|
             value = issue[attribute_name]
+            next value if value.nil?
+
             case type.to_sym
             when :long
               Integer(value)
