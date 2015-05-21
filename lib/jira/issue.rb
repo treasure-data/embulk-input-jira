@@ -1,8 +1,5 @@
 module Jira
   class Issue
-    SUPPORTED_ATTRIBUTES = ["summary", "project"].map(&:freeze).freeze
-    SUPPORTED_ATTRIBUTE_NAMES = SUPPORTED_ATTRIBUTES.map {|attr| "'#{attr}'"}.join(', ')
-
     attr_reader :fields
 
     def self.detect_attribute_type(attribute_name)
