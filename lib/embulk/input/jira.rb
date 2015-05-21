@@ -7,19 +7,22 @@ module Embulk
 
       def self.transaction(config, &control)
         # configuration code:
-        attributes = extract_attributes(config.param("attributes", :array))
-
         task = {
           "username" => config.param("username", :string),
           "password" => config.param("password", :string),
           "uri" => config.param("uri", :string),
           "jql" => config.param("jql", :string),
-          "attributes" => attributes,
         }
 
-        columns = attributes.map.with_index do |(attribute_name, type), i|
-          Column.new(i, attribute_name, type.to_sym)
+        attributes = {}
+        columns = config.param("columns", :array).map do |column|
+          name = column["name"]
+          type = column["type"].to_sym
+          attributes[name] = type
+          Column.new(column["index"], name, type, column["format"])
         end
+
+        task["attributes"] = attributes
 
         resume(task, columns, 1, &control)
       end
@@ -54,15 +57,34 @@ module Embulk
           fields = {}
           issue.fields.each_pair do |key, value|
             field_key = key.dup
-            field_value = value
 
-            if value.is_a?(Hash)
-              if value.keys.include?("name")
-                field_key << ".name"
-                field_value = value["name"]
+            if value.is_a?(String)
+              field_value = value
+            else
+
+              # TODO: refactor...
+              case key
+              when "watches"
+                field_key = "watches.watchCount"
+                field_value = value["watchCount"]
+              when "comment"
+                field_key = "comment.total"
+                field_value = value["total"]
+              when "votes"
+                field_key = "votes.votes"
+                field_value = value["votes"]
               else
-                field_key << ".id"
-                field_value = value["id"]
+                if value.is_a?(Hash)
+                  if value.keys.include?("name")
+                    field_key << ".name"
+                    field_value = value["name"]
+                  else
+                    field_key << ".id"
+                    field_value = value["id"]
+                  end
+                else
+                  field_value = value.to_json.to_s
+                end
               end
             end
 
@@ -119,9 +141,22 @@ We support #{Jira::Issue::SUPPORTED_ATTRIBUTE_NAMES}, but your config includes #
 
       def run
         @jira.search_issues(task["jql"]).each do |issue|
-          values = @attributes.map do |attribute_name, _|
-            issue[attribute_name]
+          values = @attributes.map do |(attribute_name, type)|
+            value = issue[attribute_name]
+            case type.to_sym
+            when :long
+              Integer(value)
+            when :double
+              Float(value)
+            when :timestamp
+              Time.parse(value)
+            when :boolean
+              !!value
+            else
+              value.to_s
+            end
           end
+
           page_builder.add(values)
         end
         page_builder.finish

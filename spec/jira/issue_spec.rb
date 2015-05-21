@@ -75,8 +75,8 @@ describe Jira::Issue do
       end
     end
 
-    context 'project' do
-      let(:attribute_name) { 'project' }
+    context 'project.key' do
+      let(:attribute_name) { 'project.key' }
 
       it "returns issue's project key" do
         expect(subject).to eq 'FOO'

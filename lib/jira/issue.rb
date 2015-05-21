@@ -19,11 +19,15 @@ module Jira
     end
 
     def [](attribute)
-      case attribute
-      when "summary"
-        @fields["summary"]
-      when "project"
-        @fields["project"]["key"]
+      fields = @fields
+      attribute.split('.').each do |chunk|
+        fields = fields.fetch(chunk)
+      end
+
+      if fields.is_a?(Array) || fields.is_a?(Hash)
+        fields.to_json.to_s
+      else
+        fields
       end
     end
   end
