@@ -2,26 +2,6 @@ require "spec_helper"
 require "jira/issue"
 
 describe Jira::Issue do
-  describe ".detect_attribute_type" do
-    subject { Jira::Issue.detect_attribute_type(attribute_name) }
-
-    context 'summary' do
-      let(:attribute_name) { 'summary' }
-
-      it "returns :string" do
-        expect(subject).to eq :string
-      end
-    end
-
-    context 'project' do
-      let(:attribute_name) { 'project' }
-
-      it "returns :string" do
-        expect(subject).to eq :string
-      end
-    end
-  end
-
   describe ".initialize" do
     context "when argument has 'fields' key" do
       let(:issue_attributes) do

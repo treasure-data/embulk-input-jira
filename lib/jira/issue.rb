@@ -2,15 +2,6 @@ module Jira
   class Issue
     attr_reader :fields
 
-    def self.detect_attribute_type(attribute_name)
-      case attribute_name
-      when "summary", "project"
-        :string
-      else
-        raise "Unsupported attribute_name: #{attribute_name}."
-      end
-    end
-
     def initialize(attributes)
       @fields = attributes.fetch("fields")
     end
