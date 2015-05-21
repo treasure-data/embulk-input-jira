@@ -39,11 +39,25 @@ describe Jira::Issue do
       {"fields" =>
         {
           "summary" => "jira issue",
-          "project" =>
-          {
-            "key" => "FOO",
+          "project" => project_attribute,
+          "labels" =>
+          [
+            "Feature",
+            "WantTo"
+          ],
+          "priority" => {
+            "iconUrl" => "https://jira-api/images/icon.png",
+            "name" => "Must",
+            "id" => "1"
           },
+          "customfield_1" => nil,
         }
+      }
+    end
+
+    let(:project_attribute) do
+      {
+        "key" => "FOO",
       }
     end
 
@@ -58,8 +72,34 @@ describe Jira::Issue do
     context 'project.key' do
       let(:attribute_name) { 'project.key' }
 
-      it "returns issue's project key" do
-        expect(subject).to eq 'FOO'
+      context "when project is not nil" do
+        it "returns issue's project key" do
+          expect(subject).to eq 'FOO'
+        end
+      end
+
+      context "when project is nil" do
+        let(:project_attribute) { nil }
+
+        it "returns nil" do
+          expect(subject).to be_nil
+        end
+      end
+    end
+
+    context 'labels' do
+      let(:attribute_name) { 'labels' }
+
+      it "returns issue's labels JSON string" do
+        expect(subject).to eq '["Feature","WantTo"]'
+      end
+    end
+
+    context 'priority' do
+      let(:attribute_name) { 'priority' }
+
+      it "returns issue's priority JSON string" do
+        expect(subject).to eq '{"iconUrl":"https://jira-api/images/icon.png","name":"Must","id":"1"}'
       end
     end
   end

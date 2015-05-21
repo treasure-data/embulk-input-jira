@@ -9,7 +9,8 @@ module Jira
     def [](attribute)
       fields = @fields
       attribute.split('.').each do |chunk|
-        fields = fields.fetch(chunk)
+        fields = fields[chunk]
+        return fields if fields.nil?
       end
 
       if fields.is_a?(Array) || fields.is_a?(Hash)
