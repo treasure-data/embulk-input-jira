@@ -19,7 +19,7 @@ module Embulk
           name = column["name"]
           type = column["type"].to_sym
           attributes[name] = type
-          Column.new(column["index"], name, type, column["format"])
+          Column.new(nil, name, type, column["format"])
         end
 
         task["attributes"] = attributes
@@ -93,8 +93,11 @@ module Embulk
 
           fields
         end
-
-        columns = Guess::SchemaGuess.from_hash_records(records)
+        columns = Guess::SchemaGuess.from_hash_records(records).map do |c|
+          column = {name: c.name, type: c.type}
+          column[:format] = c.format if c.format
+          column
+        end
 
         guessed_config = {
           "username" => username,
