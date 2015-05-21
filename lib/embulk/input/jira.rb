@@ -108,25 +108,6 @@ module Embulk
         return guessed_config
       end
 
-      def self.extract_attributes(attribute_names)
-        unsupported_attributes = attribute_names - Jira::Issue::SUPPORTED_ATTRIBUTES
-
-        unless unsupported_attributes.empty?
-          unsupported_attribute_names =
-            unsupported_attributes.map {|attr| "'#{attr}'"}.join(', ')
-
-          raise(<<-MESSAGE)
-Unsupported Jira attributes is(are) specified.
-We support #{Jira::Issue::SUPPORTED_ATTRIBUTE_NAMES}, but your config includes #{unsupported_attribute_names}.
-          MESSAGE
-        end
-
-        attribute_names.map do |name|
-          type = Jira::Issue.detect_attribute_type(name)
-          [name, type]
-        end
-      end
-
       def init
         # initialization code:
         @attributes = task["attributes"]
