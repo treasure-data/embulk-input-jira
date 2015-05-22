@@ -71,4 +71,45 @@ describe Embulk::Input::JiraInputPlugin do
       end
     end
   end
+
+  describe ".generate_record" do
+    subject do
+      allow(Jira::Api).to receive(:setup)
+      Embulk::Input::JiraInputPlugin.generate_record(fields)
+    end
+
+    let(:fields) do
+      {
+        "summary" => "jira issue",
+        "project" => {
+          "id" => "FOO",
+        },
+        "labels" =>
+        [
+          "Feature",
+          "WantTo"
+        ],
+        "priority" => {
+          "iconUrl" => "https://jira-api/images/icon.png",
+          "name" => "Must",
+          "id" => "1"
+        },
+        "customfield_1" => nil,
+      }
+    end
+
+    let(:expected) do
+      {
+        "summary" => "jira issue",
+        "project.id" => "FOO",
+        "labels" => "[\"Feature\",\"WantTo\"]",
+        "priority.name" => "Must",
+        "customfield_1" => "null"
+      }
+    end
+
+    it 'return guessed record' do
+      expect(subject).to eq expected
+    end
+  end
 end

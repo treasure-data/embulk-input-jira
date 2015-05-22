@@ -54,35 +54,9 @@ module Embulk
 
         # TODO: we use 0..10 issues to guess config?
         records = jira.search_issues(jql)[0..10].map do |issue|
-          fields = {}
-          issue.fields.each_pair do |key, value|
-            field_key = key.dup
-
-            if value.is_a?(String)
-              field_value = value
-            else
-
-              # TODO: refactor...
-              if value.is_a?(Hash)
-                if value.keys.include?("name")
-                  field_key << ".name"
-                  field_value = value["name"]
-                elsif value.keys.include?("id")
-                  field_key << ".id"
-                  field_value = value["id"]
-                else
-                  field_value = value.to_json.to_s
-                end
-              else
-                field_value = value.to_json.to_s
-              end
-            end
-
-            fields[field_key] = field_value
-          end
-
-          fields
+          generate_record(issue.fields)
         end
+
         columns = Guess::SchemaGuess.from_hash_records(records).map do |c|
           column = {name: c.name, type: c.type}
           column[:format] = c.format if c.format
@@ -99,6 +73,37 @@ module Embulk
         }
 
         return guessed_config
+      end
+
+      def self.generate_record(fields)
+        record = {}
+        fields.each_pair do |key, value|
+          field_key = key.dup
+
+          if value.is_a?(String)
+            field_value = value
+          else
+
+            # TODO: refactor...
+            if value.is_a?(Hash)
+              if value.keys.include?("name")
+                field_key << ".name"
+                field_value = value["name"]
+              elsif value.keys.include?("id")
+                field_key << ".id"
+                field_value = value["id"]
+              else
+                field_value = value.to_json.to_s
+              end
+            else
+              field_value = value.to_json.to_s
+            end
+          end
+
+          record[field_key] = field_value
+        end
+
+        record
       end
 
       def init
