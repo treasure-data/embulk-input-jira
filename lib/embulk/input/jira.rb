@@ -116,21 +116,7 @@ module Embulk
       def run
         @jira.search_issues(task["jql"]).each do |issue|
           values = @attributes.map do |(attribute_name, type)|
-            value = issue[attribute_name]
-            next value if value.nil?
-
-            case type.to_sym
-            when :long
-              Integer(value)
-            when :double
-              Float(value)
-            when :timestamp
-              Time.parse(value)
-            when :boolean
-              !!value
-            else
-              value.to_s
-            end
+            cast(issue[attribute_name], type)
           end
 
           page_builder.add(values)
@@ -139,6 +125,25 @@ module Embulk
 
         commit_report = {}
         return commit_report
+      end
+
+      private
+
+      def cast(value, type)
+        return value if value.nil?
+
+        case type.to_sym
+        when :long
+          Integer(value)
+        when :double
+          Float(value)
+        when :timestamp
+          Time.parse(value)
+        when :boolean
+          !!value
+        else
+          value.to_s
+        end
       end
     end
   end
