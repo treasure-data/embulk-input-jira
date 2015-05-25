@@ -1,10 +1,10 @@
 require "spec_helper"
 require "embulk/input/jira-input-plugin-utils"
 
-describe Embulk::Input::Utils do
+describe Embulk::Input::JiraInputPluginUtils do
   describe ".guess_columns" do
     subject do
-      Embulk::Input::Utils.guess_columns(records)
+      Embulk::Input::JiraInputPluginUtils.guess_columns(records)
     end
 
     let(:records) do
@@ -28,7 +28,7 @@ describe Embulk::Input::Utils do
 
   describe ".cast" do
     subject do
-      Embulk::Input::Utils.cast(value, type)
+      Embulk::Input::JiraInputPluginUtils.cast(value, type)
     end
 
     context "when value is nil" do

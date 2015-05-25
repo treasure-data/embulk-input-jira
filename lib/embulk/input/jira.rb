@@ -58,7 +58,7 @@ module Embulk
           issue.to_record
         end
 
-        columns = Utils.guess_columns(records)
+        columns = JiraInputPluginUtils.guess_columns(records)
 
         guessed_config = {
           "username" => username,
@@ -86,7 +86,7 @@ module Embulk
       def run
         @jira.search_issues(task["jql"]).each do |issue|
           values = @attributes.map do |(attribute_name, type)|
-            Utils.cast(issue[attribute_name], type)
+            JiraInputPluginUtils.cast(issue[attribute_name], type)
           end
 
           page_builder.add(values)

@@ -2,7 +2,7 @@
 
 module Embulk
   module Input
-    module Utils
+    module JiraInputPluginUtils
       # Guess::SchemaGuess.from_hash_records returns Columns
       # containing 'index' key, but it is needless.
       def self.guess_columns(records)
