@@ -78,7 +78,6 @@ describe Embulk::Input::JiraInputPlugin do
 
     let(:next_config_diff) { {} }
 
-
     it "returns next_config_diff" do
       expect(subject).to eq next_config_diff
     end
@@ -90,9 +89,7 @@ describe Embulk::Input::JiraInputPlugin do
     let(:config) { Object.new } # add mock later
 
     let(:jira_api) { Jira::Api.new }
-
     let(:jira_issues) { [Jira::Issue.new(field)] }
-
     let(:field) do
       {
         "fields" =>
@@ -193,7 +190,6 @@ describe Embulk::Input::JiraInputPlugin do
 
     before do
       # TODO: create stubs without each `it` expected
-
       allow(Jira::Api).to receive(:setup).and_return(jira_api)
       allow(jira_api).to receive(:search_issues).and_return(jira_issues)
       allow(page_builder).to receive(:add).with(["FOO"])
