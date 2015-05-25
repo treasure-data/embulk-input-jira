@@ -4,10 +4,10 @@ require "embulk/input/jira"
 describe Embulk::Input::JiraInputPlugin do
 
   describe ".transaction" do
-    subject { Embulk::Input::JiraInputPlugin.transaction(config, &block) }
+    subject { Embulk::Input::JiraInputPlugin.transaction(config, &control) }
 
     let(:config) { Object.new } # add mock later
-    let(:block) { Proc.new{|task, columns, count| } }
+    let(:control) { Proc.new{|task, columns, count| } }
     let(:task) do
       {
         "username" => "hoge",
@@ -41,11 +41,11 @@ describe Embulk::Input::JiraInputPlugin do
       allow(config).to receive(:param).with("uri", :string).and_return("http://jira.example/")
       allow(config).to receive(:param).with("jql", :string).and_return("PROJECT=FOO")
       allow(config).to receive(:param).with("columns", :array).and_return(columns)
-      allow(Embulk::Input::JiraInputPlugin).to receive(:resume).with(task, column_structs, 1, &block)
+      allow(Embulk::Input::JiraInputPlugin).to receive(:resume).with(task, column_structs, 1, &control)
     end
 
     it "calls .resume method with proper parameters" do
-      expect(Embulk::Input::JiraInputPlugin).to receive(:resume).with(task, column_structs, 1, &block)
+      expect(Embulk::Input::JiraInputPlugin).to receive(:resume).with(task, column_structs, 1, &control)
       subject
     end
   end
