@@ -64,4 +64,50 @@ describe Embulk::Input::JiraInputPlugin do
       expect(subject).to eq commit_report
     end
   end
+
+  describe ".transaction" do
+    subject { Embulk::Input::JiraInputPlugin.transaction(config, &block) }
+    let(:config) { Object.new } # add mock later
+    let(:block) { Proc.new{|task, columns, count| } }
+    let(:task) do
+      {
+        "username" => "hoge",
+        "password" => "fuga",
+        "uri" => "http://jira.example/",
+        "jql" => "PROJECT=FOO",
+        "attributes" => {
+          "project.key" => :string,
+          "comment.total" => :long
+        }
+      }
+    end
+
+    let(:columns) do
+      [
+        {"name" => "project.key", "type" => "string"},
+        {"name" => "comment.total", "type" => "long"}
+      ]
+    end
+
+    let(:column_structs) do
+      [
+        Embulk::Column.new(nil, "project.key", :string),
+        Embulk::Column.new(nil, "comment.total", :long)
+      ]
+    end
+
+    before do
+      allow(config).to receive(:param).with("username", :string).and_return("hoge")
+      allow(config).to receive(:param).with("password", :string).and_return("fuga")
+      allow(config).to receive(:param).with("uri", :string).and_return("http://jira.example/")
+      allow(config).to receive(:param).with("jql", :string).and_return("PROJECT=FOO")
+      allow(config).to receive(:param).with("columns", :array).and_return(columns)
+      allow(Embulk::Input::JiraInputPlugin).to receive(:resume).with(task, column_structs, 1, &block)
+    end
+
+    it "calls .resume method with proper parameters" do
+      expect(Embulk::Input::JiraInputPlugin).to receive(:resume).with(task, column_structs, 1, &block)
+      subject
+    end
+  end
 end
