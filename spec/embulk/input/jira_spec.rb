@@ -151,4 +151,67 @@ describe Embulk::Input::JiraInputPlugin do
       expect(subject).to eq next_config_diff
     end
   end
+
+  describe ".guess" do
+    subject { Embulk::Input::JiraInputPlugin.guess(config) }
+
+    let(:config) { Object.new } # add mock later
+
+    let(:jira_api) { Jira::Api.new }
+
+    let(:jira_issues) { [Jira::Issue.new(field)] }
+
+    let(:field) do
+      {
+        "fields" =>
+        {
+          "project" => {
+            "key" => "FOO",
+          },
+        }
+      }
+    end
+
+    let(:columns) do
+      [
+        {"name" => "project.key", "type" => "string"},
+        {"name" => "comment.total", "type" => "long"}
+      ]
+    end
+
+    let(:guessed_config) do
+      {
+        "username" => "hoge",
+        "password" => "fuga",
+        "uri" => "http://jira.example/",
+        "api_version" => "latest",
+        "auth_type" => "basic",
+        "columns" => [
+          {name: "project", type: :string}
+        ]
+      }
+
+    end
+
+    before do
+      allow(jira_api).to receive(:search_issues).and_return(jira_issues)
+
+      allow(config).to receive(:param).with("username", :string).and_return("hoge")
+      allow(config).to receive(:param).with("password", :string).and_return("fuga")
+      allow(config).to receive(:param).with("uri", :string).and_return("http://jira.example/")
+      allow(config).to receive(:param).with("jql", :string).and_return("PROJECT=FOO")
+      allow(config).to receive(:param).with("columns", :array).and_return(columns)
+    end
+
+    it "setup Jira::Api" do
+      expect(Jira::Api).to receive(:setup).and_return(jira_api)
+      subject
+    end
+
+    it "returns guessed config" do
+      allow(Jira::Api).to receive(:setup).and_return(jira_api)
+
+      expect(subject).to eq guessed_config
+    end
+  end
 end
