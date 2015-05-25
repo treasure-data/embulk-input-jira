@@ -1,4 +1,4 @@
-require "embulk/input/utils"
+require "embulk/input/jira-input-plugin-utils"
 require "jira/api"
 
 module Embulk

@@ -1,5 +1,5 @@
 require "spec_helper"
-require "embulk/input/utils"
+require "embulk/input/jira-input-plugin-utils"
 
 describe Embulk::Input::Utils do
   describe ".guess_columns" do
