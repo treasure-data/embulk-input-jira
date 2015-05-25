@@ -110,4 +110,38 @@ describe Embulk::Input::JiraInputPlugin do
       subject
     end
   end
+
+  describe ".resume" do
+    subject { Embulk::Input::JiraInputPlugin.resume(task, columns, count, &control) }
+
+    let(:task) do
+      {
+        "username" => "hoge",
+        "password" => "fuga",
+        "uri" => "http://jira.example/",
+        "jql" => "PROJECT=FOO",
+        "attributes" => {
+          "project.key" => :string,
+          "comment.total" => :long
+        }
+      }
+    end
+
+    let(:columns) do
+      [
+        Embulk::Column.new(nil, "project.key", :string),
+        Embulk::Column.new(nil, "comment.total", :long)
+      ]
+    end
+
+    let(:count) { 1 }
+    let(:control) { Proc.new{|task, columns, count| } } # do nothing
+
+    let(:next_config_diff) { {} }
+
+
+    it "returns next_config_diff" do
+      expect(subject).to eq next_config_diff
+    end
+  end
 end
