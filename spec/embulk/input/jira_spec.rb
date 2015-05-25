@@ -2,74 +2,6 @@ require "spec_helper"
 require "embulk/input/jira"
 
 describe Embulk::Input::JiraInputPlugin do
-  it do
-    allow(Jira::Api).to receive(:setup)
-    expect(Embulk::Input::JiraInputPlugin.new({}, nil, nil, nil)).to be_a(Embulk::InputPlugin)
-  end
-
-  describe "#init (.new)" do
-    # NOTE: InputPlugin.initialize calls #init method.
-
-    subject { Embulk::Input::JiraInputPlugin.new({}, nil, nil, nil) }
-
-    it "setup Jira::Api" do
-      expect(Jira::Api).to receive(:setup).and_return(Jira::Api.new)
-      subject
-    end
-  end
-
-  describe "#run" do
-    subject do
-      Embulk::Input::JiraInputPlugin.new(task, nil, nil, page_builder).run
-    end
-
-    let(:jira_api) { Jira::Api.new }
-    let(:jira_issues) { [Jira::Issue.new(field)] }
-
-    let(:page_builder) { Object.new } # add mock later
-    let(:task) do
-      {
-        "attributes" => {"project.key" => "string"}
-      }
-    end
-
-    let(:field) do
-      {
-        "fields" =>
-        {
-          "project" => {
-            "key" => "FOO",
-          },
-        }
-      }
-    end
-
-    let(:commit_report) { {} }
-
-    before do
-      # TODO: create stubs without each `it` expected
-
-      allow(Jira::Api).to receive(:setup).and_return(jira_api)
-      allow(jira_api).to receive(:search_issues).and_return(jira_issues)
-      allow(page_builder).to receive(:add).with(["FOO"])
-      allow(page_builder).to receive(:finish)
-    end
-
-    it 'search JIRA issues' do
-      expect(jira_api).to receive(:search_issues)
-      subject
-    end
-
-    it 'page build and finish' do
-      expect(page_builder).to receive(:add).with(["FOO"])
-      expect(page_builder).to receive(:finish)
-      subject
-    end
-
-    it 'returns commit report' do
-      expect(subject).to eq commit_report
-    end
-  end
 
   describe ".transaction" do
     subject { Embulk::Input::JiraInputPlugin.transaction(config, &block) }
@@ -212,6 +144,75 @@ describe Embulk::Input::JiraInputPlugin do
       allow(Jira::Api).to receive(:setup).and_return(jira_api)
 
       expect(subject).to eq guessed_config
+    end
+  end
+
+  it do
+    allow(Jira::Api).to receive(:setup)
+    expect(Embulk::Input::JiraInputPlugin.new({}, nil, nil, nil)).to be_a(Embulk::InputPlugin)
+  end
+
+  describe "#init (.new)" do
+    # NOTE: InputPlugin.initialize calls #init method.
+
+    subject { Embulk::Input::JiraInputPlugin.new({}, nil, nil, nil) }
+
+    it "setup Jira::Api" do
+      expect(Jira::Api).to receive(:setup).and_return(Jira::Api.new)
+      subject
+    end
+  end
+
+  describe "#run" do
+    subject do
+      Embulk::Input::JiraInputPlugin.new(task, nil, nil, page_builder).run
+    end
+
+    let(:jira_api) { Jira::Api.new }
+    let(:jira_issues) { [Jira::Issue.new(field)] }
+
+    let(:page_builder) { Object.new } # add mock later
+    let(:task) do
+      {
+        "attributes" => {"project.key" => "string"}
+      }
+    end
+
+    let(:field) do
+      {
+        "fields" =>
+        {
+          "project" => {
+            "key" => "FOO",
+          },
+        }
+      }
+    end
+
+    let(:commit_report) { {} }
+
+    before do
+      # TODO: create stubs without each `it` expected
+
+      allow(Jira::Api).to receive(:setup).and_return(jira_api)
+      allow(jira_api).to receive(:search_issues).and_return(jira_issues)
+      allow(page_builder).to receive(:add).with(["FOO"])
+      allow(page_builder).to receive(:finish)
+    end
+
+    it 'search JIRA issues' do
+      expect(jira_api).to receive(:search_issues)
+      subject
+    end
+
+    it 'page build and finish' do
+      expect(page_builder).to receive(:add).with(["FOO"])
+      expect(page_builder).to receive(:finish)
+      subject
+    end
+
+    it 'returns commit report' do
+      expect(subject).to eq commit_report
     end
   end
 end
