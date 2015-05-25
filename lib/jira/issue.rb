@@ -23,23 +23,23 @@ module Jira
     def to_record
       record = {}
       fields.each_pair do |key, value|
-        field_key = key
-        field_value = value.to_json.to_s
+        record_key = key
+        record_value = value.to_json.to_s
 
         if value.is_a?(String)
-          field_value = value
+          record_value = value
 
         elsif value.is_a?(Hash)
           if value.keys.include?("name")
-            field_key += ".name"
-            field_value = value["name"]
+            record_key += ".name"
+            record_value = value["name"]
           elsif value.keys.include?("id")
-            field_key += ".id"
-            field_value = value["id"]
+            record_key += ".id"
+            record_value = value["id"]
           end
         end
 
-        record[field_key] = field_value
+        record[record_key] = record_value
       end
 
       record
