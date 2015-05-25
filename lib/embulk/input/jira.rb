@@ -35,7 +35,8 @@ module Embulk
       end
 
       def self.guess(config)
-        # TODO: api_version, and auth_type should be define as constant, or specified from config...
+        # TODO: api_version should be 2 (the latest version
+        # auth_type should be specified from config. (The future task)
 
         username = config.param("username", :string)
         password = config.param("password", :string)
