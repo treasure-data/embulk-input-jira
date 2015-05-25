@@ -20,7 +20,7 @@ module Jira
       end
     end
 
-    def generate_record
+    def to_record
       record = {}
       fields.each_pair do |key, value|
         field_key = key.dup

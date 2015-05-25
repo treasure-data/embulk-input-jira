@@ -104,9 +104,9 @@ describe Jira::Issue do
     end
   end
 
-  describe "#generate_record" do
+  describe "#to_record" do
     subject do
-      Jira::Issue.new(issue_fields).generate_record
+      Jira::Issue.new(issue_fields).to_record
     end
 
     let(:issue_fields) do

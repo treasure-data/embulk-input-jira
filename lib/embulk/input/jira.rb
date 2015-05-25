@@ -54,7 +54,7 @@ module Embulk
 
         # TODO: we use 0..10 issues to guess config?
         records = jira.search_issues(jql)[0..10].map do |issue|
-          issue.generate_record
+          issue.to_record
         end
 
         columns = Guess::SchemaGuess.from_hash_records(records).map do |c|
