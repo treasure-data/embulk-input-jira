@@ -7,5 +7,11 @@ describe Embulk::Input::JiraInputPlugin do
     expect(Embulk::Input::JiraInputPlugin.new({}, nil, nil, nil)).to be_a(Embulk::InputPlugin)
   end
 
-  # TODO: add specs for methods inherited from Embulk::InputPlugin
+  describe ".init" do
+    subject { Embulk::Input::JiraInputPlugin.init }
+
+    it "setup Jira::Api" do
+      allow(Jira::Api).to receive(:setup)
+    end
+  end
 end
