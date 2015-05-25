@@ -1,6 +1,9 @@
 require "rubygems"
 require "bundler/setup"
 Bundler.require(:runtime, :development)
+require "codeclimate-test-reporter"
+CodeClimate::TestReporter.start
+
 require "embulk/command/embulk_run"
 
 Dir["./spec/support/**/*.rb"].each{|file| require file }
