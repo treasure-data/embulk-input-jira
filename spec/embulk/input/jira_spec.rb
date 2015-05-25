@@ -7,11 +7,14 @@ describe Embulk::Input::JiraInputPlugin do
     expect(Embulk::Input::JiraInputPlugin.new({}, nil, nil, nil)).to be_a(Embulk::InputPlugin)
   end
 
-  describe ".init" do
-    subject { Embulk::Input::JiraInputPlugin.init }
+  describe "#init (.new)" do
+    # NOTE: InputPlugin.initialize calls #init method.
+
+    subject { Embulk::Input::JiraInputPlugin.new({}, nil, nil, nil) }
 
     it "setup Jira::Api" do
-      allow(Jira::Api).to receive(:setup)
+      expect(Jira::Api).to receive(:setup).and_return(Jira::Api.new)
+      subject
     end
   end
 
