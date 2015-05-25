@@ -22,6 +22,7 @@ module Jira
 
     def to_record
       record = {}
+
       fields.each_pair do |key, value|
         record_key = key
         record_value = value.to_json.to_s
