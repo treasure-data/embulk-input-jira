@@ -7,7 +7,6 @@ module Embulk
       Plugin.register_input("jira", self)
 
       def self.transaction(config, &control)
-        # configuration code:
         task = {
           "username" => config.param("username", :string),
           "password" => config.param("password", :string),
@@ -77,7 +76,6 @@ module Embulk
       end
 
       def init
-        # initialization code:
         @attributes = task["attributes"]
         @jira = Jira::Api.setup do |config|
           config.username = task["username"]
