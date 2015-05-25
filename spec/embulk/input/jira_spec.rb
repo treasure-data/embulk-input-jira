@@ -21,6 +21,8 @@ describe Embulk::Input::JiraInputPlugin do
     end
 
     let(:jira_api) { Jira::Api.new }
+    let(:jira_issues) { [Jira::Issue.new(field)] }
+
     let(:page_builder) { Object.new } # add mock later
     let(:task) do
       {
@@ -33,7 +35,7 @@ describe Embulk::Input::JiraInputPlugin do
         "fields" =>
         {
           "project" => {
-            "id" => "FOO",
+            "key" => "FOO",
           },
         }
       }
@@ -45,8 +47,8 @@ describe Embulk::Input::JiraInputPlugin do
       # TODO: create stubs without each `it` expected
 
       allow(Jira::Api).to receive(:setup).and_return(jira_api)
-      allow(jira_api).to receive(:search_issues).and_return([Jira::Issue.new(field)])
-      allow(page_builder).to receive(:add)
+      allow(jira_api).to receive(:search_issues).and_return(jira_issues)
+      allow(page_builder).to receive(:add).with(["FOO"])
       allow(page_builder).to receive(:finish)
     end
 
@@ -56,7 +58,7 @@ describe Embulk::Input::JiraInputPlugin do
     end
 
     it 'page build and finish' do
-      expect(page_builder).to receive(:add)
+      expect(page_builder).to receive(:add).with(["FOO"])
       expect(page_builder).to receive(:finish)
       subject
     end
