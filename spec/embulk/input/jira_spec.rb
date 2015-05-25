@@ -1,15 +1,11 @@
-require "embulk/command/embulk_run"
-classpath_dir = Embulk.home("classpath")
-jars = Dir.entries(classpath_dir).select {|f| f =~ /\.jar$/ }.sort
-jars.each do |jar|
-  require File.join(classpath_dir, jar)
-end
-require "embulk/java/bootstrap"
-require "embulk"
+require "spec_helper"
 require "embulk/input/jira"
 
-require "spec_helper"
-
 describe Embulk::Input::JiraInputPlugin do
-  # TODO: add specs for methods inherited from Embulk::Input::InputPlugin
+  it do
+    allow(Jira::Api).to receive(:setup)
+    expect(Embulk::Input::JiraInputPlugin.new({}, nil, nil, nil)).to be_a(Embulk::InputPlugin)
+  end
+
+  # TODO: add specs for methods inherited from Embulk::InputPlugin
 end
