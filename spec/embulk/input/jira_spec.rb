@@ -67,6 +67,7 @@ describe Embulk::Input::JiraInputPlugin do
 
   describe ".transaction" do
     subject { Embulk::Input::JiraInputPlugin.transaction(config, &block) }
+
     let(:config) { Object.new } # add mock later
     let(:block) { Proc.new{|task, columns, count| } }
     let(:task) do
