@@ -103,4 +103,46 @@ describe Jira::Issue do
       end
     end
   end
+
+  describe "#to_record" do
+    subject do
+      Jira::Issue.new(issue_fields).to_record
+    end
+
+    let(:issue_fields) do
+      {"fields" =>
+        {
+          "summary" => "jira issue",
+          "project" => {
+            "id" => "FOO",
+          },
+          "labels" =>
+          [
+            "Feature",
+            "WantTo"
+          ],
+          "priority" => {
+            "iconUrl" => "https://jira-api/images/icon.png",
+            "name" => "Must",
+            "id" => "1"
+          },
+          "customfield_1" => nil,
+        }
+      }
+    end
+
+    let(:expected) do
+      {
+        "summary" => "jira issue",
+        "project.id" => "FOO",
+        "labels" => "[\"Feature\",\"WantTo\"]",
+        "priority.name" => "Must",
+        "customfield_1" => "null"
+      }
+    end
+
+    it 'return guessed record' do
+      expect(subject).to eq expected
+    end
+  end
 end

@@ -1,3 +1,4 @@
+require "embulk/input/jira-input-plugin-utils"
 require "jira/api"
 
 module Embulk
@@ -6,7 +7,6 @@ module Embulk
       Plugin.register_input("jira", self)
 
       def self.transaction(config, &control)
-        # configuration code:
         task = {
           "username" => config.param("username", :string),
           "password" => config.param("password", :string),
@@ -35,7 +35,8 @@ module Embulk
       end
 
       def self.guess(config)
-        # TODO: api_version, and auth_type should be define as constant, or specified from config...
+        # TODO: api_version should be 2 (the latest version)
+        # auth_type should be specified from config. (The future task)
 
         username = config.param("username", :string)
         password = config.param("password", :string)
@@ -54,14 +55,10 @@ module Embulk
 
         # TODO: we use 0..10 issues to guess config?
         records = jira.search_issues(jql)[0..10].map do |issue|
-          generate_record(issue.fields)
+          issue.to_record
         end
 
-        columns = Guess::SchemaGuess.from_hash_records(records).map do |c|
-          column = {name: c.name, type: c.type}
-          column[:format] = c.format if c.format
-          column
-        end
+        columns = JiraInputPluginUtils.guess_columns(records)
 
         guessed_config = {
           "username" => username,
@@ -75,39 +72,7 @@ module Embulk
         return guessed_config
       end
 
-      def self.generate_record(fields)
-        record = {}
-        fields.each_pair do |key, value|
-          field_key = key.dup
-
-          if value.is_a?(String)
-            field_value = value
-          else
-
-            # TODO: refactor...
-            if value.is_a?(Hash)
-              if value.keys.include?("name")
-                field_key << ".name"
-                field_value = value["name"]
-              elsif value.keys.include?("id")
-                field_key << ".id"
-                field_value = value["id"]
-              else
-                field_value = value.to_json.to_s
-              end
-            else
-              field_value = value.to_json.to_s
-            end
-          end
-
-          record[field_key] = field_value
-        end
-
-        record
-      end
-
       def init
-        # initialization code:
         @attributes = task["attributes"]
         @jira = Jira::Api.setup do |config|
           config.username = task["username"]
@@ -121,7 +86,7 @@ module Embulk
       def run
         @jira.search_issues(task["jql"]).each do |issue|
           values = @attributes.map do |(attribute_name, type)|
-            cast(issue[attribute_name], type)
+            JiraInputPluginUtils.cast(issue[attribute_name], type)
           end
 
           page_builder.add(values)
@@ -130,25 +95,6 @@ module Embulk
 
         commit_report = {}
         return commit_report
-      end
-
-      private
-
-      def cast(value, type)
-        return value if value.nil?
-
-        case type.to_sym
-        when :long
-          Integer(value)
-        when :double
-          Float(value)
-        when :timestamp
-          Time.parse(value)
-        when :boolean
-          !!value
-        else
-          value.to_s
-        end
       end
     end
   end
