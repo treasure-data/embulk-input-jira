@@ -27,10 +27,10 @@ module Jira
         record_key = key
         record_value = value.to_json.to_s
 
-        if value.is_a?(String)
+        case value
+        when String
           record_value = value
-
-        elsif value.is_a?(Hash)
+        when Hash
           if value.keys.include?("name")
             record_key += ".name"
             record_value = value["name"]
