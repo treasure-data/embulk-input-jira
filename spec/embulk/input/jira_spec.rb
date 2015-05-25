@@ -20,6 +20,7 @@ describe Embulk::Input::JiraInputPlugin do
       Embulk::Input::JiraInputPlugin.new(task, nil, nil, page_builder).run
     end
 
+    let(:jira_api) { Jira::Api.new }
     let(:page_builder) { Object.new } # add mock later
     let(:task) do
       {
@@ -42,15 +43,15 @@ describe Embulk::Input::JiraInputPlugin do
 
     before do
       # TODO: create stubs without each `it` expected
-      allow(Jira::Api).to receive(:setup).and_return(Jira::Api.new)
 
-      allow_any_instance_of(Jira::Api).to receive(:search_issues).and_return [Jira::Issue.new(field)]
+      allow(Jira::Api).to receive(:setup).and_return(jira_api)
+      allow(jira_api).to receive(:search_issues).and_return([Jira::Issue.new(field)])
       allow(page_builder).to receive(:add)
       allow(page_builder).to receive(:finish)
     end
 
     it 'search JIRA issues' do
-      expect_any_instance_of(Jira::Api).to receive(:search_issues)
+      expect(jira_api).to receive(:search_issues)
       subject
     end
 
