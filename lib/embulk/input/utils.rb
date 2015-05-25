@@ -3,7 +3,7 @@
 module Embulk
   module Input
     module Utils
-      # Guess::Schema::Guess.from_hash_records returns Columns
+      # Guess::SchemaGuess.from_hash_records returns Columns
       # containing 'index' key, but it is needless.
       def self.guess_columns(records)
         schema = Guess::SchemaGuess.from_hash_records(records)
