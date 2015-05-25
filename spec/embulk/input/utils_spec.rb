@@ -2,6 +2,30 @@ require "spec_helper"
 require "embulk/input/utils"
 
 describe Embulk::Input::Utils do
+  describe ".guess_columns" do
+    subject do
+      Embulk::Input::Utils.guess_columns(records)
+    end
+
+    let(:records) do
+      [
+        {"project_key" => "FOO", "comment.total" => 3, "created" => "2015-03-01T00:12:00"}
+      ]
+    end
+
+    let(:expected) do
+      [
+        {name: "project_key", type: :string},
+        {name: "comment.total", type: :long},
+        {name: "created", type: :timestamp, format: "%Y-%m-%dT%H:%M:%S"}
+      ]
+    end
+
+    it "returns Array containing columns without 'index' key from each record" do
+      expect(subject).to eq expected
+    end
+  end
+
   describe ".cast" do
     subject do
       Embulk::Input::Utils.cast(value, type)

@@ -58,11 +58,7 @@ module Embulk
           issue.to_record
         end
 
-        columns = Guess::SchemaGuess.from_hash_records(records).map do |c|
-          column = {name: c.name, type: c.type}
-          column[:format] = c.format if c.format
-          column
-        end
+        columns = Utils.guess_columns(records)
 
         guessed_config = {
           "username" => username,
