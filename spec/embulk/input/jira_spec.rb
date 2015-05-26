@@ -220,7 +220,7 @@ describe Embulk::Input::JiraInputPlugin do
     let(:version_file_path) { File.expand_path("../../../../VERSION", __FILE__) }
     subject { Embulk::Input::JiraInputPlugin.version }
 
-    it "= VERSION file content without line-break" do
+    it "returns VERSION file content without line-break" do
       expect(subject).to eq File.read(version_file_path).strip
     end
   end
