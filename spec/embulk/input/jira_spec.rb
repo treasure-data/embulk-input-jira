@@ -5,7 +5,8 @@ describe Embulk::Input::JiraInputPlugin do
   let(:username) { "jira-user" }
   let(:password) { "password" }
   let(:uri) { "http://jira.example/" }
-  let(:jql) { "PROJECT=FOO" }
+  let(:jql) { "PROJECT=#{project_name}" }
+  let(:project_name) { "FOO" }
 
   describe ".transaction" do
     subject { Embulk::Input::JiraInputPlugin.transaction(config, &control) }
@@ -99,7 +100,7 @@ describe Embulk::Input::JiraInputPlugin do
         "fields" =>
         {
           "project" => {
-            "key" => "FOO",
+            "key" => project_name,
           },
         }
       }
@@ -184,7 +185,7 @@ describe Embulk::Input::JiraInputPlugin do
         "fields" =>
         {
           "project" => {
-            "key" => "FOO",
+            "key" => project_name,
           },
         }
       }
@@ -196,7 +197,7 @@ describe Embulk::Input::JiraInputPlugin do
       # TODO: create stubs without each `it` expected
       allow(Jira::Api).to receive(:setup).and_return(jira_api)
       allow(jira_api).to receive(:search_issues).and_return(jira_issues)
-      allow(page_builder).to receive(:add).with(["FOO"])
+      allow(page_builder).to receive(:add).with([project_name])
       allow(page_builder).to receive(:finish)
     end
 
@@ -206,7 +207,7 @@ describe Embulk::Input::JiraInputPlugin do
     end
 
     it 'page build and finish' do
-      expect(page_builder).to receive(:add).with(["FOO"])
+      expect(page_builder).to receive(:add).with([project_name])
       expect(page_builder).to receive(:finish)
       subject
     end
