@@ -5,6 +5,7 @@ describe Embulk::Input::JiraInputPlugin do
   let(:username) { "jira-user" }
   let(:password) { "password" }
   let(:uri) { "http://jira.example/" }
+  let(:jql) { "PROJECT=FOO" }
 
   describe ".transaction" do
     subject { Embulk::Input::JiraInputPlugin.transaction(config, &control) }
@@ -16,7 +17,7 @@ describe Embulk::Input::JiraInputPlugin do
         "username" => username,
         "password" => password,
         "uri" => uri,
-        "jql" => "PROJECT=FOO",
+        "jql" => jql,
         "attributes" => {
           "project.key" => :string,
           "comment.total" => :long
@@ -42,7 +43,7 @@ describe Embulk::Input::JiraInputPlugin do
       allow(config).to receive(:param).with("username", :string).and_return(username)
       allow(config).to receive(:param).with("password", :string).and_return(password)
       allow(config).to receive(:param).with("uri", :string).and_return(uri)
-      allow(config).to receive(:param).with("jql", :string).and_return("PROJECT=FOO")
+      allow(config).to receive(:param).with("jql", :string).and_return(jql)
       allow(config).to receive(:param).with("columns", :array).and_return(columns)
       allow(Embulk::Input::JiraInputPlugin).to receive(:resume).with(task, column_structs, 1, &control)
     end
@@ -61,7 +62,7 @@ describe Embulk::Input::JiraInputPlugin do
         "username" => username,
         "password" => password,
         "uri" => uri,
-        "jql" => "PROJECT=FOO",
+        "jql" => jql,
         "attributes" => {
           "project.key" => :string,
           "comment.total" => :long
@@ -131,7 +132,7 @@ describe Embulk::Input::JiraInputPlugin do
       allow(config).to receive(:param).with("username", :string).and_return(username)
       allow(config).to receive(:param).with("password", :string).and_return(password)
       allow(config).to receive(:param).with("uri", :string).and_return(uri)
-      allow(config).to receive(:param).with("jql", :string).and_return("PROJECT=FOO")
+      allow(config).to receive(:param).with("jql", :string).and_return(jql)
       allow(config).to receive(:param).with("columns", :array).and_return(columns)
     end
 
