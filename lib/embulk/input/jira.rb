@@ -6,6 +6,10 @@ module Embulk
     class JiraInputPlugin < InputPlugin
       Plugin.register_input("jira", self)
 
+      def self.version
+        File.read(File.expand_path("../../../../VERSION", __FILE__)).strip
+      end
+
       def self.transaction(config, &control)
         task = {
           "username" => config.param("username", :string),
