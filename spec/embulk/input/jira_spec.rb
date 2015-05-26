@@ -2,6 +2,7 @@ require "spec_helper"
 require "embulk/input/jira"
 
 describe Embulk::Input::JiraInputPlugin do
+  let(:username) { "jira-user" }
 
   describe ".transaction" do
     subject { Embulk::Input::JiraInputPlugin.transaction(config, &control) }
@@ -10,7 +11,7 @@ describe Embulk::Input::JiraInputPlugin do
     let(:control) { Proc.new{|task, columns, count| } }
     let(:task) do
       {
-        "username" => "hoge",
+        "username" => username,
         "password" => "fuga",
         "uri" => "http://jira.example/",
         "jql" => "PROJECT=FOO",
@@ -36,7 +37,7 @@ describe Embulk::Input::JiraInputPlugin do
     end
 
     before do
-      allow(config).to receive(:param).with("username", :string).and_return("hoge")
+      allow(config).to receive(:param).with("username", :string).and_return(username)
       allow(config).to receive(:param).with("password", :string).and_return("fuga")
       allow(config).to receive(:param).with("uri", :string).and_return("http://jira.example/")
       allow(config).to receive(:param).with("jql", :string).and_return("PROJECT=FOO")
@@ -55,7 +56,7 @@ describe Embulk::Input::JiraInputPlugin do
 
     let(:task) do
       {
-        "username" => "hoge",
+        "username" => username,
         "password" => "fuga",
         "uri" => "http://jira.example/",
         "jql" => "PROJECT=FOO",
@@ -110,7 +111,7 @@ describe Embulk::Input::JiraInputPlugin do
 
     let(:guessed_config) do
       {
-        "username" => "hoge",
+        "username" => username,
         "password" => "fuga",
         "uri" => "http://jira.example/",
         "api_version" => "latest",
@@ -125,7 +126,7 @@ describe Embulk::Input::JiraInputPlugin do
     before do
       allow(jira_api).to receive(:search_issues).and_return(jira_issues)
 
-      allow(config).to receive(:param).with("username", :string).and_return("hoge")
+      allow(config).to receive(:param).with("username", :string).and_return(username)
       allow(config).to receive(:param).with("password", :string).and_return("fuga")
       allow(config).to receive(:param).with("uri", :string).and_return("http://jira.example/")
       allow(config).to receive(:param).with("jql", :string).and_return("PROJECT=FOO")
