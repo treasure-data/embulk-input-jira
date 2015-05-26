@@ -169,11 +169,15 @@ describe Embulk::Input::JiraInputPlugin do
     end
 
     let(:jira_api) { Jira::Api.new }
-    let(:jira_issues) { [Jira::Issue.new(field)] }
+    let(:jira_issues) { [Jira::Issue.new(field)] * total_count }
+    let(:total_count) { max_result + 10 }
+    let(:max_result) { Embulk::Input::JiraInputPlugin::PER_PAGE }
+
 
     let(:page_builder) { Object.new } # add mock later
     let(:task) do
       {
+        "jql" => jql,
         "attributes" => {"project.key" => "string"}
       }
     end
@@ -194,7 +198,12 @@ describe Embulk::Input::JiraInputPlugin do
     before do
       # TODO: create stubs without each `it` expected
       allow(Jira::Api).to receive(:setup).and_return(jira_api)
-      allow(jira_api).to receive(:search_issues).and_return(jira_issues)
+
+      0.step(total_count, max_result) do |start_at|
+        issues = jira_issues[start_at..(start_at + max_result - 1)]
+        allow(jira_api).to receive(:search_issues).with(jql, start_at: start_at).and_return(issues)
+      end
+      allow(jira_api).to receive(:total_count).and_return(total_count)
 
       allow(page_builder).to receive(:add).with([project_name])
       allow(page_builder).to receive(:finish)
@@ -206,7 +215,7 @@ describe Embulk::Input::JiraInputPlugin do
     end
 
     it 'page build and finish' do
-      expect(page_builder).to receive(:add).with([project_name])
+      expect(page_builder).to receive(:add).with([project_name]).exactly(total_count).times
       expect(page_builder).to receive(:finish)
       subject
     end

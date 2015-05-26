@@ -1,3 +1,5 @@
+# TODO: move to spec/jira/api_spec.rb
+
 require "spec_helper"
 require "jira/api"
 
@@ -58,6 +60,29 @@ describe Jira::Api do
 
       expect(subject).to be_kind_of Array
       expect(subject.map(&:class)).to match_array [Jira::Issue, Jira::Issue]
+    end
+  end
+
+  describe "#total_count" do
+    subject { jira_api.total_count(jql) }
+
+    let(:jira_api) { Jira::Api.new }
+    let(:jql) { "project=FOO" }
+    let(:results) { Object.new } # add mock later
+    let(:results_count) { 5 }
+
+    before do
+      allow(results).to receive(:num_results).and_return(results_count)
+    end
+
+    it "calls Jira::Api#search with proper arguments" do
+      expect(jira_api).to receive(:search).with(jql, max_results: 1).and_return(results)
+      subject
+    end
+
+    it "returns issues count" do
+      allow(jira_api).to receive(:search).with(jql, max_results: 1).and_return(results)
+      expect(subject).to eq results_count
     end
   end
 end
