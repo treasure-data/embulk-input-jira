@@ -151,7 +151,7 @@ describe Embulk::Input::JiraInputPlugin do
     subject { Embulk::Input::JiraInputPlugin.new({}, nil, nil, nil) }
 
     it "setup Jira::Api" do
-      expect(Jira::Api).to receive(:setup).and_return(Jira::Api.new)
+      expect(Jira::Api).to receive(:setup)
       subject
     end
 
