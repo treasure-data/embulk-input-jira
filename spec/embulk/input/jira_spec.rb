@@ -13,6 +13,7 @@ describe Embulk::Input::JiraInputPlugin do
 
     let(:config) { Object.new } # add mock later
     let(:control) { Proc.new{|task, columns, count| } }
+
     let(:task) do
       {
         "username" => username,
@@ -193,6 +194,7 @@ describe Embulk::Input::JiraInputPlugin do
       # TODO: create stubs without each `it` expected
       allow(Jira::Api).to receive(:setup).and_return(jira_api)
       allow(jira_api).to receive(:search_issues).and_return(jira_issues)
+
       allow(page_builder).to receive(:add).with([project_name])
       allow(page_builder).to receive(:finish)
     end
