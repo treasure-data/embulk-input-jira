@@ -16,6 +16,9 @@ module Jira
 
     def search(jql)
       Jiralicious.search(jql)
+
+    def total_count(jql)
+      Jiralicious.search(jql).num_results
     end
   end
 end

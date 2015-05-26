@@ -1,3 +1,5 @@
+# TODO: move to spec/jira/api_spec.rb
+
 require "spec_helper"
 require "jira/api"
 
@@ -58,6 +60,21 @@ describe Jira::Api do
 
       expect(subject).to be_kind_of Array
       expect(subject.map(&:class)).to match_array [Jira::Issue, Jira::Issue]
+    end
+  end
+
+  describe "#total_count" do
+    subject { Jira::Api.new.total_count(jql) }
+
+    let(:jql) { "project=FOO" }
+    let(:results) { 5 }
+
+    before do
+      allow(Jiralicious).to receive_message_chain(:search, :num_results).and_return(results)
+    end
+
+    it do
+      expect(subject).to eq results
     end
   end
 end
