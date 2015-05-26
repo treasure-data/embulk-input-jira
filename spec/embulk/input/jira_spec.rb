@@ -46,7 +46,6 @@ describe Embulk::Input::JiraInputPlugin do
       allow(config).to receive(:param).with("uri", :string).and_return(uri)
       allow(config).to receive(:param).with("jql", :string).and_return(jql)
       allow(config).to receive(:param).with("columns", :array).and_return(columns)
-      allow(Embulk::Input::JiraInputPlugin).to receive(:resume).with(task, column_structs, 1, &control)
     end
 
     it "calls .resume method with proper parameters" do
