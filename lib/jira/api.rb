@@ -19,7 +19,7 @@ module Jira
     end
 
     def total_count(jql)
-      Jiralicious.search(jql).num_results
+      search(jql, max_results: 1).num_results
     end
   end
 end

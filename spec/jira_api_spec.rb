@@ -64,17 +64,25 @@ describe Jira::Api do
   end
 
   describe "#total_count" do
-    subject { Jira::Api.new.total_count(jql) }
+    subject { jira_api.total_count(jql) }
 
+    let(:jira_api) { Jira::Api.new }
     let(:jql) { "project=FOO" }
-    let(:results) { 5 }
+    let(:results) { Object.new } # add mock later
+    let(:results_count) { 5 }
 
     before do
-      allow(Jiralicious).to receive_message_chain(:search, :num_results).and_return(results)
+      allow(results).to receive(:num_results).and_return(results_count)
     end
 
-    it do
-      expect(subject).to eq results
+    it "calls Jira::Api#search with proper arguments" do
+      expect(jira_api).to receive(:search).with(jql, max_results: 1).and_return(results)
+      subject
+    end
+
+    it "returns issues count" do
+      allow(jira_api).to receive(:search).with(jql, max_results: 1).and_return(results)
+      expect(subject).to eq results_count
     end
   end
 end
