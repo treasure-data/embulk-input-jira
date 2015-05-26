@@ -12,7 +12,7 @@ describe Embulk::Input::JiraInputPlugin do
     subject { Embulk::Input::JiraInputPlugin.transaction(config, &control) }
 
     let(:config) { Object.new } # add mock later
-    let(:control) { Proc.new{|task, columns, count| } }
+    let(:control) { Proc.new{|task, columns, count| } } # do nothing
 
     let(:task) do
       {
@@ -49,6 +49,7 @@ describe Embulk::Input::JiraInputPlugin do
       allow(config).to receive(:param).with("columns", :array).and_return(columns)
     end
 
+    # NOTE: I should check other factor, but i don't know it...
     it "calls .resume method with proper parameters" do
       expect(Embulk::Input::JiraInputPlugin).to receive(:resume).with(task, column_structs, 1, &control)
       subject
