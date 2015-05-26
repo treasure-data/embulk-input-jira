@@ -215,4 +215,13 @@ describe Embulk::Input::JiraInputPlugin do
       expect(subject).to eq commit_report
     end
   end
+
+  describe ".version" do
+    let(:version_file_path) { File.expand_path("../../../../VERSION", __FILE__) }
+    subject { Embulk::Input::JiraInputPlugin.version }
+
+    it "= VERSION file content without line-break" do
+      expect(subject).to eq File.read(version_file_path).strip
+    end
+  end
 end
