@@ -3,6 +3,7 @@ require "embulk/input/jira"
 
 describe Embulk::Input::JiraInputPlugin do
   let(:username) { "jira-user" }
+  let(:password) { "password" }
 
   describe ".transaction" do
     subject { Embulk::Input::JiraInputPlugin.transaction(config, &control) }
@@ -12,7 +13,7 @@ describe Embulk::Input::JiraInputPlugin do
     let(:task) do
       {
         "username" => username,
-        "password" => "fuga",
+        "password" => password,
         "uri" => "http://jira.example/",
         "jql" => "PROJECT=FOO",
         "attributes" => {
@@ -38,7 +39,7 @@ describe Embulk::Input::JiraInputPlugin do
 
     before do
       allow(config).to receive(:param).with("username", :string).and_return(username)
-      allow(config).to receive(:param).with("password", :string).and_return("fuga")
+      allow(config).to receive(:param).with("password", :string).and_return(password)
       allow(config).to receive(:param).with("uri", :string).and_return("http://jira.example/")
       allow(config).to receive(:param).with("jql", :string).and_return("PROJECT=FOO")
       allow(config).to receive(:param).with("columns", :array).and_return(columns)
@@ -57,7 +58,7 @@ describe Embulk::Input::JiraInputPlugin do
     let(:task) do
       {
         "username" => username,
-        "password" => "fuga",
+        "password" => password,
         "uri" => "http://jira.example/",
         "jql" => "PROJECT=FOO",
         "attributes" => {
@@ -112,7 +113,7 @@ describe Embulk::Input::JiraInputPlugin do
     let(:guessed_config) do
       {
         "username" => username,
-        "password" => "fuga",
+        "password" => password,
         "uri" => "http://jira.example/",
         "api_version" => "latest",
         "auth_type" => "basic",
@@ -127,7 +128,7 @@ describe Embulk::Input::JiraInputPlugin do
       allow(jira_api).to receive(:search_issues).and_return(jira_issues)
 
       allow(config).to receive(:param).with("username", :string).and_return(username)
-      allow(config).to receive(:param).with("password", :string).and_return("fuga")
+      allow(config).to receive(:param).with("password", :string).and_return(password)
       allow(config).to receive(:param).with("uri", :string).and_return("http://jira.example/")
       allow(config).to receive(:param).with("jql", :string).and_return("PROJECT=FOO")
       allow(config).to receive(:param).with("columns", :array).and_return(columns)
