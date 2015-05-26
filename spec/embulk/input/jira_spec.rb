@@ -122,7 +122,6 @@ describe Embulk::Input::JiraInputPlugin do
           {name: "comment", type: :string}
         ]
       }
-
     end
 
     before do
