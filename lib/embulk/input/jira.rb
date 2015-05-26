@@ -88,10 +88,8 @@ module Embulk
 
       def run
         total_count = @jira.total_count(@jql)
-        search_count = (total_count.to_f / PER_PAGE).ceil
 
-        search_count.times do |i|
-          start_at = i * PER_PAGE
+        0.step(total_count, PER_PAGE) do |start_at|
           @jira.search_issues(@jql, start_at: start_at).each do |issue|
             values = @attributes.map do |(attribute_name, type)|
               JiraInputPluginUtils.cast(issue[attribute_name], type)
