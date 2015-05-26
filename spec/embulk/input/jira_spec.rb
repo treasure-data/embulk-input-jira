@@ -199,7 +199,7 @@ describe Embulk::Input::JiraInputPlugin do
       # TODO: create stubs without each `it` expected
       allow(Jira::Api).to receive(:setup).and_return(jira_api)
 
-      [0, max_result].each do |start_at|
+      0.step(total_count, max_result) do |start_at|
         issues = jira_issues[start_at..(start_at + max_result - 1)]
         allow(jira_api).to receive(:search_issues).with(jql, start_at: start_at).and_return(issues)
       end
