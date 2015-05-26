@@ -4,6 +4,8 @@ require "jira/api"
 module Embulk
   module Input
     class JiraInputPlugin < InputPlugin
+      PAGE_PER = 50
+
       Plugin.register_input("jira", self)
 
       def self.transaction(config, &control)
@@ -81,16 +83,24 @@ module Embulk
           config.api_version = "latest"
           config.auth_type = :basic
         end
+        @jql = task["jql"]
       end
 
       def run
-        @jira.search_issues(task["jql"]).each do |issue|
-          values = @attributes.map do |(attribute_name, type)|
-            JiraInputPluginUtils.cast(issue[attribute_name], type)
-          end
+        total_count = @jira.total_count(@jql)
+        search_count = (total_count.to_f / PAGE_PER).ceil
 
-          page_builder.add(values)
+        search_count.times do |i|
+          start_at = i * PAGE_PER
+          @jira.search_issues(@jql, start_at: start_at).each do |issue|
+            values = @attributes.map do |(attribute_name, type)|
+              JiraInputPluginUtils.cast(issue[attribute_name], type)
+            end
+
+            page_builder.add(values)
+          end
         end
+
         page_builder.finish
 
         commit_report = {}
