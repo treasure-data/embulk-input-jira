@@ -100,8 +100,13 @@ describe Embulk::Input::JiraInputPlugin do
         "fields" =>
         {
           "project" => {
+            "name" => project_name,
             "key" => project_name,
           },
+          "comment" => {
+            "total" => 0,
+            "comments" => []
+          }
         }
       }
     end
@@ -114,7 +119,8 @@ describe Embulk::Input::JiraInputPlugin do
         "api_version" => "latest",
         "auth_type" => "basic",
         "columns" => [
-          {name: "project", type: :string}
+          {name: "project.name", type: :string},
+          {name: "comment", type: :string}
         ]
       }
 
