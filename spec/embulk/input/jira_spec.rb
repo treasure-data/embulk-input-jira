@@ -106,13 +106,6 @@ describe Embulk::Input::JiraInputPlugin do
       }
     end
 
-    let(:columns) do
-      [
-        {"name" => "project.key", "type" => "string"},
-        {"name" => "comment.total", "type" => "long"}
-      ]
-    end
-
     let(:guessed_config) do
       {
         "username" => username,
@@ -134,7 +127,6 @@ describe Embulk::Input::JiraInputPlugin do
       allow(config).to receive(:param).with("password", :string).and_return(password)
       allow(config).to receive(:param).with("uri", :string).and_return(uri)
       allow(config).to receive(:param).with("jql", :string).and_return(jql)
-      allow(config).to receive(:param).with("columns", :array).and_return(columns)
     end
 
     it "setup Jira::Api" do
