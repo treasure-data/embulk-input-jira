@@ -4,7 +4,7 @@ require "jira/api"
 module Embulk
   module Input
     class JiraInputPlugin < InputPlugin
-      PAGE_PER = 50
+      PER_PAGE = 50
 
       Plugin.register_input("jira", self)
 
@@ -88,10 +88,10 @@ module Embulk
 
       def run
         total_count = @jira.total_count(@jql)
-        search_count = (total_count.to_f / PAGE_PER).ceil
+        search_count = (total_count.to_f / PER_PAGE).ceil
 
         search_count.times do |i|
-          start_at = i * PAGE_PER
+          start_at = i * PER_PAGE
           @jira.search_issues(@jql, start_at: start_at).each do |issue|
             values = @attributes.map do |(attribute_name, type)|
               JiraInputPluginUtils.cast(issue[attribute_name], type)

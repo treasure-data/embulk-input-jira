@@ -171,7 +171,7 @@ describe Embulk::Input::JiraInputPlugin do
     let(:jira_api) { Jira::Api.new }
     let(:jira_issues) { [Jira::Issue.new(field)] * total_count }
     let(:total_count) { max_result + 10 }
-    let(:max_result) { Embulk::Input::JiraInputPlugin::PAGE_PER }
+    let(:max_result) { Embulk::Input::JiraInputPlugin::PER_PAGE }
 
 
     let(:page_builder) { Object.new } # add mock later
