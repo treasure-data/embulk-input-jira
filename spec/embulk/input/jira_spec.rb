@@ -157,7 +157,7 @@ describe Embulk::Input::JiraInputPlugin do
 
     it "is a Embulk::InputPlugin" do
       allow(Jira::Api).to receive(:setup)
-      expect(Embulk::Input::JiraInputPlugin.new({}, nil, nil, nil)).to be_a(Embulk::InputPlugin)
+      expect(subject).to be_a(Embulk::InputPlugin)
     end
   end
 
