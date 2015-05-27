@@ -9,9 +9,9 @@ TODO: Write short description here and embulk-input-jira.gemspec file.
 ## Overview
 
 * **Plugin type**: input
-* **Resume supported**: yes
-* **Cleanup supported**: yes
-* **Guess supported**: no
+* **Resume supported**: no
+* **Cleanup supported**: no
+* **Guess supported**: yes
 
 ## Configuration
 
