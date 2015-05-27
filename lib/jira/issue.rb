@@ -18,16 +18,16 @@ module Jira
         return key
       end
 
-      fields = @fields
-      attribute.split('.').each do |chunk|
-        fields = fields[chunk]
-        return fields if fields.nil?
+      chunk = fields
+      attribute.split('.').each do |key|
+        chunk = chunk[key]
+        return chunk if chunk.nil?
       end
 
-      if fields.is_a?(Array) || fields.is_a?(Hash)
-        fields.to_json.to_s
+      if chunk.is_a?(Array) || chunk.is_a?(Hash)
+        chunk.to_json.to_s
       else
-        fields
+        chunk
       end
     end
 
