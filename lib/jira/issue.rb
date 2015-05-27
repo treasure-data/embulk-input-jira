@@ -13,9 +13,9 @@ module Jira
     def [](attribute)
       case attribute
       when "id"
-        return @id
+        return id
       when "key"
-        return @key
+        return key
       end
 
       fields = @fields
@@ -34,8 +34,8 @@ module Jira
     def to_record
       record = {}
 
-      record["key"] = @key
-      record["id"] = @id
+      record["id"] = id
+      record["key"] = key
 
       fields.each_pair do |key, value|
         record_key = key
