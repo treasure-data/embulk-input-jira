@@ -5,7 +5,10 @@ describe Jira::Issue do
   describe ".initialize" do
     context "when argument has 'fields' key" do
       let(:issue_attributes) do
-        {"fields" =>
+        {
+          "id" => 1,
+          "jira_key" => "PRO-1",
+          "fields" =>
           {
             "summary" => "jira issue",
             "project" =>
@@ -16,7 +19,15 @@ describe Jira::Issue do
         }
       end
 
-      it "has @field with argument['fields']" do
+      it "has @id with argument['id']" do
+        expect(Jira::Issue.new(issue_attributes).id).to eq issue_attributes["id"]
+      end
+
+      it "has @key with argument['jira_key']" do
+        expect(Jira::Issue.new(issue_attributes).key).to eq issue_attributes["jira_key"]
+      end
+
+      it "has @fields with argument['fields']" do
         expect(Jira::Issue.new(issue_attributes).fields).to eq issue_attributes["fields"]
       end
     end
@@ -36,8 +47,10 @@ describe Jira::Issue do
     subject { Jira::Issue.new(issue_attributes)[attribute_name] }
 
     let(:issue_attributes) do
-      {"fields" =>
-        {
+      {
+        "id" => "1",
+        "jira_key" => "FOO-1",
+        "fields" => {
           "summary" => "jira issue",
           "project" => project_attribute,
           "labels" =>
@@ -59,6 +72,22 @@ describe Jira::Issue do
       {
         "key" => "FOO",
       }
+    end
+
+    context 'id' do
+      let(:attribute_name) { 'id' }
+
+      it "returns issue id" do
+        expect(subject).to eq "1"
+      end
+    end
+
+    context 'key' do
+      let(:attribute_name) { 'key' }
+
+      it "returns issue key" do
+        expect(subject).to eq "FOO-1"
+      end
     end
 
     context 'summary' do
@@ -106,12 +135,14 @@ describe Jira::Issue do
 
   describe "#to_record" do
     subject do
-      Jira::Issue.new(issue_fields).to_record
+      Jira::Issue.new(issue_attributes).to_record
     end
 
-    let(:issue_fields) do
-      {"fields" =>
-        {
+    let(:issue_attributes) do
+      {
+        "id" => 1,
+        "jira_key" => "FOO-1",
+        "fields" => {
           "summary" => "jira issue",
           "project" => {
             "id" => "FOO",
@@ -133,6 +164,8 @@ describe Jira::Issue do
 
     let(:expected) do
       {
+        "id" => 1,
+        "key" => "FOO-1",
         "summary" => "jira issue",
         "project.id" => "FOO",
         "labels" => "[\"Feature\",\"WantTo\"]",

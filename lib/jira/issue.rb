@@ -1,27 +1,41 @@
 module Jira
   class Issue
-    attr_reader :fields
+    attr_reader :id, :key, :fields
 
     def initialize(attributes)
+      @id = attributes.fetch("id")
+
+      # https://github.com/dorack/jiralicious/blob/404b7b6d5b7020f42064cf8d7a745ab02057e728/lib/jiralicious/issue.rb#L11-L12
+      @key = attributes.fetch("jira_key")
       @fields = attributes.fetch("fields")
     end
 
     def [](attribute)
-      fields = @fields
-      attribute.split('.').each do |chunk|
-        fields = fields[chunk]
-        return fields if fields.nil?
+      case attribute
+      when "id"
+        return id
+      when "key"
+        return key
       end
 
-      if fields.is_a?(Array) || fields.is_a?(Hash)
-        fields.to_json.to_s
+      chunk = fields
+      attribute.split('.').each do |key|
+        chunk = chunk[key]
+        return chunk if chunk.nil?
+      end
+
+      if chunk.is_a?(Array) || chunk.is_a?(Hash)
+        chunk.to_json.to_s
       else
-        fields
+        chunk
       end
     end
 
     def to_record
       record = {}
+
+      record["id"] = id
+      record["key"] = key
 
       fields.each_pair do |key, value|
         record_key = key
