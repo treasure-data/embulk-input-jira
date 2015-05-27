@@ -4,7 +4,7 @@
 
 # Jira input plugin for Embulk
 
-TODO: Write short description here and embulk-input-jira.gemspec file.
+embulk-input-jira is the Embulk input plugin for JIRA.
 
 ## Overview
 
