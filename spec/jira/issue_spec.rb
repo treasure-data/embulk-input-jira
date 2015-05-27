@@ -7,7 +7,7 @@ describe Jira::Issue do
       let(:issue_attributes) do
         {
           "id" => 1,
-          "jira_key" => "PRO_1",
+          "jira_key" => "PRO-1",
           "fields" =>
           {
             "summary" => "jira issue",
