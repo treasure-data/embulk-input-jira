@@ -4,7 +4,7 @@
 
 # Jira input plugin for Embulk
 
-embulk-input-jira is the Embulk input plugin for JIRA.
+embulk-input-jira is the Embulk input plugin for [JIRA](https://www.atlassian.com/software/jira).
 
 ## Overview
 
