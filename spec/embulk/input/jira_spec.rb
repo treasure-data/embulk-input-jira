@@ -99,6 +99,7 @@ describe Embulk::Input::JiraInputPlugin do
     let(:field) do
       {
         "id" => "100",
+        "jira_key" => "FOO-100",
         "fields" =>
         {
           "project" => {
@@ -122,6 +123,7 @@ describe Embulk::Input::JiraInputPlugin do
         "auth_type" => "basic",
         "columns" => [
           {name: "id", type: :long},
+          {name: "key", type: :string},
           {name: "project.name", type: :string},
           {name: "comment", type: :string}
         ]
@@ -173,7 +175,7 @@ describe Embulk::Input::JiraInputPlugin do
     let(:jira_api) { Jira::Api.new }
     let(:jira_issues) do
       (1..total_count).map do |i|
-        attributes = field.merge("id" => i.to_s)
+        attributes = field.merge("id" => i.to_s, "jira_key" => "FOO-#{i}")
 
         Jira::Issue.new(attributes)
       end

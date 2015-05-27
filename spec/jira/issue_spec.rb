@@ -7,6 +7,7 @@ describe Jira::Issue do
       let(:issue_attributes) do
         {
           "id" => 1,
+          "jira_key" => "PRO_1",
           "fields" =>
           {
             "summary" => "jira issue",
@@ -20,6 +21,10 @@ describe Jira::Issue do
 
       it "has @id with argument['id']" do
         expect(Jira::Issue.new(issue_attributes).id).to eq issue_attributes["id"]
+      end
+
+      it "has @key with argument['jira_key']" do
+        expect(Jira::Issue.new(issue_attributes).key).to eq issue_attributes["jira_key"]
       end
 
       it "has @field with argument['fields']" do
@@ -44,6 +49,7 @@ describe Jira::Issue do
     let(:issue_attributes) do
       {
         "id" => "1",
+        "jira_key" => "FOO-1",
         "fields" => {
           "summary" => "jira issue",
           "project" => project_attribute,
@@ -73,6 +79,14 @@ describe Jira::Issue do
 
       it "returns issue id" do
         expect(subject).to eq "1"
+      end
+    end
+
+    context 'key' do
+      let(:attribute_name) { 'key' }
+
+      it "returns issue key" do
+        expect(subject).to eq "FOO-1"
       end
     end
 
@@ -127,6 +141,7 @@ describe Jira::Issue do
     let(:issue_fields) do
       {
         "id" => 1,
+        "jira_key" => "FOO-1",
         "fields" => {
           "summary" => "jira issue",
           "project" => {
@@ -150,6 +165,7 @@ describe Jira::Issue do
     let(:expected) do
       {
         "id" => 1,
+        "key" => "FOO-1",
         "summary" => "jira issue",
         "project.id" => "FOO",
         "labels" => "[\"Feature\",\"WantTo\"]",
