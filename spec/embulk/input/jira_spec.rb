@@ -175,7 +175,7 @@ describe Embulk::Input::JiraInputPlugin do
     let(:jira_api) { Jira::Api.new }
     let(:jira_issues) do
       (1..total_count).map do |i|
-        attributes = field.merge("id" => i.to_s, "jira_key" => "FOO-#{i}")
+        attributes = fields.merge("id" => i.to_s, "jira_key" => "FOO-#{i}")
 
         Jira::Issue.new(attributes)
       end
@@ -193,7 +193,7 @@ describe Embulk::Input::JiraInputPlugin do
       }
     end
 
-    let(:field) do
+    let(:fields) do
       {
         "fields" =>
         {

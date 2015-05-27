@@ -27,7 +27,7 @@ describe Jira::Issue do
         expect(Jira::Issue.new(issue_attributes).key).to eq issue_attributes["jira_key"]
       end
 
-      it "has @field with argument['fields']" do
+      it "has @fields with argument['fields']" do
         expect(Jira::Issue.new(issue_attributes).fields).to eq issue_attributes["fields"]
       end
     end
