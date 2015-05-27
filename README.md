@@ -41,5 +41,5 @@ in:
 ## Build
 
 ```
-$ rake
+$ bundle exec rake build
 ```
