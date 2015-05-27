@@ -1,23 +1,20 @@
 module Jira
   class Issue
-    JIRA_ID = "id"
-    ISSUE_ID = "id"
-    JIRA_KEY = "jira_key"
-    ISSUE_KEY = "key"
-
     attr_reader :id, :key, :fields
 
     def initialize(attributes)
-      @id = attributes.fetch(JIRA_ID)
-      @key = attributes.fetch(JIRA_KEY)
+      @id = attributes.fetch("id")
+
+      # https://github.com/dorack/jiralicious/blob/404b7b6d5b7020f42064cf8d7a745ab02057e728/lib/jiralicious/issue.rb#L11-L12
+      @key = attributes.fetch("jira_key")
       @fields = attributes.fetch("fields")
     end
 
     def [](attribute)
       case attribute
-      when ISSUE_ID
+      when "id"
         return @id
-      when ISSUE_KEY
+      when "key"
         return @key
       end
 
@@ -37,8 +34,8 @@ module Jira
     def to_record
       record = {}
 
-      record[ISSUE_ID] = @id
-      record[ISSUE_KEY] = @key
+      record["key"] = @key
+      record["id"] = @id
 
       fields.each_pair do |key, value|
         record_key = key
