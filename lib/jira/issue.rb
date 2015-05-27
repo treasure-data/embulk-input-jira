@@ -1,12 +1,21 @@
 module Jira
   class Issue
-    attr_reader :fields
+    JIRA_ID = "id"
+    ISSUE_ID = "id"
+
+    attr_reader :id, :fields
 
     def initialize(attributes)
+      @id = attributes.fetch(JIRA_ID)
       @fields = attributes.fetch("fields")
     end
 
     def [](attribute)
+      case attribute
+      when ISSUE_ID
+        return @id
+      end
+
       fields = @fields
       attribute.split('.').each do |chunk|
         fields = fields[chunk]
@@ -22,6 +31,8 @@ module Jira
 
     def to_record
       record = {}
+
+      record[ISSUE_ID] = @id
 
       fields.each_pair do |key, value|
         record_key = key

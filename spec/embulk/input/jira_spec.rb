@@ -98,6 +98,7 @@ describe Embulk::Input::JiraInputPlugin do
     let(:jira_issues) { [Jira::Issue.new(field)] }
     let(:field) do
       {
+        "id" => "100",
         "fields" =>
         {
           "project" => {
@@ -120,6 +121,7 @@ describe Embulk::Input::JiraInputPlugin do
         "api_version" => "latest",
         "auth_type" => "basic",
         "columns" => [
+          {name: "id", type: :long},
           {name: "project.name", type: :string},
           {name: "comment", type: :string}
         ]
@@ -169,7 +171,14 @@ describe Embulk::Input::JiraInputPlugin do
     end
 
     let(:jira_api) { Jira::Api.new }
-    let(:jira_issues) { [Jira::Issue.new(field)] * total_count }
+    let(:jira_issues) do
+      (1..total_count).map do |i|
+        attributes = field.merge("id" => i.to_s)
+
+        Jira::Issue.new(attributes)
+      end
+    end
+
     let(:total_count) { max_result + 10 }
     let(:max_result) { Embulk::Input::JiraInputPlugin::PER_PAGE }
 

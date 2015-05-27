@@ -31,6 +31,7 @@ describe Jira::Api do
     let(:results) do
       [
         {
+          "id" => 1,
           "fields" =>
           {
             "summary" => "issue summary",
@@ -41,6 +42,7 @@ describe Jira::Api do
           }
         },
         {
+          "id" => 2,
           "fields" =>
           {
             "summary" => "jira issue",

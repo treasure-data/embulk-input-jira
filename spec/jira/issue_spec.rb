@@ -5,7 +5,9 @@ describe Jira::Issue do
   describe ".initialize" do
     context "when argument has 'fields' key" do
       let(:issue_attributes) do
-        {"fields" =>
+        {
+          "id" => 1,
+          "fields" =>
           {
             "summary" => "jira issue",
             "project" =>
@@ -14,6 +16,10 @@ describe Jira::Issue do
             },
           }
         }
+      end
+
+      it "has @id with argument['id']" do
+        expect(Jira::Issue.new(issue_attributes).id).to eq issue_attributes["id"]
       end
 
       it "has @field with argument['fields']" do
@@ -36,8 +42,9 @@ describe Jira::Issue do
     subject { Jira::Issue.new(issue_attributes)[attribute_name] }
 
     let(:issue_attributes) do
-      {"fields" =>
-        {
+      {
+        "id" => "1",
+        "fields" => {
           "summary" => "jira issue",
           "project" => project_attribute,
           "labels" =>
@@ -59,6 +66,14 @@ describe Jira::Issue do
       {
         "key" => "FOO",
       }
+    end
+
+    context 'id' do
+      let(:attribute_name) { 'id' }
+
+      it "returns issue id" do
+        expect(subject).to eq "1"
+      end
     end
 
     context 'summary' do
@@ -110,8 +125,9 @@ describe Jira::Issue do
     end
 
     let(:issue_fields) do
-      {"fields" =>
-        {
+      {
+        "id" => 1,
+        "fields" => {
           "summary" => "jira issue",
           "project" => {
             "id" => "FOO",
@@ -133,6 +149,7 @@ describe Jira::Issue do
 
     let(:expected) do
       {
+        "id" => 1,
         "summary" => "jira issue",
         "project.id" => "FOO",
         "labels" => "[\"Feature\",\"WantTo\"]",
