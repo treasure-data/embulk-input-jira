@@ -95,8 +95,8 @@ describe Embulk::Input::JiraInputPlugin do
     let(:config) { Object.new } # add mock later
 
     let(:jira_api) { Jira::Api.new }
-    let(:jira_issues) { [Jira::Issue.new(field)] }
-    let(:field) do
+    let(:jira_issues) { [Jira::Issue.new(attributes)] }
+    let(:attributes) do
       {
         "id" => "100",
         "jira_key" => "FOO-100",

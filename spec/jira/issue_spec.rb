@@ -135,10 +135,10 @@ describe Jira::Issue do
 
   describe "#to_record" do
     subject do
-      Jira::Issue.new(issue_fields).to_record
+      Jira::Issue.new(issue_attributes).to_record
     end
 
-    let(:issue_fields) do
+    let(:issue_attributes) do
       {
         "id" => 1,
         "jira_key" => "FOO-1",
