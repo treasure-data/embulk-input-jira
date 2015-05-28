@@ -1,3 +1,3 @@
-## 0.0.1 (2015-xx-xx)
+## 0.0.1 (2015-05-28)
 
-(not released yet)
+The first release!!
