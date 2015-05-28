@@ -6,7 +6,7 @@ Gem::Specification.new do |spec|
   spec.summary       = "Jira input plugin for Embulk"
   spec.description   = "Loads records from Jira."
   spec.email         = ["k@uu59.org", "h.yoshihara@everyleaf.com"]
-  spec.licenses      = ["MIT"]
+  spec.licenses      = ["Apache2"]
   spec.homepage      = "https://github.com/treasure-data/embulk-input-jira"
 
   spec.files         = `git ls-files`.split("\n") + Dir["classpath/*.jar"]
