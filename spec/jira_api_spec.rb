@@ -33,7 +33,7 @@ describe Jira::Api do
       end
 
       it "retry SEARCH_RETRY_TIMES times then raise error" do
-        expect(Timeout).to receive(:timeout).exactly(Jira::Api::SEARCH_RETRY_TIMES)
+        expect(Timeout).to receive(:timeout).exactly(Jira::Api::SEARCH_RETRY_TIMES_DEFAULT)
         expect { subject }.to raise_error
       end
     end
