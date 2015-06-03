@@ -18,11 +18,24 @@ describe Jira::Api do
 
   describe "#search" do
     let(:jql) { "project=FOO" }
+    let(:api) { Jira::Api.new }
 
-    subject { Jira::Api.new.search(jql) }
+    subject { api.search(jql) }
 
     it do
       allow(Jiralicious).to receive(:search).with(jql)
+    end
+
+    describe "retry and timeout" do
+      before do
+        allow(Timeout).to receive(:timeout) { raise Timeout::Error }
+        allow(api).to receive(:sleep)
+      end
+
+      it "retry SEARCH_RETRY_TIMES times then raise error" do
+        expect(Timeout).to receive(:timeout).exactly(Jira::Api::SEARCH_RETRY_TIMES)
+        expect { subject }.to raise_error
+      end
     end
   end
 

@@ -1,8 +1,12 @@
 require "jiralicious"
 require "jira/issue"
+require "timeout"
 
 module Jira
   class Api
+    SEARCH_TIMEOUT = 60
+    SEARCH_RETRY_TIMES = 10
+
     def self.setup(&block)
       Jiralicious.configure(&block)
       new
@@ -15,7 +19,17 @@ module Jira
     end
 
     def search(jql, options={})
-      Jiralicious.search(jql, options)
+      times = 1
+      begin
+        Timeout.timeout(SEARCH_TIMEOUT) do
+          Jiralicious.search(jql, options)
+        end
+      rescue Timeout::Error
+        times += 1
+        sleep times # retry after some seconds for JIRA API perhaps under the overload
+        raise "JIRA API was too many timeouts" if times > SEARCH_RETRY_TIMES
+        retry
+      end
     end
 
     def total_count(jql)
