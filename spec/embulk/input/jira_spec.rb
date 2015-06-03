@@ -116,11 +116,6 @@ describe Embulk::Input::JiraInputPlugin do
 
     let(:guessed_config) do
       {
-        "username" => username,
-        "password" => password,
-        "uri" => uri,
-        "api_version" => "latest",
-        "auth_type" => "basic",
         "columns" => [
           {name: "id", type: :long},
           {name: "key", type: :string},
