@@ -94,8 +94,10 @@ module Embulk
 
       def run
         total_count = @jira.total_count(@jql)
+        last_page = (total_count.to_f / PER_PAGE).ceil
 
-        0.step(total_count, PER_PAGE) do |start_at|
+        0.step(total_count, PER_PAGE).with_index(1) do |start_at, page|
+          logger.debug "Fetching #{page} / #{last_page} page"
           @jira.search_issues(@jql, start_at: start_at).each do |issue|
             values = @attributes.map do |(attribute_name, type)|
               JiraInputPluginUtils.cast(issue[attribute_name], type)
