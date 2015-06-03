@@ -1,5 +1,7 @@
 require "embulk/input/jira-input-plugin-utils"
 require "jira/api"
+require "logger"
+require "time"
 
 module Embulk
   module Input
@@ -87,8 +89,10 @@ module Embulk
 
       def run
         total_count = @jira.total_count(@jql)
+        last_page = (total_count.to_f / PER_PAGE).ceil
 
-        0.step(total_count, PER_PAGE) do |start_at|
+        0.step(total_count, PER_PAGE).with_index(1) do |start_at, page|
+          logger.debug "Fetching #{page} / #{last_page} page"
           @jira.search_issues(@jql, start_at: start_at).each do |issue|
             values = @attributes.map do |(attribute_name, type)|
               JiraInputPluginUtils.cast(issue[attribute_name], type)
@@ -102,6 +106,21 @@ module Embulk
 
         commit_report = {}
         return commit_report
+      end
+
+      def self.logger
+        @logger ||=
+          begin
+            logger = Logger.new($stdout)
+            logger.formatter = proc do |severity, datetime, progname, msg|
+              "#{datetime.strftime("%Y-%m-%d %H:%M:%S.%L %z")} [#{severity}] #{msg}\n"
+            end
+            logger
+          end
+      end
+
+      def logger
+        self.class.logger
       end
     end
   end

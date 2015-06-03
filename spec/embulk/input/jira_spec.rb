@@ -164,7 +164,11 @@ describe Embulk::Input::JiraInputPlugin do
 
   describe "#run" do
     subject do
-      Embulk::Input::JiraInputPlugin.new(task, nil, nil, page_builder).run
+      result = nil
+      capture_output(:out) do
+        result = Embulk::Input::JiraInputPlugin.new(task, nil, nil, page_builder).run
+      end
+      result
     end
 
     let(:jira_api) { Jira::Api.new }
@@ -238,5 +242,22 @@ describe Embulk::Input::JiraInputPlugin do
     it "returns VERSION file content without line-break" do
       expect(subject).to eq File.read(version_file_path).strip
     end
+  end
+
+  describe ".logger" do
+    let(:logger) { Embulk::Input::JiraInputPlugin.logger }
+
+    subject { logger }
+
+    it { is_expected.to be_a(Logger) }
+  end
+
+  describe "#logger" do
+    let(:instance) { Embulk::Input::JiraInputPlugin.new({}, nil, nil, nil) }
+    let(:logger) { instance.logger }
+
+    subject { logger }
+
+    it { is_expected.to be_a(Logger) }
   end
 end
