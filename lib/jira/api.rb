@@ -6,7 +6,7 @@ module Jira
   class Api
     SEARCH_TIMEOUT = 5
     SEARCH_ISSUES_TIMEOUT = 60
-    SEARCH_RETRY_TIMES = 10
+    SEARCH_RETRY_TIMES_DEFAULT = 10
 
     def self.setup(&block)
       Jiralicious.configure(&block)
@@ -14,7 +14,7 @@ module Jira
     end
 
     def search_issues(jql, options={})
-      timeout_and_retry(SEARCH_ISSUES_TIMEOUT, SEARCH_RETRY_TIMES) do
+      timeout_and_retry(SEARCH_ISSUES_TIMEOUT) do
         search(jql, options).issues.map do |issue|
           ::Jira::Issue.new(issue)
         end
@@ -22,7 +22,7 @@ module Jira
     end
 
     def search(jql, options={})
-      timeout_and_retry(SEARCH_TIMEOUT, SEARCH_RETRY_TIMES) do
+      timeout_and_retry(SEARCH_TIMEOUT) do
         Jiralicious.search(jql, options)
       end
     end
@@ -33,7 +33,7 @@ module Jira
 
     private
 
-    def timeout_and_retry(wait, retry_times = 10, &block)
+    def timeout_and_retry(wait, retry_times = SEARCH_RETRY_TIMES_DEFAULT, &block)
       times = 1
       begin
         Timeout.timeout(wait) do
