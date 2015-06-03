@@ -102,4 +102,28 @@ describe Jira::Api do
       expect(subject).to eq results_count
     end
   end
+
+  describe "#timeout_and_retry" do
+    let(:wait) { 1 }
+    let(:retry_times) { 3 }
+    let(:jira_api) { Jira::Api.new }
+    let(:block) { proc{ "it works" } }
+
+    subject { jira_api.send(:timeout_and_retry, wait, retry_times, &block) }
+
+    before do
+      allow(jira_api).to receive(:sleep)
+    end
+
+    it "return given block result if timeout is not occured" do
+      expect(subject).to eq block.call
+    end
+
+    it "Always timeout, raise error after N times retry" do
+      allow(Timeout).to receive(:timeout) { raise Timeout::Error }
+
+      expect(Timeout).to receive(:timeout).with(wait).exactly(retry_times).times
+      expect { subject }.to raise_error(Timeout::Error)
+    end
+  end
 end
