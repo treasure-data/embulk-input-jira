@@ -6,7 +6,7 @@ module Jira
   class Api
     SEARCH_TIMEOUT_SECONDS = 5
     SEARCH_ISSUES_TIMEOUT_SECONDS = 60
-    SEARCH_RETRY_TIMES_DEFAULT = 10
+    DEFAULT_SEARCH_RETRY_TIMES = 10
 
     def self.setup(&block)
       Jiralicious.configure(&block)
@@ -33,7 +33,7 @@ module Jira
 
     private
 
-    def timeout_and_retry(wait, retry_times = SEARCH_RETRY_TIMES_DEFAULT, &block)
+    def timeout_and_retry(wait, retry_times = DEFAULT_SEARCH_RETRY_TIMES, &block)
       count = 1
       begin
         Timeout.timeout(wait) do
