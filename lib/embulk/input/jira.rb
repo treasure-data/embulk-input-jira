@@ -1,5 +1,7 @@
 require "embulk/input/jira-input-plugin-utils"
 require "jira/api"
+require "logger"
+require "time"
 
 module Embulk
   module Input
@@ -107,6 +109,21 @@ module Embulk
 
         commit_report = {}
         return commit_report
+      end
+
+      def self.logger
+        @logger ||=
+          begin
+            logger = Logger.new($stdout)
+            logger.formatter = proc do |severity, datetime, progname, msg|
+              "#{datetime.strftime("%Y-%m-%d %H:%M:%S.%L %z")} [#{severity}] #{msg}\n"
+            end
+            logger
+          end
+      end
+
+      def logger
+        self.class.logger
       end
     end
   end
