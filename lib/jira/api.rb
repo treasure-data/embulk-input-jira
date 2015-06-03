@@ -34,15 +34,15 @@ module Jira
     private
 
     def timeout_and_retry(wait, retry_times = SEARCH_RETRY_TIMES_DEFAULT, &block)
-      times = 1
+      count = 1
       begin
         Timeout.timeout(wait) do
           yield
         end
       rescue Timeout::Error => e
-        times += 1
-        sleep times # retry after some seconds for JIRA API perhaps under the overload
-        raise e if times > retry_times
+        count += 1
+        sleep count # retry after some seconds for JIRA API perhaps under the overload
+        raise e if count > retry_times
         retry
       end
     end
