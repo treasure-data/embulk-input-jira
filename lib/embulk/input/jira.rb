@@ -67,9 +67,6 @@ module Embulk
         columns = JiraInputPluginUtils.guess_columns(records)
 
         guessed_config = {
-          "username" => username,
-          "password" => password,
-          "uri" => uri,
           "api_version" => api_version,
           "auth_type" => auth_type,
           "columns" => columns,
