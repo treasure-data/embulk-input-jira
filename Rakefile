@@ -2,7 +2,7 @@ require "bundler/gem_tasks"
 require 'rspec/core/rake_task'
 require "json"
 require "pathname"
-require "httpclient"
+require "open-uri"
 
 
 task default: :spec
@@ -36,7 +36,8 @@ namespace :release do
 
     # Update ChangeLog
     pr_descriptions = pr_numbers.map do |number|
-      payload = JSON.parse(HTTPClient.get("https://api.github.com/repos/treasure-data/embulk-input-jira/issues/#{number.gsub("#", "")}").body)
+      body = open("https://api.github.com/repos/treasure-data/embulk-input-jira/issues/#{number.gsub("#", "")}").read
+      payload = JSON.parse(body)
       "* [] #{payload["title"]} [#{number}](https://github.com/treasure-data/embulk-input-jira/pull/#{number.gsub('#', '')}) "
     end.join("\n")
 
