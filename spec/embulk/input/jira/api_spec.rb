@@ -1,7 +1,4 @@
-# TODO: move to spec/jira/api_spec.rb
-
 require "spec_helper"
-require "embulk/input/jira/api"
 
 describe Embulk::Input::Jira::Api do
   describe ".setup" do

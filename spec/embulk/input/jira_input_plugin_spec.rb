@@ -1,5 +1,4 @@
 require "spec_helper"
-require "embulk/input/jira"
 
 describe Embulk::Input::JiraInputPlugin do
   let(:username) { "jira-user" }

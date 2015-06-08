@@ -1,5 +1,4 @@
 require "spec_helper"
-require "embulk/input/jira/issue"
 
 describe Embulk::Input::Jira::Issue do
   describe ".initialize" do

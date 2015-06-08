@@ -14,6 +14,7 @@ if ENV["COVERAGE"]
 end
 
 $LOAD_PATH.unshift File.expand_path("../../lib", __FILE__)
+require "embulk/input/jira"
 
 RSpec.configure do |config|
   config.include StdoutAndErrCapture
