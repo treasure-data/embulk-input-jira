@@ -1,7 +1,6 @@
 require "spec_helper"
-require "jira/issue"
 
-describe Jira::Issue do
+describe Embulk::Input::Jira::Issue do
   describe ".initialize" do
     context "when argument has 'fields' key" do
       let(:issue_attributes) do
@@ -20,15 +19,15 @@ describe Jira::Issue do
       end
 
       it "has @id with argument['id']" do
-        expect(Jira::Issue.new(issue_attributes).id).to eq issue_attributes["id"]
+        expect(Embulk::Input::Jira::Issue.new(issue_attributes).id).to eq issue_attributes["id"]
       end
 
       it "has @key with argument['jira_key']" do
-        expect(Jira::Issue.new(issue_attributes).key).to eq issue_attributes["jira_key"]
+        expect(Embulk::Input::Jira::Issue.new(issue_attributes).key).to eq issue_attributes["jira_key"]
       end
 
       it "has @fields with argument['fields']" do
-        expect(Jira::Issue.new(issue_attributes).fields).to eq issue_attributes["fields"]
+        expect(Embulk::Input::Jira::Issue.new(issue_attributes).fields).to eq issue_attributes["fields"]
       end
     end
 
@@ -38,13 +37,13 @@ describe Jira::Issue do
       end
 
       it "raises error" do
-        expect { Jira::Issue.new(issue_attributes) }.to raise_error
+        expect { Embulk::Input::Jira::Issue.new(issue_attributes) }.to raise_error
       end
     end
   end
 
   describe "#[]" do
-    subject { Jira::Issue.new(issue_attributes)[attribute_name] }
+    subject { Embulk::Input::Jira::Issue.new(issue_attributes)[attribute_name] }
 
     let(:issue_attributes) do
       {
@@ -135,7 +134,7 @@ describe Jira::Issue do
 
   describe "#to_record" do
     subject do
-      Jira::Issue.new(issue_attributes).to_record
+      Embulk::Input::Jira::Issue.new(issue_attributes).to_record
     end
 
     let(:issue_attributes) do
