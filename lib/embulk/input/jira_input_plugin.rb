@@ -1,4 +1,4 @@
-require "embulk/input/jira-input-plugin-utils"
+require "embulk/input/jira_input_plugin_utils"
 require "embulk/input/jira/api"
 require "logger"
 require "time"
