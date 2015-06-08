@@ -1,14 +1,14 @@
 # TODO: move to spec/jira/api_spec.rb
 
 require "spec_helper"
-require "jira/api"
+require "embulk/input/jira/api"
 
-describe Jira::Api do
+describe Embulk::Input::Jira::Api do
   describe ".setup" do
-    subject { Jira::Api.setup {}  }
+    subject { Embulk::Input::Jira::Api.setup {}  }
 
-    it "returns Jira::Api instance" do
-      expect(subject.is_a?(Jira::Api)).to be_truthy
+    it "returns Embulk::Input::Jira::Api instance" do
+      expect(subject.is_a?(Embulk::Input::Jira::Api)).to be_truthy
     end
 
     it "calls Jiralicious.configure" do
@@ -18,7 +18,7 @@ describe Jira::Api do
 
   describe "#search" do
     let(:jql) { "project=FOO" }
-    let(:api) { Jira::Api.new }
+    let(:api) { Embulk::Input::Jira::Api.new }
 
     subject { api.search(jql) }
 
@@ -33,7 +33,7 @@ describe Jira::Api do
       end
 
       it "retry DEFAULT_SEARCH_RETRY_TIMES times then raise error" do
-        expect(Timeout).to receive(:timeout).exactly(Jira::Api::DEFAULT_SEARCH_RETRY_TIMES)
+        expect(Timeout).to receive(:timeout).exactly(Embulk::Input::Jira::Api::DEFAULT_SEARCH_RETRY_TIMES)
         expect { subject }.to raise_error
       end
     end
@@ -70,20 +70,20 @@ describe Jira::Api do
       ]
     end
 
-    subject { Jira::Api.new.search_issues(jql) }
+    subject { Embulk::Input::Jira::Api.new.search_issues(jql) }
 
     it do
       allow(Jiralicious).to receive_message_chain(:search, :issues).and_return(results)
 
       expect(subject).to be_kind_of Array
-      expect(subject.map(&:class)).to match_array [Jira::Issue, Jira::Issue]
+      expect(subject.map(&:class)).to match_array [Embulk::Input::Jira::Issue, Embulk::Input::Jira::Issue]
     end
   end
 
   describe "#total_count" do
     subject { jira_api.total_count(jql) }
 
-    let(:jira_api) { Jira::Api.new }
+    let(:jira_api) { Embulk::Input::Jira::Api.new }
     let(:jql) { "project=FOO" }
     let(:results) { Object.new } # add mock later
     let(:results_count) { 5 }
@@ -92,7 +92,7 @@ describe Jira::Api do
       allow(results).to receive(:num_results).and_return(results_count)
     end
 
-    it "calls Jira::Api#search with proper arguments" do
+    it "calls Embulk::Input::Jira::Api#search with proper arguments" do
       expect(jira_api).to receive(:search).with(jql, max_results: 1).and_return(results)
       subject
     end
@@ -106,7 +106,7 @@ describe Jira::Api do
   describe "#timeout_and_retry" do
     let(:wait) { 1 }
     let(:retry_times) { 3 }
-    let(:jira_api) { Jira::Api.new }
+    let(:jira_api) { Embulk::Input::Jira::Api.new }
     let(:block) { proc{ "it works" } }
 
     subject { jira_api.send(:timeout_and_retry, wait, retry_times, &block) }

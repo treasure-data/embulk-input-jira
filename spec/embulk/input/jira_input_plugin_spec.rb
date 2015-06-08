@@ -94,8 +94,8 @@ describe Embulk::Input::JiraInputPlugin do
 
     let(:config) { Object.new } # add mock later
 
-    let(:jira_api) { Jira::Api.new }
-    let(:jira_issues) { [Jira::Issue.new(attributes)] }
+    let(:jira_api) { Embulk::Input::Jira::Api.new }
+    let(:jira_issues) { [Embulk::Input::Jira::Issue.new(attributes)] }
     let(:attributes) do
       {
         "id" => "100",
@@ -134,13 +134,13 @@ describe Embulk::Input::JiraInputPlugin do
       allow(config).to receive(:param).with("jql", :string).and_return(jql)
     end
 
-    it "setup Jira::Api" do
-      expect(Jira::Api).to receive(:setup).and_return(jira_api)
+    it "setup Embulk::Input::Jira::Api" do
+      expect(Embulk::Input::Jira::Api).to receive(:setup).and_return(jira_api)
       subject
     end
 
     it "returns guessed config" do
-      allow(Jira::Api).to receive(:setup).and_return(jira_api)
+      allow(Embulk::Input::Jira::Api).to receive(:setup).and_return(jira_api)
 
       expect(subject).to eq guessed_config
     end
@@ -151,13 +151,13 @@ describe Embulk::Input::JiraInputPlugin do
 
     subject { Embulk::Input::JiraInputPlugin.new({}, nil, nil, nil) }
 
-    it "setup Jira::Api" do
-      expect(Jira::Api).to receive(:setup)
+    it "setup Embulk::Input::Jira::Api" do
+      expect(Embulk::Input::Jira::Api).to receive(:setup)
       subject
     end
 
     it "is a Embulk::InputPlugin" do
-      allow(Jira::Api).to receive(:setup)
+      allow(Embulk::Input::Jira::Api).to receive(:setup)
       expect(subject).to be_a(Embulk::InputPlugin)
     end
   end
@@ -171,12 +171,12 @@ describe Embulk::Input::JiraInputPlugin do
       result
     end
 
-    let(:jira_api) { Jira::Api.new }
+    let(:jira_api) { Embulk::Input::Jira::Api.new }
     let(:jira_issues) do
       (1..total_count).map do |i|
         attributes = fields.merge("id" => i.to_s, "jira_key" => "FOO-#{i}")
 
-        Jira::Issue.new(attributes)
+        Embulk::Input::Jira::Issue.new(attributes)
       end
     end
 
@@ -207,7 +207,7 @@ describe Embulk::Input::JiraInputPlugin do
 
     before do
       # TODO: create stubs without each `it` expected
-      allow(Jira::Api).to receive(:setup).and_return(jira_api)
+      allow(Embulk::Input::Jira::Api).to receive(:setup).and_return(jira_api)
 
       0.step(total_count, max_result) do |start_at|
         issues = jira_issues[start_at..(start_at + max_result - 1)]
