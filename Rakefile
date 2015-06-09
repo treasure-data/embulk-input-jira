@@ -3,6 +3,7 @@ require 'rspec/core/rake_task'
 require "json"
 require "pathname"
 require "open-uri"
+require File.expand_path("../lib/embulk/input/jira/version.rb", __FILE__)
 
 
 task default: :spec
@@ -16,13 +17,12 @@ namespace :release do
   desc "Add header of now version release to ChangeLog and bump up version"
   task :prepare do
     root_dir = Pathname.new(File.expand_path("../", __FILE__))
-    version_file = root_dir.join("VERSION")
     changelog_file = root_dir.join("CHANGELOG.md")
 
     system("git fetch origin")
 
     # detect merged PR
-    old_version = version_file.read.strip
+    old_version = Embulk::Input::Jira::VERSION
     pr_numbers = `git log v#{old_version}..origin/master --oneline`.scan(/#[0-9]+/)
 
     if !$?.success? || pr_numbers.empty?
@@ -51,7 +51,11 @@ HEADER
     File.open(changelog_file, "w") {|f| f.write(new_changelog) }
 
     # Update version.rb
-    File.open(version_file, "w") {|f| f.write new_version }
+    version_file = root_dir.join("./lib/embulk/input/jira/version.rb")
+    old_content = version_file.read
+    File.open(version_file, "w") do |f|
+      f.write old_content.gsub(old_version, new_version)
+    end
 
     # Update Gemfile.lock
     system("bundle install")
