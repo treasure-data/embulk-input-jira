@@ -1,4 +1,4 @@
-require_relative "./lib/embulk/input/jira/version"
+require File.expand_path("../lib/embulk/input/jira/version.rb", __FILE__)
 
 Gem::Specification.new do |spec|
   spec.name          = "embulk-input-jira"

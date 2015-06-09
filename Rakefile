@@ -3,7 +3,7 @@ require 'rspec/core/rake_task'
 require "json"
 require "pathname"
 require "open-uri"
-require_relative "./lib/embulk/input/jira/version"
+require File.expand_path("../lib/embulk/input/jira/version.rb", __FILE__)
 
 
 task default: :spec
