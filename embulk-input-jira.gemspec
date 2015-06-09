@@ -1,7 +1,8 @@
+require_relative "./lib/embulk/input/jira/version"
 
 Gem::Specification.new do |spec|
   spec.name          = "embulk-input-jira"
-  spec.version       = File.read(File.expand_path("../VERSION", __FILE__)).strip
+  spec.version       = Embulk::Input::Jira::VERSION
   spec.authors       = ["uu59", "yoshihara"]
   spec.summary       = "Jira input plugin for Embulk"
   spec.description   = "Loads records from Jira."
