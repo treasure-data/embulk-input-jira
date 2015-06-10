@@ -7,6 +7,7 @@ module Embulk
   module Input
     class JiraInputPlugin < InputPlugin
       PER_PAGE = 50
+      GUESS_RECORDS_COUNT = 10
 
       Plugin.register_input("jira", self)
 
@@ -58,7 +59,7 @@ module Embulk
         end
 
         # TODO: we use 0..10 issues to guess config?
-        records = jira.search_issues(jql)[0..10].map do |issue|
+        records = jira.search_issues(jql, max_results: GUESS_RECORDS_COUNT).map do |issue|
           issue.to_record
         end
 
