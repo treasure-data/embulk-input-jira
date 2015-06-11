@@ -11,6 +11,7 @@ in:
     before do
       config_file.puts config
       config_file.close
+      allow(org.embulk.spi.Exec).to receive_message_chain(:session, :isPreview).and_return(true)
     end
 
     subject {

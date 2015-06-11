@@ -8,6 +8,7 @@ module Embulk
     class JiraInputPlugin < InputPlugin
       PER_PAGE = 50
       GUESS_RECORDS_COUNT = 10
+      PREVIEW_RECORDS_COUNT = 15
 
       Plugin.register_input("jira", self)
 
@@ -85,12 +86,21 @@ module Embulk
       end
 
       def run
-        total_count = @jira.total_count(@jql)
-        last_page = (total_count.to_f / PER_PAGE).ceil
+        # NOTE: This is workaround for "org.embulk.spi.Exec.isPreview"
+        if org.embulk.spi.Exec.session().isPreview()
+          options = {max_results: PREVIEW_RECORDS_COUNT}
+          total_count = PREVIEW_RECORDS_COUNT
+          last_page = 1
+          logger.debug "For preview mode, JIRA input plugin fetches records at most #{PREVIEW_RECORDS_COUNT}"
+        else
+          options = {}
+          total_count = @jira.total_count(@jql)
+          last_page = (total_count.to_f / PER_PAGE).ceil
+        end
 
         0.step(total_count, PER_PAGE).with_index(1) do |start_at, page|
           logger.debug "Fetching #{page} / #{last_page} page"
-          @jira.search_issues(@jql, start_at: start_at).each do |issue|
+          @jira.search_issues(@jql, options.merge(start_at: start_at)).each do |issue|
             values = @attributes.map do |(attribute_name, type)|
               JiraInputPluginUtils.cast(issue[attribute_name], type)
             end
