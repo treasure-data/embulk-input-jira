@@ -87,6 +87,7 @@ module Embulk
 
       def run
         # NOTE: This is workaround for "org.embulk.spi.Exec.isPreview"
+        # TODO: Extract process for preview command to method
         if org.embulk.spi.Exec.session().isPreview()
           options = {max_results: PREVIEW_RECORDS_COUNT}
           total_count = PREVIEW_RECORDS_COUNT
