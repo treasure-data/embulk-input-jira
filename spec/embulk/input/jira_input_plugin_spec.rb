@@ -125,7 +125,7 @@ describe Embulk::Input::JiraInputPlugin do
     end
 
     before do
-      allow(jira_api).to receive(:search_issues).and_return(jira_issues)
+      allow(jira_api).to receive(:search_issues).with(jql, max_results: Embulk::Input::JiraInputPlugin::GUESS_RECORDS_COUNT).and_return(jira_issues)
 
       allow(config).to receive(:param).with("username", :string).and_return(username)
       allow(config).to receive(:param).with("password", :string).and_return(password)
@@ -205,6 +205,8 @@ describe Embulk::Input::JiraInputPlugin do
     let(:commit_report) { {} }
 
     before do
+      allow(org.embulk.spi.Exec).to receive_message_chain(:session, :isPreview).and_return(false)
+
       # TODO: create stubs without each `it` expected
       allow(Embulk::Input::Jira::Api).to receive(:setup).and_return(jira_api)
 
