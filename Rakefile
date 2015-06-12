@@ -38,7 +38,7 @@ namespace :release do
     pr_descriptions = pr_numbers.map do |number|
       body = open("https://api.github.com/repos/treasure-data/embulk-input-jira/issues/#{number.gsub("#", "")}").read
       payload = JSON.parse(body)
-      "* [] #{payload["title"]} [#{number}](https://github.com/treasure-data/embulk-input-jira/pull/#{number.gsub('#', '')}) "
+      "* [] #{payload["title"]} [#{number}](https://github.com/treasure-data/embulk-input-jira/pull/#{number.gsub('#', '')})"
     end.join("\n")
 
     new_changelog = <<-HEADER
