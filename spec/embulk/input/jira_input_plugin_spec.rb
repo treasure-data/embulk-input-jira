@@ -119,7 +119,9 @@ describe Embulk::Input::JiraInputPlugin do
           {name: "id", type: :long},
           {name: "key", type: :string},
           {name: "project.name", type: :string},
-          {name: "comment", type: :string}
+          {name: "project.key", type: :string},
+          {name: "comment.total", type: :long},
+          {name: "comment.comments", type: :string},
         ]
       }
     end
