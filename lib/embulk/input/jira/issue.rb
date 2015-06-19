@@ -20,16 +20,29 @@ module Embulk
             return key
           end
 
-          chunk = fields
-          attribute.split('.').each do |key|
-            chunk = chunk[key]
-            return chunk if chunk.nil?
+          attribute_keys = attribute.split('.')
+
+          fetch(fields, attribute_keys)
+        end
+
+        def fetch(fields, keys)
+          return fields if fields.nil?
+
+          if keys.empty?
+            return fields if !fields.is_a?(Hash) && !fields.is_a?(Array)
+
+            if fields.is_a?(Hash) || fields.any? { |element| element.is_a?(Hash) }
+              return fields.to_json
+            else
+              return fields.map(&:to_s).join(",")
+            end
           end
 
-          if chunk.is_a?(Array) || chunk.is_a?(Hash)
-            chunk.to_json.to_s
+          key = keys.shift
+          if fields.is_a?(Array)
+            fetch(fields.map {|hash| hash[key] }, keys)
           else
-            chunk
+            fetch(fields[key], keys)
           end
         end
 

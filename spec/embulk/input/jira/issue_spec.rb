@@ -49,85 +49,97 @@ describe Embulk::Input::Jira::Issue do
       {
         "id" => "1",
         "jira_key" => "FOO-1",
-        "fields" => {
-          "summary" => "jira issue",
-          "project" => project_attribute,
-          "labels" =>
-          [
-            "Feature",
-            "WantTo"
-          ],
-          "priority" => {
-            "iconUrl" => "https://jira-api/images/icon.png",
-            "name" => "Must",
-            "id" => "1"
-          },
-          "customfield_1" => nil,
+        "fields" => fields_attributes
+      }
+    end
+
+    context "when target attribute_name is especially key" do
+      let(:fields_attributes) { {} }
+
+      context 'id' do
+        let(:attribute_name) { 'id' }
+
+        it "returns issue id" do
+          expect(subject).to eq "1"
+        end
+      end
+
+      context 'key' do
+        let(:attribute_name) { 'key' }
+
+        it "returns issue key" do
+          expect(subject).to eq "FOO-1"
+        end
+      end
+    end
+
+    context "when fields_attributes is `{'hoge' => 'fuga'}` and attribute_name is 'hoge'" do
+      let(:fields_attributes) do
+        {'hoge' => 'fuga'}
+      end
+
+      let(:attribute_name) { 'hoge' }
+
+      it "returns 'fuga'" do
+        expect(subject).to eq "fuga"
+      end
+    end
+
+    context "when fields_attributes is `{'hoge' => {'fuga' => 'piyo', 'foo' => 'bar'}}`" do
+      let(:fields_attributes) do
+        {'hoge' => {'fuga' => 'piyo', 'foo' => 'bar'}}
+      end
+
+      context "when attribute_name is 'hoge'" do
+        let(:attribute_name) { 'hoge' }
+
+        it "returns hoge's JSON" do
+          expect(subject).to eq({'fuga' => 'piyo', 'foo' => 'bar'}.to_json)
+        end
+      end
+
+      context "when attribute_name is 'hoge.fuga'" do
+        let(:attribute_name) { 'hoge.fuga' }
+
+        it "returns 'piyo'" do
+          expect(subject).to eq 'piyo'
+        end
+      end
+    end
+
+    context "when fields_attributes is `{'hoge' => [{'bar' => 'piyo1'}, {'bar' => 'piyo2'}]}`" do
+      let(:fields_attributes) do
+        {'hoge' => [{'bar' => 'piyo1'}, {'bar' => 'piyo2'}]}
+      end
+
+      context "when attribute_name is 'hoge'" do
+        let(:attribute_name) { 'hoge' }
+
+        it "returns JSON array" do
+          expect(subject).to eq [{'bar' => 'piyo1'}, {'bar' => 'piyo2'}].to_json
+        end
+      end
+
+      context "when attribute_name is 'hoge.bar'" do
+        let(:attribute_name) { 'hoge.bar' }
+
+        it "returns CSV values assigned by 'bar' key" do
+          expect(subject).to eq 'piyo1,piyo2'
+        end
+      end
+    end
+
+    context "when fields_attributes is `{'hoge' => ['elem1', 'elem2', 'elem3']}` and attribute_name is 'hoge'" do
+      let(:fields_attributes) do
+        {
+          'hoge' => ['elem1', 'elem2', 'elem3'],
         }
-      }
-    end
-
-    let(:project_attribute) do
-      {
-        "key" => "FOO",
-      }
-    end
-
-    context 'id' do
-      let(:attribute_name) { 'id' }
-
-      it "returns issue id" do
-        expect(subject).to eq "1"
-      end
-    end
-
-    context 'key' do
-      let(:attribute_name) { 'key' }
-
-      it "returns issue key" do
-        expect(subject).to eq "FOO-1"
-      end
-    end
-
-    context 'summary' do
-      let(:attribute_name) { 'summary' }
-
-      it "returns issue summary" do
-        expect(subject).to eq 'jira issue'
-      end
-    end
-
-    context 'project.key' do
-      let(:attribute_name) { 'project.key' }
-
-      context "when project is not nil" do
-        it "returns issue's project key" do
-          expect(subject).to eq 'FOO'
-        end
       end
 
-      context "when project is nil" do
-        let(:project_attribute) { nil }
+      let(:attribute_name) { 'hoge' }
 
-        it "returns nil" do
-          expect(subject).to be_nil
-        end
-      end
-    end
-
-    context 'labels' do
-      let(:attribute_name) { 'labels' }
-
-      it "returns issue's labels JSON string" do
-        expect(subject).to eq '["Feature","WantTo"]'
-      end
-    end
-
-    context 'priority' do
-      let(:attribute_name) { 'priority' }
-
-      it "returns issue's priority JSON string" do
-        expect(subject).to eq '{"iconUrl":"https://jira-api/images/icon.png","name":"Must","id":"1"}'
+      it "returns CSV values assigned by 'hoge'" do
+        expect(subject).to eq 'elem1,elem2,elem3'
       end
     end
   end
