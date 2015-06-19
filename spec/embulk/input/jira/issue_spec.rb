@@ -73,73 +73,73 @@ describe Embulk::Input::Jira::Issue do
       end
     end
 
-    context "when fields_attributes is `{'hoge' => 'fuga'}` and attribute_name is 'hoge'" do
+    context "when fields_attributes is Hash" do
       let(:fields_attributes) do
-        {'hoge' => 'fuga'}
+        {'key' => 'value'}
       end
 
-      let(:attribute_name) { 'hoge' }
+      let(:attribute_name) { 'key' }
 
-      it "returns 'fuga'" do
-        expect(subject).to eq "fuga"
+      it "returns 'value'" do
+        expect(subject).to eq "FOO-1"
       end
     end
 
-    context "when fields_attributes is `{'hoge' => {'fuga' => 'piyo', 'foo' => 'bar'}}`" do
+    context "when fields_attributes is `{'key1' => {'key2' => 'value2', 'key3' => 'value3'}}`" do
       let(:fields_attributes) do
-        {'hoge' => {'fuga' => 'piyo', 'foo' => 'bar'}}
+        {'key1' => {'key2' => 'value2', 'key3' => 'value3'}}
       end
 
-      context "when attribute_name is 'hoge'" do
-        let(:attribute_name) { 'hoge' }
+      context "when attribute_name is 'key1'" do
+        let(:attribute_name) { 'key1' }
 
-        it "returns hoge's JSON" do
-          expect(subject).to eq({'fuga' => 'piyo', 'foo' => 'bar'}.to_json)
+        it "returns key1's JSON" do
+          expect(subject).to eq({'key2' => 'value2', 'key3' => 'value3'}.to_json)
         end
       end
 
-      context "when attribute_name is 'hoge.fuga'" do
-        let(:attribute_name) { 'hoge.fuga' }
+      context "when attribute_name is 'key1.key2'" do
+        let(:attribute_name) { 'key1.key2' }
 
-        it "returns 'piyo'" do
-          expect(subject).to eq 'piyo'
+        it "returns 'value2'" do
+          expect(subject).to eq 'value2'
         end
       end
     end
 
-    context "when fields_attributes is `{'hoge' => [{'bar' => 'piyo1'}, {'bar' => 'piyo2'}]}`" do
+    context "when fields_attributes is `{'key1' => [{'key2' => 'value2-1'}, {'key2' => 'value2-2'}]}`" do
       let(:fields_attributes) do
-        {'hoge' => [{'bar' => 'piyo1'}, {'bar' => 'piyo2'}]}
+        {'key1' => [{'key2' => 'value2-1'}, {'key2' => 'value2-2'}]}
       end
 
-      context "when attribute_name is 'hoge'" do
-        let(:attribute_name) { 'hoge' }
+      context "when attribute_name is 'key1'" do
+        let(:attribute_name) { 'key1' }
 
         it "returns JSON array" do
-          expect(subject).to eq [{'bar' => 'piyo1'}, {'bar' => 'piyo2'}].to_json
+          expect(subject).to eq [{'key2' => 'value2-1'}, {'key2' => 'value2-2'}].to_json
         end
       end
 
-      context "when attribute_name is 'hoge.bar'" do
-        let(:attribute_name) { 'hoge.bar' }
+      context "when attribute_name is 'key1.key2'" do
+        let(:attribute_name) { 'key1.key2' }
 
-        it "returns CSV values assigned by 'bar' key" do
-          expect(subject).to eq 'piyo1,piyo2'
+        it "returns CSV values assigned by 'key2' key" do
+          expect(subject).to eq 'value2-1,value2-2'
         end
       end
     end
 
-    context "when fields_attributes is `{'hoge' => ['elem1', 'elem2', 'elem3']}` and attribute_name is 'hoge'" do
+    context "when fields_attributes is `{'key1' => ['element1', 'element2', 'element3']}`" do
       let(:fields_attributes) do
         {
-          'hoge' => ['elem1', 'elem2', 'elem3'],
+          'key1' => ['element1', 'element2', 'element3'],
         }
       end
 
-      let(:attribute_name) { 'hoge' }
+      let(:attribute_name) { 'key1' }
 
-      it "returns CSV values assigned by 'hoge'" do
-        expect(subject).to eq 'elem1,elem2,elem3'
+      it "returns CSV values assigned by 'key1'" do
+        expect(subject).to eq 'element1,element2,element3'
       end
     end
   end
@@ -166,36 +166,41 @@ describe Embulk::Input::Jira::Issue do
       }.merge(exptected_record_from_fields)
     end
 
-    context "when fields_attributes is `{'hoge' => 'fuga'}`" do
+    context "when fields_attributes is `{'key' => 'value'}`" do
       let(:fields_attributes) do
-        {'hoge' => 'fuga'}
+        {'key' => 'value'}
       end
 
       let(:exptected_record_from_fields) do
-        {'hoge' => 'fuga'}
+        {'key' => 'value'}
       end
 
       it_behaves_like "return guessed record"
     end
 
-    context "when fields_attributes is `{'hoge' => {'fuga' => 'piyo', 'foo' => 'bar'}}`" do
+    context "when fields_attributes is `{'key1' => {'key2' => 'value2', 'key3' => 'value3'}}`" do
       let(:fields_attributes) do
-        {'hoge' => {'fuga' => 'piyo', 'foo' => 'bar'}}
+        {
+          'key1' => {
+            'key2' => 'value2',
+            'key3' => 'value3',
+          }
+        }
       end
 
       let(:exptected_record_from_fields) do
         {
-          "hoge.fuga" => "piyo",
-          "hoge.foo" => "bar"
+          "key1.key2" => "value2",
+          "key1.key3" => "value3"
         }
       end
 
       it_behaves_like "return guessed record"
     end
 
-    context "when fields_attributes is `{'hoge' => {'fuga' => {'piyo' => last_child}}}`" do
+    context "when fields_attributes is `{'key1' => {'key2' => {'key3' => last_child}}}`" do
       let(:fields_attributes) do
-        {'hoge' => {'fuga' => {'piyo' => last_child}}}
+        {'key1' => {'key2' => {'key3' => last_child}}}
       end
 
       context "when last_child is String" do
@@ -204,7 +209,7 @@ describe Embulk::Input::Jira::Issue do
         end
 
         let(:exptected_record_from_fields) do
-          {"hoge.fuga.piyo" => "String"}
+          {"key1.key2.key3" => "String"}
         end
 
         it_behaves_like "return guessed record"
@@ -216,7 +221,7 @@ describe Embulk::Input::Jira::Issue do
         end
 
         let(:exptected_record_from_fields) do
-          {"hoge.fuga.piyo.key" => "BAR-1"}
+          {"key1.key2.key3.key" => "BAR-1"}
         end
 
         it_behaves_like "return guessed record"
@@ -228,7 +233,7 @@ describe Embulk::Input::Jira::Issue do
         end
 
         let(:exptected_record_from_fields) do
-          {"hoge.fuga.piyo.id" => "20"}
+          {"key1.key2.key3.id" => "20"}
         end
 
         it_behaves_like "return guessed record"
@@ -240,7 +245,7 @@ describe Embulk::Input::Jira::Issue do
         end
 
         let(:exptected_record_from_fields) do
-          {"hoge.fuga.piyo.name" => "Foo name"}
+          {"key1.key2.key3.name" => "Foo name"}
         end
 
         it_behaves_like "return guessed record"
@@ -248,11 +253,11 @@ describe Embulk::Input::Jira::Issue do
 
       context "when last_child has another key except 'key', 'id', 'name'" do
         let(:last_child) do
-          {"bar" => "piyo"}
+          {"customfield_0001" => "value0001"}
         end
 
         let(:exptected_record_from_fields) do
-          {"hoge.fuga.piyo" => "{\"bar\":\"piyo\"}"}
+          {"key1.key2.key3" => "{\"customfield_0001\":\"value0001\"}"}
         end
 
         it_behaves_like "return guessed record"
@@ -261,55 +266,55 @@ describe Embulk::Input::Jira::Issue do
       context "when last_child Hash Array" do
         let(:last_child) do
           [
-            {"key4" => "value1", "key5" => "value2"},
-            {"key6" => "value3", "key5" => "value4"},
+            {"key4" => "value4", "key5" => "value5-1"},
+            {"key6" => "value6", "key5" => "value5-2"},
           ]
         end
 
         let(:exptected_record_from_fields) do
-          {"hoge.fuga.piyo" => '{"key4":["value1",null],"key5":["value2","value4"],"key6":[null,"value3"]}'}
+          {"key1.key2.key3" => '{"key4":["value4",null],"key5":["value5-1","value5-2"],"key6":[null,"value6"]}'}
         end
 
         it_behaves_like "return guessed record"
       end
     end
 
-    context "when fields_attributes is `{'hoge' => ['elem1', 'elem2', 'elem3'], 'fuga' => ['elem4', 'elem5', 'elem6']}`" do
+    context "when fields_attributes is `{'key1' => ['element1-1', 'element1-2', 'element1-3'], 'key2' => ['element2-1', 'element2-2', 'element2-3']}`" do
       let(:fields_attributes) do
         {
-          'hoge' => ['elem1', 'elem2', 'elem3'],
-          'fuga' => ['elem4', 'elem5', 'elem6'],
+          'key1' => ['element1-1', 'element1-2', 'element1-3'],
+          'key2' => ['element2-1', 'element2-2', 'element2-3'],
         }
       end
 
       let(:exptected_record_from_fields) do
         {
-          "hoge" => '"elem1,elem2,elem3"',
-          "fuga" => '"elem4,elem5,elem6"',
+          'key1' => '"element1-1,element1-2,element1-3"',
+          'key2' => '"element2-1,element2-2,element2-3"',
         }
       end
 
       it_behaves_like "return guessed record"
     end
 
-    context "when fields_attributes is `{'hoge' => []}`" do
+    context "when fields_attributes is `{'key' => []}`" do
       let(:fields_attributes) do
-        {'hoge' => []}
+        {'key' => []}
       end
 
       let(:exptected_record_from_fields) do
-        {"hoge" => '""'}
+        {"key" => '""'}
       end
 
       it_behaves_like "return guessed record"
     end
 
-    context "when fields_attributes is `{'hoge' => { 'fuga' => [{'foo' => 'bar1'}, {'foo'=> 'bar2'}]}}`" do
+    context "when fields_attributes is `{'key1' => { 'key2' => [{'key3' => 'valu3-1'}, {'key3'=> 'value3-2'}]}}`" do
       let(:fields_attributes) do
         {
-          'hoge' => {
-            'fuga' => [
-              {'foo' => 'bar1'}, {'foo'=> 'bar2'},
+          'key1' => {
+            'key2' => [
+              {'key3' => 'value3-1'}, {'key3'=> 'value3-2'},
             ]
           }
         }
@@ -317,22 +322,27 @@ describe Embulk::Input::Jira::Issue do
 
       let(:exptected_record_from_fields) do
         {
-          "hoge.fuga.foo" => '"bar1,bar2"',
+          "key1.key2.key3" => '"value3-1,value3-2"',
         }
       end
 
       it_behaves_like "return guessed record"
     end
 
-    context "when fields_attributes is `{'hoge' => { 'fuga' => ['elem1', 'elem2', 'elem3'], 'piyo' => ['elem4', 'elem5', 'elem6']}}`" do
+    context "when fields_attributes is `{'key1' => { 'key2' => ['element2-1', 'element2-2', 'element2-3'], 'key3' => ['element3-1', 'element3-2', 'element3-3']}}`" do
       let(:fields_attributes) do
-        {'hoge' => {'fuga' => ['elem1', 'elem2', 'elem3'], 'piyo' => ['elem4', 'elem5', 'elem6']}}
+        {
+          'key1' => {
+            'key2' => ['element2-1', 'element2-2', 'element2-3'],
+            'key3' => ['element3-1', 'element3-2', 'element3-3']
+          }
+        }
       end
 
       let(:exptected_record_from_fields) do
         {
-          "hoge.fuga" => '"elem1,elem2,elem3"',
-          "hoge.piyo" => '"elem4,elem5,elem6"',
+          "key1.key2" => '"element2-1,element2-2,element2-3"',
+          "key1.key3" => '"element3-1,element3-2,element3-3"',
         }
       end
 
