@@ -73,6 +73,26 @@ describe Embulk::Input::Jira::Issue do
       end
     end
 
+    context "when fields_attributes is empty Hash" do
+      let(:fields_attributes) { {} }
+
+      let(:attribute_name) { 'key1' }
+
+      it "returns nil" do
+        expect(subject).to eq nil
+      end
+    end
+
+    context "when fields_attributes is empty Hash including Array" do
+      let(:fields_attributes) { { 'key1' => [] } }
+
+      let(:attribute_name) { 'key1' }
+
+      it "returns empty Array" do
+        expect(subject).to eq []
+      end
+    end
+
     context "when fields_attributes is Hash" do
       let(:fields_attributes) do
         {'key' => 'value'}
@@ -116,7 +136,7 @@ describe Embulk::Input::Jira::Issue do
         let(:attribute_name) { 'key1' }
 
         it "returns JSON array" do
-          expect(subject).to eq [{'key2' => 'value2-1'}, {'key2' => 'value2-2'}].to_json
+          expect(subject).to eq '{"key2":"value2-1"},{"key2":"value2-2"}'
         end
       end
 
@@ -125,6 +145,28 @@ describe Embulk::Input::Jira::Issue do
 
         it "returns CSV values assigned by 'key2' key" do
           expect(subject).to eq 'value2-1,value2-2'
+        end
+      end
+    end
+
+    context "when fields_attributes is `{'key1' => [{'key2' => 'value2-1'}, nil]}`" do
+      let(:fields_attributes) do
+        {'key1' => [{'key2' => 'value2-1'}, nil]}
+      end
+
+      context "when attribute_name is 'key1'" do
+        let(:attribute_name) { 'key1' }
+
+        it "returns CSV value including null" do
+          expect(subject).to eq '{"key2":"value2-1"},null'
+        end
+      end
+
+      context "when attribute_name is 'key1.key2'" do
+        let(:attribute_name) { 'key1.key2' }
+
+        it "returns JSON array including null" do
+          expect(subject).to eq 'value2-1,null'
         end
       end
     end

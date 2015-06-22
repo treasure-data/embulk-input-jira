@@ -26,23 +26,41 @@ module Embulk
         end
 
         def fetch(fields, keys)
-          return fields if fields.nil?
+          return fields if fields.nil? || (fields.is_a?(Array) && fields.empty?)
 
           if keys.empty?
-            return fields if !fields.is_a?(Hash) && !fields.is_a?(Array)
+            case fields
+            when Array
+              values = fields.map do |field|
+                case field
+                when NilClass, Hash, Array
+                  field.to_json
+                else
+                  field.to_s
+                end
+              end
 
-            if fields.is_a?(Hash) || fields.any? { |element| element.is_a?(Hash) }
+              return values.join(",")
+            when Hash
               return fields.to_json
             else
-              return fields.map(&:to_s).join(",")
+              return fields
             end
           end
 
-          key = keys.shift
+          target_key = keys.shift
           if fields.is_a?(Array)
-            fetch(fields.map {|hash| hash[key] }, keys)
+            values = fields.map do |field|
+              if field.is_a?(Hash)
+                field[target_key]
+              else
+                field.to_json
+              end
+            end
+
+            fetch(values, keys)
           else
-            fetch(fields[key], keys)
+            fetch(fields[target_key], keys)
           end
         end
 
