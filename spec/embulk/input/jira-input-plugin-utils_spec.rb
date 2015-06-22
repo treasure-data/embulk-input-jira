@@ -8,15 +8,17 @@ describe Embulk::Input::JiraInputPluginUtils do
 
     let(:records) do
       [
-        {"project_key" => "FOO", "comment.total" => 3, "created" => "2015-03-01T00:12:00"}
+        {"project.key" => "FOO-1", "comment.total" => 3, "created" => "2015-03-01T00:12:00"},
+        {"project.id" => "1", "project.key" => "FOO", "comment.total" => 3, "created" => "2015-03-01T00:12:00"}
       ]
     end
 
     let(:expected) do
       [
-        {name: "project_key", type: :string},
         {name: "comment.total", type: :long},
-        {name: "created", type: :timestamp, format: "%Y-%m-%dT%H:%M:%S"}
+        {name: "created", type: :timestamp, format: "%Y-%m-%dT%H:%M:%S"},
+        {name: "project.id", type: :long},
+        {name: "project.key", type: :string},
       ]
     end
 

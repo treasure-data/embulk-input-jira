@@ -20,46 +20,112 @@ module Embulk
             return key
           end
 
-          chunk = fields
-          attribute.split('.').each do |key|
-            chunk = chunk[key]
-            return chunk if chunk.nil?
-          end
+          attribute_keys = attribute.split('.')
 
-          if chunk.is_a?(Array) || chunk.is_a?(Hash)
-            chunk.to_json.to_s
-          else
-            chunk
-          end
+          fetch(fields, attribute_keys)
         end
 
         def to_record
-          record = {}
+          @record = {}
 
-          record["id"] = id
-          record["key"] = key
+          @record["id"] = id
+          @record["key"] = key
 
-          fields.each_pair do |key, value|
-            record_key = key
-            record_value = value.to_json.to_s
+          generate_record(fields, "")
 
-            case value
-            when String
-              record_value = value
+          @record
+        end
+
+        private
+
+        def fetch(fields, keys)
+          return fields if fields.nil? || (fields.is_a?(Array) && fields.empty?)
+
+          if keys.empty?
+            case fields
+            when Array
+              values = fields.map do |field|
+                if field.is_a?(String)
+                  field.to_s
+                else
+                  field.to_json
+                end
+              end
+
+              return values.join(",")
             when Hash
-              if value.keys.include?("name")
-                record_key += ".name"
-                record_value = value["name"]
-              elsif value.keys.include?("id")
-                record_key += ".id"
-                record_value = value["id"]
+              return fields.to_json
+            else
+              return fields
+            end
+          end
+
+          target_key = keys.shift
+          if fields.is_a?(Array)
+            values = fields.map do |field|
+              if field.is_a?(Hash)
+                field[target_key]
+              else
+                field.to_json
               end
             end
 
-            record[record_key] = record_value
+            fetch(values, keys)
+          else
+            fetch(fields[target_key], keys)
+          end
+        end
+
+        def generate_record(value, prefix_key)
+          case value
+          when Hash
+            # NOTE: If you want to flatten JSON completely, please
+            # remove this if...end and #add_heuristic_value.
+            if prefix_key.count(".") > 1
+              add_heuristic_value(value, prefix_key)
+              return
+            end
+
+            value.each_pair do |_key, _value|
+              generate_record(_value, record_key(prefix_key, _key))
+            end
+          when Array
+            if value.empty? || value.any? {|v| !v.is_a?(Hash) }
+              @record[prefix_key] = "\"#{value.map(&:to_s).join(',')}\""
+              return
+            end
+
+            # gathering values from each Hash
+            keys = value.map(&:keys).inject([]) {|sum, key| sum + key }.uniq
+            values = value.inject({}) do |sum, elem|
+              keys.each {|key| sum[key] = (sum[key] || []) << elem[key] }
+              sum
+            end
+
+            generate_record(values, prefix_key)
+          else
+            @record[prefix_key] = value
+          end
+        end
+
+        def record_key(prefix, key)
+          return key if prefix.empty?
+
+          "#{prefix}.#{key}"
+        end
+
+        def add_heuristic_value(hash, prefix_key)
+          heuristic_values = hash.select do |key, value|
+            ["name", "key", "id"].include?(key) && !value.nil?
           end
 
-          record
+          if heuristic_values.empty?
+            @record[prefix_key] = hash.to_json
+          else
+            heuristic_values.each do |key, value|
+              @record[record_key(prefix_key, key)] = value
+            end
+          end
         end
       end
     end
