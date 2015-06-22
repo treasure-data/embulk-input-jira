@@ -25,6 +25,19 @@ module Embulk
           fetch(fields, attribute_keys)
         end
 
+        def to_record
+          @record = {}
+
+          @record["id"] = id
+          @record["key"] = key
+
+          generate_record(fields, "")
+
+          @record
+        end
+
+        private
+
         def fetch(fields, keys)
           return fields if fields.nil? || (fields.is_a?(Array) && fields.empty?)
 
@@ -63,19 +76,6 @@ module Embulk
             fetch(fields[target_key], keys)
           end
         end
-
-        def to_record
-          @record = {}
-
-          @record["id"] = id
-          @record["key"] = key
-
-          generate_record(fields, "")
-
-          @record
-        end
-
-        private
 
         def generate_record(value, prefix_key)
           case value
