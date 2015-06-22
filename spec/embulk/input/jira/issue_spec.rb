@@ -351,7 +351,7 @@ describe Embulk::Input::Jira::Issue do
       it_behaves_like "return guessed record"
     end
 
-    context "when fields_attributes is `{'key1' => { 'key2' => [{'key3' => 'valu3-1'}, {'key3'=> 'value3-2'}]}}`" do
+    context "when fields_attributes is `{'key1' => { 'key2' => [{'key3' => 'value3-1'}, {'key3'=> 'value3-2'}]}}`" do
       let(:fields_attributes) do
         {
           'key1' => {
