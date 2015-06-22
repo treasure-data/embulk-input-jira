@@ -45,11 +45,10 @@ module Embulk
             case fields
             when Array
               values = fields.map do |field|
-                case field
-                when NilClass, Hash, Array
-                  field.to_json
-                else
+                if field.is_a?(String)
                   field.to_s
+                else
+                  field.to_json
                 end
               end
 
