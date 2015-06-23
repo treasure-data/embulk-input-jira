@@ -3,7 +3,6 @@ require 'rspec/core/rake_task'
 require "json"
 require "pathname"
 require "open-uri"
-require File.expand_path("../lib/embulk/input/jira/version.rb", __FILE__)
 
 
 task default: :spec
@@ -16,6 +15,9 @@ end
 namespace :release do
   desc "Add header of now version release to ChangeLog and bump up version"
   task :prepare do
+    #
+    # TODO: Fix version bump
+    #
     root_dir = Pathname.new(File.expand_path("../", __FILE__))
     changelog_file = root_dir.join("CHANGELOG.md")
 

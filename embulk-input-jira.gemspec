@@ -1,8 +1,6 @@
-require File.expand_path("../lib/embulk/input/jira/version.rb", __FILE__)
-
 Gem::Specification.new do |spec|
   spec.name          = "embulk-input-jira"
-  spec.version       = Embulk::Input::Jira::VERSION
+  spec.version       = "0.0.4"
   spec.authors       = ["uu59", "yoshihara"]
   spec.summary       = "Jira input plugin for Embulk"
   spec.description   = "Loads records from Jira."
