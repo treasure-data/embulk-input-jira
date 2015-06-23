@@ -8,6 +8,8 @@ embulk-input-jira is the Embulk input plugin for [JIRA](https://www.atlassian.co
 
 ## Overview
 
+Required Embulk version >= 0.6.12
+
 * **Plugin type**: input
 * **Resume supported**: no
 * **Cleanup supported**: no

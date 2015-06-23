@@ -86,9 +86,9 @@ module Embulk
       end
 
       def run
-        # NOTE: This is workaround for "org.embulk.spi.Exec.isPreview"
         # TODO: Extract process for preview command to method
-        if org.embulk.spi.Exec.session().isPreview()
+        # http://www.embulk.org/docs/release/release-0.6.12.html
+        if org.embulk.spi.Exec.isPreview()
           options = {max_results: PREVIEW_RECORDS_COUNT}
           total_count = PREVIEW_RECORDS_COUNT
           last_page = 1
@@ -117,14 +117,7 @@ module Embulk
       end
 
       def self.logger
-        @logger ||=
-          begin
-            logger = Logger.new($stdout)
-            logger.formatter = proc do |severity, datetime, progname, msg|
-              "#{datetime.strftime("%Y-%m-%d %H:%M:%S.%L %z")} [#{severity}] #{msg}\n"
-            end
-            logger
-          end
+        Embulk.logger
       end
 
       def logger
