@@ -243,7 +243,7 @@ describe Embulk::Input::JiraInputPlugin do
 
     subject { logger }
 
-    it { is_expected.to be_a(Logger) }
+    it { is_expected.to be_a(Embulk::Logger) }
   end
 
   describe "#logger" do
@@ -252,6 +252,6 @@ describe Embulk::Input::JiraInputPlugin do
 
     subject { logger }
 
-    it { is_expected.to be_a(Logger) }
+    it { is_expected.to be_a(Embulk::Logger) }
   end
 end
