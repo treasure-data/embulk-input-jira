@@ -3,7 +3,6 @@ require 'rspec/core/rake_task'
 require "json"
 require "pathname"
 require "open-uri"
-require File.expand_path("../lib/embulk/input/jira/version.rb", __FILE__)
 
 
 task default: :spec
@@ -18,11 +17,12 @@ namespace :release do
   task :prepare do
     root_dir = Pathname.new(File.expand_path("../", __FILE__))
     changelog_file = root_dir.join("CHANGELOG.md")
+    gemspec_file = root_dir.join("embulk-input-jira.gemspec")
 
     system("git fetch origin")
 
     # detect merged PR
-    old_version = Embulk::Input::Jira::VERSION
+    old_version = gemspec_file.read[/spec\.version += *"([0-9]+\.[0-9]+\.[0-9]+)"/, 1]
     pr_numbers = `git log v#{old_version}..origin/master --oneline`.scan(/#[0-9]+/)
 
     if !$?.success? || pr_numbers.empty?
@@ -51,10 +51,9 @@ HEADER
     File.open(changelog_file, "w") {|f| f.write(new_changelog) }
 
     # Update version.rb
-    version_file = root_dir.join("./lib/embulk/input/jira/version.rb")
-    old_content = version_file.read
-    File.open(version_file, "w") do |f|
-      f.write old_content.gsub(old_version, new_version)
+    old_content = gemspec_file.read
+    File.open(gemspec_file, "w") do |f|
+      f.write old_content.gsub(/(spec\.version += *)".*?"/, %Q!\\1"#{new_version}"!)
     end
 
     # Update Gemfile.lock

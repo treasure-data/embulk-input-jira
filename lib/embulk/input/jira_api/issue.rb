@@ -1,6 +1,6 @@
 module Embulk
   module Input
-    module Jira
+    module JiraApi
       class Issue
         attr_reader :id, :key, :fields
 

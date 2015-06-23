@@ -1,11 +1,11 @@
 require "jiralicious"
-require "embulk/input/jira/issue"
+require "embulk/input/jira_api/issue"
 require "timeout"
 
 module Embulk
   module Input
-    module Jira
-      class Api
+    module JiraApi
+      class Client
         SEARCH_TIMEOUT_SECONDS = 5
         SEARCH_ISSUES_TIMEOUT_SECONDS = 60
         DEFAULT_SEARCH_RETRY_TIMES = 10
@@ -18,7 +18,7 @@ module Embulk
         def search_issues(jql, options={})
           timeout_and_retry(SEARCH_ISSUES_TIMEOUT_SECONDS) do
             search(jql, options).issues.map do |issue|
-              Jira::Issue.new(issue)
+              JiraApi::Issue.new(issue)
             end
           end
         end
