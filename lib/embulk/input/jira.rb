@@ -84,9 +84,7 @@ module Embulk
       end
 
       def run
-        # TODO: Extract process for preview command to method
-        # http://www.embulk.org/docs/release/release-0.6.12.html
-        if org.embulk.spi.Exec.isPreview()
+        if preview?
           options = {max_results: PREVIEW_RECORDS_COUNT}
           total_count = PREVIEW_RECORDS_COUNT
           last_page = 1
@@ -120,6 +118,17 @@ module Embulk
 
       def logger
         self.class.logger
+      end
+
+      private
+
+      def preview?
+        begin
+          # http://www.embulk.org/docs/release/release-0.6.12.html
+          org.embulk.spi.Exec.isPreview()
+        rescue java.lang.NullPointerException => e
+          false
+        end
       end
     end
   end
