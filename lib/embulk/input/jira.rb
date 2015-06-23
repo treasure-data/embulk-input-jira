@@ -1,5 +1,5 @@
 require "embulk/input/jira_input_plugin_utils"
-require "embulk/input/jira_api/api"
+require "embulk/input/jira_api/client"
 require "logger"
 require "time"
 
@@ -51,7 +51,7 @@ module Embulk
         auth_type = "basic"
         jql = config.param("jql", :string)
 
-        jira = JiraApi::Api.setup do |jira_config|
+        jira = JiraApi::Client.setup do |jira_config|
           jira_config.username = username
           jira_config.password = password
           jira_config.uri = uri
@@ -75,7 +75,7 @@ module Embulk
 
       def init
         @attributes = task["attributes"]
-        @jira = JiraApi::Api.setup do |config|
+        @jira = JiraApi::Client.setup do |config|
           config.username = task["username"]
           config.password = task["password"]
           config.uri = task["uri"]

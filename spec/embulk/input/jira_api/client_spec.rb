@@ -1,11 +1,11 @@
 require "spec_helper"
 
-describe Embulk::Input::JiraApi::Api do
+describe Embulk::Input::JiraApi::Client do
   describe ".setup" do
-    subject { Embulk::Input::JiraApi::Api.setup {}  }
+    subject { Embulk::Input::JiraApi::Client.setup {}  }
 
-    it "returns Embulk::Input::JiraApi::Api instance" do
-      expect(subject.is_a?(Embulk::Input::JiraApi::Api)).to be_truthy
+    it "returns Embulk::Input::JiraApi::Client instance" do
+      expect(subject.is_a?(Embulk::Input::JiraApi::Client)).to be_truthy
     end
 
     it "calls Jiralicious.configure" do
@@ -15,7 +15,7 @@ describe Embulk::Input::JiraApi::Api do
 
   describe "#search" do
     let(:jql) { "project=FOO" }
-    let(:api) { Embulk::Input::JiraApi::Api.new }
+    let(:api) { Embulk::Input::JiraApi::Client.new }
 
     subject { api.search(jql) }
 
@@ -30,7 +30,7 @@ describe Embulk::Input::JiraApi::Api do
       end
 
       it "retry DEFAULT_SEARCH_RETRY_TIMES times then raise error" do
-        expect(Timeout).to receive(:timeout).exactly(Embulk::Input::JiraApi::Api::DEFAULT_SEARCH_RETRY_TIMES)
+        expect(Timeout).to receive(:timeout).exactly(Embulk::Input::JiraApi::Client::DEFAULT_SEARCH_RETRY_TIMES)
         expect { subject }.to raise_error
       end
     end
@@ -67,7 +67,7 @@ describe Embulk::Input::JiraApi::Api do
       ]
     end
 
-    subject { Embulk::Input::JiraApi::Api.new.search_issues(jql) }
+    subject { Embulk::Input::JiraApi::Client.new.search_issues(jql) }
 
     it do
       allow(Jiralicious).to receive_message_chain(:search, :issues).and_return(results)
@@ -80,7 +80,7 @@ describe Embulk::Input::JiraApi::Api do
   describe "#total_count" do
     subject { jira_api.total_count(jql) }
 
-    let(:jira_api) { Embulk::Input::JiraApi::Api.new }
+    let(:jira_api) { Embulk::Input::JiraApi::Client.new }
     let(:jql) { "project=FOO" }
     let(:results) { Object.new } # add mock later
     let(:results_count) { 5 }
@@ -89,7 +89,7 @@ describe Embulk::Input::JiraApi::Api do
       allow(results).to receive(:num_results).and_return(results_count)
     end
 
-    it "calls Embulk::Input::JiraApi::Api#search with proper arguments" do
+    it "calls Embulk::Input::JiraApi::Client#search with proper arguments" do
       expect(jira_api).to receive(:search).with(jql, max_results: 1).and_return(results)
       subject
     end
@@ -103,7 +103,7 @@ describe Embulk::Input::JiraApi::Api do
   describe "#timeout_and_retry" do
     let(:wait) { 1 }
     let(:retry_times) { 3 }
-    let(:jira_api) { Embulk::Input::JiraApi::Api.new }
+    let(:jira_api) { Embulk::Input::JiraApi::Client.new }
     let(:block) { proc{ "it works" } }
 
     subject { jira_api.send(:timeout_and_retry, wait, retry_times, &block) }

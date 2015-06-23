@@ -5,7 +5,7 @@ require "timeout"
 module Embulk
   module Input
     module JiraApi
-      class Api
+      class Client
         SEARCH_TIMEOUT_SECONDS = 5
         SEARCH_ISSUES_TIMEOUT_SECONDS = 60
         DEFAULT_SEARCH_RETRY_TIMES = 10
