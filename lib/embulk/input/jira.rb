@@ -1,7 +1,5 @@
 require "embulk/input/jira_input_plugin_utils"
 require "embulk/input/jira_api"
-require "logger"
-require "time"
 
 module Embulk
   module Input
