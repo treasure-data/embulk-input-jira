@@ -207,7 +207,7 @@ describe Embulk::Input::JiraInputPlugin do
     let(:commit_report) { {} }
 
     before do
-      allow(org.embulk.spi.Exec).to receive_message_chain(:session, :isPreview).and_return(false)
+      allow(org.embulk.spi.Exec).to receive(:isPreview).and_return(false)
 
       # TODO: create stubs without each `it` expected
       allow(Embulk::Input::Jira::Api).to receive(:setup).and_return(jira_api)
