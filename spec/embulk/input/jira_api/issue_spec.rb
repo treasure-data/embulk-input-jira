@@ -1,6 +1,6 @@
 require "spec_helper"
 
-describe Embulk::Input::Jira::Issue do
+describe Embulk::Input::JiraApi::Issue do
   describe ".initialize" do
     context "when argument has 'fields' key" do
       let(:issue_attributes) do
@@ -19,15 +19,15 @@ describe Embulk::Input::Jira::Issue do
       end
 
       it "has @id with argument['id']" do
-        expect(Embulk::Input::Jira::Issue.new(issue_attributes).id).to eq issue_attributes["id"]
+        expect(Embulk::Input::JiraApi::Issue.new(issue_attributes).id).to eq issue_attributes["id"]
       end
 
       it "has @key with argument['jira_key']" do
-        expect(Embulk::Input::Jira::Issue.new(issue_attributes).key).to eq issue_attributes["jira_key"]
+        expect(Embulk::Input::JiraApi::Issue.new(issue_attributes).key).to eq issue_attributes["jira_key"]
       end
 
       it "has @fields with argument['fields']" do
-        expect(Embulk::Input::Jira::Issue.new(issue_attributes).fields).to eq issue_attributes["fields"]
+        expect(Embulk::Input::JiraApi::Issue.new(issue_attributes).fields).to eq issue_attributes["fields"]
       end
     end
 
@@ -37,13 +37,13 @@ describe Embulk::Input::Jira::Issue do
       end
 
       it "raises error" do
-        expect { Embulk::Input::Jira::Issue.new(issue_attributes) }.to raise_error
+        expect { Embulk::Input::JiraApi::Issue.new(issue_attributes) }.to raise_error
       end
     end
   end
 
   describe "#[]" do
-    subject { Embulk::Input::Jira::Issue.new(issue_attributes)[attribute_name] }
+    subject { Embulk::Input::JiraApi::Issue.new(issue_attributes)[attribute_name] }
 
     let(:issue_attributes) do
       {
@@ -188,7 +188,7 @@ describe Embulk::Input::Jira::Issue do
 
   describe "#to_record" do
     subject do
-      Embulk::Input::Jira::Issue.new(issue_attributes).to_record
+      Embulk::Input::JiraApi::Issue.new(issue_attributes).to_record
     end
 
     shared_examples 'return guessed record' do

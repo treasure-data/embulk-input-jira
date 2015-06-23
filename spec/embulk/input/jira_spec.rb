@@ -1,6 +1,6 @@
 require "spec_helper"
 
-describe Embulk::Input::JiraInputPlugin do
+describe Embulk::Input::Jira do
   let(:username) { "jira-user" }
   let(:password) { "password" }
   let(:uri) { "http://jira.example/" }
@@ -8,7 +8,7 @@ describe Embulk::Input::JiraInputPlugin do
   let(:project_name) { "FOO" }
 
   describe ".transaction" do
-    subject { Embulk::Input::JiraInputPlugin.transaction(config, &control) }
+    subject { described_class.transaction(config, &control) }
 
     let(:config) { Object.new } # add mock later
     let(:control) { Proc.new{|task, columns, count| } } # do nothing
@@ -50,13 +50,13 @@ describe Embulk::Input::JiraInputPlugin do
 
     # NOTE: I should check other factor, but i don't know it...
     it "calls .resume method with proper parameters" do
-      expect(Embulk::Input::JiraInputPlugin).to receive(:resume).with(task, column_structs, 1, &control)
+      expect(described_class).to receive(:resume).with(task, column_structs, 1, &control)
       subject
     end
   end
 
   describe ".resume" do
-    subject { Embulk::Input::JiraInputPlugin.resume(task, columns, count, &control) }
+    subject { described_class.resume(task, columns, count, &control) }
 
     let(:task) do
       {
@@ -89,12 +89,12 @@ describe Embulk::Input::JiraInputPlugin do
   end
 
   describe ".guess" do
-    subject { Embulk::Input::JiraInputPlugin.guess(config) }
+    subject { described_class.guess(config) }
 
     let(:config) { Object.new } # add mock later
 
-    let(:jira_api) { Embulk::Input::Jira::Api.new }
-    let(:jira_issues) { [Embulk::Input::Jira::Issue.new(attributes)] }
+    let(:jira_api) { Embulk::Input::JiraApi::Api.new }
+    let(:jira_issues) { [Embulk::Input::JiraApi::Issue.new(attributes)] }
     let(:attributes) do
       {
         "id" => "100",
@@ -127,7 +127,7 @@ describe Embulk::Input::JiraInputPlugin do
     end
 
     before do
-      allow(jira_api).to receive(:search_issues).with(jql, max_results: Embulk::Input::JiraInputPlugin::GUESS_RECORDS_COUNT).and_return(jira_issues)
+      allow(jira_api).to receive(:search_issues).with(jql, max_results: described_class::GUESS_RECORDS_COUNT).and_return(jira_issues)
 
       allow(config).to receive(:param).with("username", :string).and_return(username)
       allow(config).to receive(:param).with("password", :string).and_return(password)
@@ -135,13 +135,13 @@ describe Embulk::Input::JiraInputPlugin do
       allow(config).to receive(:param).with("jql", :string).and_return(jql)
     end
 
-    it "setup Embulk::Input::Jira::Api" do
-      expect(Embulk::Input::Jira::Api).to receive(:setup).and_return(jira_api)
+    it "setup Embulk::Input::JiraApi::Api" do
+      expect(Embulk::Input::JiraApi::Api).to receive(:setup).and_return(jira_api)
       subject
     end
 
     it "returns guessed config" do
-      allow(Embulk::Input::Jira::Api).to receive(:setup).and_return(jira_api)
+      allow(Embulk::Input::JiraApi::Api).to receive(:setup).and_return(jira_api)
 
       expect(subject).to eq guessed_config
     end
@@ -150,15 +150,15 @@ describe Embulk::Input::JiraInputPlugin do
   describe "#init (.new)" do
     # NOTE: InputPlugin.initialize calls #init method.
 
-    subject { Embulk::Input::JiraInputPlugin.new({}, nil, nil, nil) }
+    subject { described_class.new({}, nil, nil, nil) }
 
-    it "setup Embulk::Input::Jira::Api" do
-      expect(Embulk::Input::Jira::Api).to receive(:setup)
+    it "setup Embulk::Input::JiraApi::Api" do
+      expect(Embulk::Input::JiraApi::Api).to receive(:setup)
       subject
     end
 
     it "is a Embulk::InputPlugin" do
-      allow(Embulk::Input::Jira::Api).to receive(:setup)
+      allow(Embulk::Input::JiraApi::Api).to receive(:setup)
       expect(subject).to be_a(Embulk::InputPlugin)
     end
   end
@@ -167,22 +167,22 @@ describe Embulk::Input::JiraInputPlugin do
     subject do
       result = nil
       capture_output(:out) do
-        result = Embulk::Input::JiraInputPlugin.new(task, nil, nil, page_builder).run
+        result = described_class.new(task, nil, nil, page_builder).run
       end
       result
     end
 
-    let(:jira_api) { Embulk::Input::Jira::Api.new }
+    let(:jira_api) { Embulk::Input::JiraApi::Api.new }
     let(:jira_issues) do
       (1..total_count).map do |i|
         attributes = fields.merge("id" => i.to_s, "jira_key" => "FOO-#{i}")
 
-        Embulk::Input::Jira::Issue.new(attributes)
+        Embulk::Input::JiraApi::Issue.new(attributes)
       end
     end
 
     let(:total_count) { max_result + 10 }
-    let(:max_result) { Embulk::Input::JiraInputPlugin::PER_PAGE }
+    let(:max_result) { described_class::PER_PAGE }
 
 
     let(:page_builder) { Object.new } # add mock later
@@ -210,7 +210,7 @@ describe Embulk::Input::JiraInputPlugin do
       allow(org.embulk.spi.Exec).to receive(:isPreview).and_return(false)
 
       # TODO: create stubs without each `it` expected
-      allow(Embulk::Input::Jira::Api).to receive(:setup).and_return(jira_api)
+      allow(Embulk::Input::JiraApi::Api).to receive(:setup).and_return(jira_api)
 
       0.step(total_count, max_result) do |start_at|
         issues = jira_issues[start_at..(start_at + max_result - 1)]
@@ -239,7 +239,7 @@ describe Embulk::Input::JiraInputPlugin do
   end
 
   describe ".logger" do
-    let(:logger) { Embulk::Input::JiraInputPlugin.logger }
+    let(:logger) { described_class.logger }
 
     subject { logger }
 
@@ -247,7 +247,7 @@ describe Embulk::Input::JiraInputPlugin do
   end
 
   describe "#logger" do
-    let(:instance) { Embulk::Input::JiraInputPlugin.new({}, nil, nil, nil) }
+    let(:instance) { described_class.new({}, nil, nil, nil) }
     let(:logger) { instance.logger }
 
     subject { logger }
