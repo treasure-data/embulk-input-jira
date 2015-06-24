@@ -19,8 +19,8 @@ module Embulk
 
         def search_issues(jql, options={})
           timeout_and_retry(SEARCH_ISSUES_TIMEOUT_SECONDS) do
-            issues = search(jql, options).issues_raw
-            Parallel.map(issues, in_threads: PARALLEL_THREAD_COUNT) do |issue_raw|
+            issues_raw = search(jql, options).issues_raw
+            Parallel.map(issues_raw, in_threads: PARALLEL_THREAD_COUNT) do |issue_raw|
               # https://github.com/dorack/jiralicious/blob/v0.4.0/lib/jiralicious/search_result.rb#L32-34
               issue = Jiralicious::Issue.find(issue_raw["key"])
               JiraApi::Issue.new(issue)
