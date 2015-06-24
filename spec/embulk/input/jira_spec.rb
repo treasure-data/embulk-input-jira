@@ -15,11 +15,11 @@ describe Embulk::Input::Jira do
 
     let(:task) do
       {
-        "username" => username,
-        "password" => password,
-        "uri" => uri,
-        "jql" => jql,
-        "attributes" => {
+        username: username,
+        password: password,
+        uri: uri,
+        jql: jql,
+        attributes: {
           "project.key" => :string,
           "comment.total" => :long
         }
@@ -41,11 +41,11 @@ describe Embulk::Input::Jira do
     end
 
     before do
-      allow(config).to receive(:param).with("username", :string).and_return(username)
-      allow(config).to receive(:param).with("password", :string).and_return(password)
-      allow(config).to receive(:param).with("uri", :string).and_return(uri)
-      allow(config).to receive(:param).with("jql", :string).and_return(jql)
-      allow(config).to receive(:param).with("columns", :array).and_return(columns)
+      allow(config).to receive(:param).with(:username, :string).and_return(username)
+      allow(config).to receive(:param).with(:password, :string).and_return(password)
+      allow(config).to receive(:param).with(:uri, :string).and_return(uri)
+      allow(config).to receive(:param).with(:jql, :string).and_return(jql)
+      allow(config).to receive(:param).with(:columns, :array).and_return(columns)
     end
 
     # NOTE: I should check other factor, but i don't know it...
@@ -60,11 +60,11 @@ describe Embulk::Input::Jira do
 
     let(:task) do
       {
-        "username" => username,
-        "password" => password,
-        "uri" => uri,
-        "jql" => jql,
-        "attributes" => {
+        username: username,
+        password: password,
+        uri: uri,
+        jql: jql,
+        attributes: {
           "project.key" => :string,
           "comment.total" => :long
         }
@@ -129,10 +129,10 @@ describe Embulk::Input::Jira do
     before do
       allow(jira_api).to receive(:search_issues).with(jql, max_results: described_class::GUESS_RECORDS_COUNT).and_return(jira_issues)
 
-      allow(config).to receive(:param).with("username", :string).and_return(username)
-      allow(config).to receive(:param).with("password", :string).and_return(password)
-      allow(config).to receive(:param).with("uri", :string).and_return(uri)
-      allow(config).to receive(:param).with("jql", :string).and_return(jql)
+      allow(config).to receive(:param).with(:username, :string).and_return(username)
+      allow(config).to receive(:param).with(:password, :string).and_return(password)
+      allow(config).to receive(:param).with(:uri, :string).and_return(uri)
+      allow(config).to receive(:param).with(:jql, :string).and_return(jql)
     end
 
     it "setup Embulk::Input::JiraApi::Client" do
@@ -188,8 +188,8 @@ describe Embulk::Input::Jira do
     let(:page_builder) { Object.new } # add mock later
     let(:task) do
       {
-        "jql" => jql,
-        "attributes" => {"project.key" => "string"}
+        jql: jql,
+        attributes: {"project.key" => "string"}
       }
     end
 
@@ -243,8 +243,8 @@ describe Embulk::Input::Jira do
     let(:plugin) { described_class.new(task, nil, nil, page_builder) }
     let(:task) do
       {
-        "jql" => jql,
-        "attributes" => {"project.key" => "string"}
+        jql: jql,
+        attributes: {"project.key" => "string"}
       }
     end
     let(:page_builder) { double("page_builder") }
