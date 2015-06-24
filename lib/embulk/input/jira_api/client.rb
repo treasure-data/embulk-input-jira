@@ -1,4 +1,5 @@
 require "jiralicious"
+require "parallel"
 require "embulk/input/jira_api/issue"
 require "timeout"
 
@@ -6,6 +7,7 @@ module Embulk
   module Input
     module JiraApi
       class Client
+        PARALLEL_THREAD_COUNT = 50
         SEARCH_TIMEOUT_SECONDS = 5
         SEARCH_ISSUES_TIMEOUT_SECONDS = 60
         DEFAULT_SEARCH_RETRY_TIMES = 10
@@ -17,7 +19,10 @@ module Embulk
 
         def search_issues(jql, options={})
           timeout_and_retry(SEARCH_ISSUES_TIMEOUT_SECONDS) do
-            search(jql, options).issues.map do |issue|
+            issues = search(jql, options).issues_raw
+            Parallel.map(issues, in_threads: PARALLEL_THREAD_COUNT) do |issue_raw|
+              # https://github.com/dorack/jiralicious/blob/v0.4.0/lib/jiralicious/search_result.rb#L32-34
+              issue = Jiralicious::Issue.find(issue_raw["key"])
               JiraApi::Issue.new(issue)
             end
           end
