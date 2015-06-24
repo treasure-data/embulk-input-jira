@@ -1,3 +1,7 @@
+## 0.0.6 - 2015-06-24
+* [maintenance] String keys to symbols [#35](https://github.com/treasure-data/embulk-input-jira/pull/35)
+* [enhancement] Faster fetching with parallel API request [#34](https://github.com/treasure-data/embulk-input-jira/pull/34)
+
 ## 0.0.5 - 2015-06-24
 
 **Embulk 0.6.12+ is required since this version**
