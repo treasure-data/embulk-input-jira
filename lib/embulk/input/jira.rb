@@ -84,18 +84,10 @@ module Embulk
       end
 
       def run
-        # TODO: Extract process for preview command to method
-        # http://www.embulk.org/docs/release/release-0.6.12.html
-        if org.embulk.spi.Exec.isPreview()
-          options = {max_results: PREVIEW_RECORDS_COUNT}
-          total_count = PREVIEW_RECORDS_COUNT
-          last_page = 1
-          logger.debug "For preview mode, JIRA input plugin fetches records at most #{PREVIEW_RECORDS_COUNT}"
-        else
-          options = {}
-          total_count = @jira.total_count(@jql)
-          last_page = (total_count.to_f / PER_PAGE).ceil
-        end
+        return preview if preview?
+        options = {}
+        total_count = @jira.total_count(@jql)
+        last_page = (total_count.to_f / PER_PAGE).ceil
 
         0.step(total_count, PER_PAGE).with_index(1) do |start_at, page|
           logger.debug "Fetching #{page} / #{last_page} page"
@@ -120,6 +112,31 @@ module Embulk
 
       def logger
         self.class.logger
+      end
+
+      private
+
+      def preview
+        logger.debug "For preview mode, JIRA input plugin fetches records at most #{PREVIEW_RECORDS_COUNT}"
+        @jira.search_issues(@jql, max_results: PREVIEW_RECORDS_COUNT).each do |issue|
+          values = @attributes.map do |(attribute_name, type)|
+            JiraInputPluginUtils.cast(issue[attribute_name], type)
+          end
+          page_builder.add(values)
+        end
+        page_builder.finish
+
+        commit_report = {}
+        return commit_report
+      end
+
+      def preview?
+        begin
+          # http://www.embulk.org/docs/release/release-0.6.12.html
+          org.embulk.spi.Exec.isPreview()
+        rescue java.lang.NullPointerException => e
+          false
+        end
       end
     end
   end
