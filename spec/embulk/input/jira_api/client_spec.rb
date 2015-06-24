@@ -48,7 +48,7 @@ describe Embulk::Input::JiraApi::Client do
             "summary" => "issue summary",
             "project" =>
             {
-              "key" => "FOO"
+              "key" => "FO1"
             }
           }
         },
@@ -60,7 +60,7 @@ describe Embulk::Input::JiraApi::Client do
             "summary" => "jira issue",
             "project" =>
             {
-              "key" => "FOO"
+              "key" => "FO2"
             }
           }
         }
@@ -70,7 +70,8 @@ describe Embulk::Input::JiraApi::Client do
     subject { Embulk::Input::JiraApi::Client.new.search_issues(jql) }
 
     it do
-      allow(Jiralicious).to receive_message_chain(:search, :issues).and_return(results)
+      allow(Jiralicious).to receive_message_chain(:search, :issues_raw).and_return(results)
+      allow(Jiralicious::Issue).to receive(:find).and_return(results.first)
 
       expect(subject).to be_kind_of Array
       expect(subject.map(&:class)).to match_array [Embulk::Input::JiraApi::Issue, Embulk::Input::JiraApi::Issue]
