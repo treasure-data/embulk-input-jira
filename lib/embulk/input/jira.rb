@@ -12,21 +12,21 @@ module Embulk
 
       def self.transaction(config, &control)
         task = {
-          "username" => config.param("username", :string),
-          "password" => config.param("password", :string),
-          "uri" => config.param("uri", :string),
-          "jql" => config.param("jql", :string),
+          username: config.param(:username, :string),
+          password: config.param(:password, :string),
+          uri: config.param(:uri, :string),
+          jql: config.param(:jql, :string),
         }
 
         attributes = {}
-        columns = config.param("columns", :array).map do |column|
+        columns = config.param(:columns, :array).map do |column|
           name = column["name"]
           type = column["type"].to_sym
           attributes[name] = type
           Column.new(nil, name, type, column["format"])
         end
 
-        task["attributes"] = attributes
+        task[:attributes] = attributes
 
         resume(task, columns, 1, &control)
       end
@@ -42,12 +42,12 @@ module Embulk
         # TODO: api_version should be 2 (the latest version)
         # auth_type should be specified from config. (The future task)
 
-        username = config.param("username", :string)
-        password = config.param("password", :string)
-        uri = config.param("uri", :string)
+        username = config.param(:username, :string)
+        password = config.param(:password, :string)
+        uri = config.param(:uri, :string)
         api_version = "latest"
         auth_type = "basic"
-        jql = config.param("jql", :string)
+        jql = config.param(:jql, :string)
 
         jira = JiraApi::Client.setup do |jira_config|
           jira_config.username = username
@@ -72,15 +72,15 @@ module Embulk
       end
 
       def init
-        @attributes = task["attributes"]
+        @attributes = task[:attributes]
         @jira = JiraApi::Client.setup do |config|
-          config.username = task["username"]
-          config.password = task["password"]
-          config.uri = task["uri"]
+          config.username = task[:username]
+          config.password = task[:password]
+          config.uri = task[:uri]
           config.api_version = "latest"
           config.auth_type = :basic
         end
-        @jql = task["jql"]
+        @jql = task[:jql]
       end
 
       def run
