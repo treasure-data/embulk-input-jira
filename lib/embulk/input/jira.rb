@@ -39,22 +39,20 @@ module Embulk
       end
 
       def self.guess(config)
-        # TODO: api_version should be 2 (the latest version)
-        # auth_type should be specified from config. (The future task)
-
         username = config.param(:username, :string)
         password = config.param(:password, :string)
         uri = config.param(:uri, :string)
-        api_version = "latest"
-        auth_type = "basic"
         jql = config.param(:jql, :string)
 
         jira = JiraApi::Client.setup do |jira_config|
+          # TODO: api_version should be 2 (the latest version)
+          # auth_type should be specified from config. (The future task)
+
           jira_config.username = username
           jira_config.password = password
           jira_config.uri = uri
-          jira_config.api_version = api_version
-          jira_config.auth_type = auth_type
+          jira_config.api_version = "latest"
+          jira_config.auth_type = "basic"
         end
 
         # TODO: we use 0..10 issues to guess config?
@@ -78,7 +76,7 @@ module Embulk
           config.password = task[:password]
           config.uri = task[:uri]
           config.api_version = "latest"
-          config.auth_type = :basic
+          config.auth_type = "basic"
         end
         @jql = task[:jql]
       end
