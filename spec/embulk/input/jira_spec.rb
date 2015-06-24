@@ -165,13 +165,13 @@ describe Embulk::Input::Jira do
 
   describe "#run" do
     subject do
-      result = nil
-      capture_output(:out) do
-        result = described_class.new(task, nil, nil, page_builder).run
+      allow(plugin).to receive(:logger).and_return(::Logger.new(File::NULL))
+      silence do
+        plugin.run
       end
-      result
     end
 
+    let(:plugin) { described_class.new(task, nil, nil, page_builder) }
     let(:jira_api) { Embulk::Input::JiraApi::Client.new }
     let(:jira_issues) do
       (1..total_count).map do |i|
@@ -207,7 +207,7 @@ describe Embulk::Input::Jira do
     let(:commit_report) { {} }
 
     before do
-      allow(org.embulk.spi.Exec).to receive(:isPreview).and_return(false)
+      allow(jira_api).to receive(:preview?).and_return(false)
 
       # TODO: create stubs without each `it` expected
       allow(Embulk::Input::JiraApi::Client).to receive(:setup).and_return(jira_api)
@@ -235,6 +235,60 @@ describe Embulk::Input::Jira do
 
     it 'returns commit report' do
       expect(subject).to eq commit_report
+    end
+
+  end
+
+  describe "preview" do
+    let(:plugin) { described_class.new(task, nil, nil, page_builder) }
+    let(:task) do
+      {
+        "jql" => jql,
+        "attributes" => {"project.key" => "string"}
+      }
+    end
+    let(:page_builder) { double("page_builder") }
+    let(:jira_api) { Embulk::Input::JiraApi::Client.new }
+    let(:jira_issues) { [Embulk::Input::JiraApi::Issue.new(attributes)] }
+    let(:attributes) do
+      {
+        "id" => "100",
+        "jira_key" => "FOO-100",
+        "fields" =>
+        {
+          "project" => {
+            "name" => project_name,
+            "key" => project_name,
+          },
+          "comment" => {
+            "total" => 0,
+            "comments" => []
+          }
+        }
+      }
+    end
+
+
+    subject { plugin.run }
+
+    before do
+      allow(Embulk::Input::JiraApi::Client).to receive(:setup).and_return(jira_api)
+      allow(plugin).to receive(:logger).and_return(::Logger.new(File::NULL))
+      allow(plugin).to receive(:preview?).and_return(true)
+      allow(jira_api).to receive(:search_issues).and_return(jira_issues)
+      allow(page_builder).to receive(:add)
+      allow(page_builder).to receive(:finish)
+    end
+
+    it "max_results with PREVIEW_RECORDS_COUNT" do
+      expect(jira_api).to receive(:search_issues).with(jql, max_results: Embulk::Input::Jira::PREVIEW_RECORDS_COUNT)
+      subject
+    end
+
+    it "call page_builder.add and page_builder.finish" do
+      expect(page_builder).to receive(:add).exactly(jira_issues.length).times
+      expect(page_builder).to receive(:finish)
+      subject
     end
   end
 

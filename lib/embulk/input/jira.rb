@@ -106,17 +106,6 @@ module Embulk
         return commit_report
       end
 
-      def preview
-        logger.debug "For preview mode, JIRA input plugin fetches records at most #{PREVIEW_RECORDS_COUNT}"
-        @jira.search_issues(@jql, max_results: PREVIEW_RECORDS_COUNT).each do |issue|
-          values = @attributes.map do |(attribute_name, type)|
-            JiraInputPluginUtils.cast(issue[attribute_name], type)
-          end
-          page_builder.add(values)
-        end
-        page_builder.finish
-      end
-
       def self.logger
         Embulk.logger
       end
@@ -126,6 +115,20 @@ module Embulk
       end
 
       private
+
+      def preview
+        logger.debug "For preview mode, JIRA input plugin fetches records at most #{PREVIEW_RECORDS_COUNT}"
+        @jira.search_issues(@jql, max_results: PREVIEW_RECORDS_COUNT).each do |issue|
+          values = @attributes.map do |(attribute_name, type)|
+            JiraInputPluginUtils.cast(issue[attribute_name], type)
+          end
+          page_builder.add(values)
+        end
+        page_builder.finish
+
+        commit_report = {}
+        return commit_report
+      end
 
       def preview?
         begin

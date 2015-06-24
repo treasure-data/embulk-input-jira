@@ -15,7 +15,7 @@ in:
     end
 
     subject {
-      capture_output(:out) do
+      capture(:out) do
         Embulk.run ["preview", config_file.path]
       end
     }

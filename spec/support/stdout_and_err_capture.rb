@@ -1,5 +1,18 @@
 module StdoutAndErrCapture
-  def capture_output(output = :out, &block)
+  def capture(output = :out, &block)
+    _, out = swap_io(output, &block)
+    out
+  end
+
+  def silence(&block)
+    block_result = nil
+    swap_io(:out) do
+      block_result,_ = swap_io(:err, &block)
+    end
+    block_result
+  end
+
+  def swap_io(output = :out, &block)
     java_import 'java.io.PrintStream'
     java_import 'java.io.ByteArrayOutputStream'
     java_import 'java.lang.System'
@@ -12,21 +25,21 @@ module StdoutAndErrCapture
     case output
     when :out
       $stdout = ruby_buf
+      System.setOut(PrintStream.new(java_buf))
     when :err
       $stderr = ruby_buf
+      System.setErr(PrintStream.new(java_buf))
     end
-    System.setOut(PrintStream.new(java_buf))
 
-    block.call
-
-    ruby_buf.string + java_buf.toString
+    [block.call, ruby_buf.string + java_buf.toString]
   ensure
-    System.setOut(java_original_stream)
     case output
     when :out
       $stdout = ruby_original_stream
+      System.setOut(java_original_stream)
     when :err
       $stderr = ruby_original_stream
+      System.setErr(java_original_stream)
     end
   end
 end
