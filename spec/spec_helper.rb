@@ -1,12 +1,14 @@
 require "rubygems"
 require "bundler/setup"
-Bundler.require(:runtime, :development)
-require "codeclimate-test-reporter"
-CodeClimate::TestReporter.start
 
-require "embulk/command/embulk_run"
+require File.expand_path("../support/prepare_embulk.rb", __FILE__)
+# Bundler.require should call after above line
+Bundler.require(:runtime, :development)
 
 Dir["./spec/support/**/*.rb"].each{|file| require file }
+
+require "codeclimate-test-reporter"
+CodeClimate::TestReporter.start
 
 if ENV["COVERAGE"]
   require "simplecov"
