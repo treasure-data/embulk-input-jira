@@ -14,14 +14,6 @@ jdk:
   - oraclejdk8
 
 gemfile:
-  - gemfiles/embulk-0.6.12
-  - gemfiles/embulk-0.6.13
-  - gemfiles/embulk-0.6.14
-  - gemfiles/embulk-0.6.15
-  - gemfiles/embulk-0.6.16
-  - gemfiles/embulk-0.6.17
-  - gemfiles/embulk-0.6.18
-  - gemfiles/embulk-0.6.19
-  - gemfiles/embulk-0.6.20
-  - gemfiles/embulk-0.6.21
-  - gemfiles/embulk-latest
+<% versions.each do |file| -%>
+  - gemfiles/<%= file %>
+<% end -%>
