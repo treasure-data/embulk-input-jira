@@ -1,3 +1,10 @@
+## 0.0.7 - 2015-10-06
+
+* [enhancement] Supports embulk.0.7 [#40](https://github.com/treasure-data/embulk-input-jira/pull/40)
+* [maintenance] Reject embulk 0.6.22 [#39](https://github.com/treasure-data/embulk-input-jira/pull/39)
+* [maintenance] Test on multiple embulk version [#37](https://github.com/treasure-data/embulk-input-jira/pull/37)
+* [maintenance] Put all dependency gems into gemspec [#36](https://github.com/treasure-data/embulk-input-jira/pull/36)
+
 ## 0.0.6 - 2015-06-24
 * [maintenance] String keys to symbols [#35](https://github.com/treasure-data/embulk-input-jira/pull/35)
 * [enhancement] Faster fetching with parallel API request [#34](https://github.com/treasure-data/embulk-input-jira/pull/34)
