@@ -1,6 +1,7 @@
 [![Build Status](https://travis-ci.org/treasure-data/embulk-input-jira.svg)](https://travis-ci.org/treasure-data/embulk-input-jira)
 [![Code Climate](https://codeclimate.com/github/treasure-data/embulk-input-jira/badges/gpa.svg)](https://codeclimate.com/github/treasure-data/embulk-input-jira)
 [![Test Coverage](https://codeclimate.com/github/treasure-data/embulk-input-jira/badges/coverage.svg)](https://codeclimate.com/github/treasure-data/embulk-input-jira/coverage)
+[![Gem Version](https://badge.fury.io/rb/embulk-input-jira.svg)](https://badge.fury.io/rb/embulk-input-jira)
 
 # Jira input plugin for Embulk
 
