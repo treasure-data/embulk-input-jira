@@ -22,7 +22,9 @@ describe Embulk::Input::Jira do
         attributes: {
           "project.key" => :string,
           "comment.total" => :long
-        }
+        },
+        retry_limit: 5,
+        retry_initial_wait_sec: 1,
       }
     end
 
@@ -46,6 +48,8 @@ describe Embulk::Input::Jira do
       allow(config).to receive(:param).with(:uri, :string).and_return(uri)
       allow(config).to receive(:param).with(:jql, :string).and_return(jql)
       allow(config).to receive(:param).with(:columns, :array).and_return(columns)
+      allow(config).to receive(:param).with(:retry_limit, :integer, default: 5).and_return(5)
+      allow(config).to receive(:param).with(:retry_initial_wait_sec, :integer, default: 1).and_return(1)
     end
 
     # NOTE: I should check other factor, but i don't know it...

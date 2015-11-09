@@ -23,6 +23,8 @@ Required Embulk version >= 0.6.12
 - **uri** JIRA API endpoint (string, required)
 - **jql** [JQL](https://confluence.atlassian.com/display/JIRA/Advanced+Searching) for extract target issues (string, required)
 - **columns** target issue attributes. You can generate this configuration by `guess` command (array, required)
+- **retry_initial_wait_sec**: Wait seconds for exponential backoff initial value (integer, default: 1)
+- **retry_limit**: Try to retry this times (integer, default: 5)
 
 ## Example
 
