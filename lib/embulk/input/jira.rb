@@ -1,3 +1,4 @@
+require "perfect_retry"
 require "embulk/input/jira_input_plugin_utils"
 require "embulk/input/jira_api"
 
@@ -27,6 +28,8 @@ module Embulk
         end
 
         task[:attributes] = attributes
+        task[:retry_limit] = config.param(:retry_limit, :integer, default: 5)
+        task[:retry_initial_wait_sec] = config.param(:retry_initial_wait_sec, :integer, default: 1)
 
         resume(task, columns, 1, &control)
       end
@@ -79,6 +82,11 @@ module Embulk
           config.auth_type = "basic"
         end
         @jql = task[:jql]
+        @retryer = PerfectRetry.new do |config|
+          config.limit = task[:retry_limit]
+          config.sleep = proc{|n| task[:retry_initial_wait_sec] ** n}
+          config.dont_rescues = [Embulk::ConfigError]
+        end
       end
 
       def run
@@ -89,12 +97,13 @@ module Embulk
 
         0.step(total_count, PER_PAGE).with_index(1) do |start_at, page|
           logger.debug "Fetching #{page} / #{last_page} page"
-          @jira.search_issues(@jql, options.merge(start_at: start_at)).each do |issue|
-            values = @attributes.map do |(attribute_name, type)|
-              JiraInputPluginUtils.cast(issue[attribute_name], type)
+          @retryer.with_retry do
+            @jira.search_issues(@jql, options.merge(start_at: start_at)).each do |issue|
+              values = @attributes.map do |(attribute_name, type)|
+                JiraInputPluginUtils.cast(issue[attribute_name], type)
+              end
+              page_builder.add(values)
             end
-
-            page_builder.add(values)
           end
         end
 

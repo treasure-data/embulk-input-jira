@@ -14,6 +14,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency 'jiralicious', ['~> 0.5.0']
   spec.add_dependency 'parallel', ['~> 1.6.0']
+  spec.add_dependency 'perfect_retry', ['~> 0.2']
   spec.add_development_dependency 'bundler', ['~> 1.0']
   spec.add_development_dependency 'rake', ['>= 10.0']
   spec.add_development_dependency 'rspec', "~> 3.2.0"
