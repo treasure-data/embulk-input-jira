@@ -86,6 +86,8 @@ module Embulk
           config.limit = task[:retry_limit]
           config.sleep = proc{|n| task[:retry_initial_wait_sec] ** n}
           config.dont_rescues = [Embulk::ConfigError]
+          config.logger = Embulk.logger
+          config.log_level = nil
         end
       end
 
