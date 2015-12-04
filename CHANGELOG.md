@@ -1,3 +1,7 @@
+## 0.1.1 - 2015-12-04
+
+* [maintenance] Update dependency
+
 ## 0.1.0 - 2015-11-09
 
 * [enhancement] Add retry options and retry handling [#41](https://github.com/treasure-data/embulk-input-jira/pull/41)
