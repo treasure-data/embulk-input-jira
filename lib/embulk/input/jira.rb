@@ -58,9 +58,15 @@ module Embulk
           jira_config.auth_type = "basic"
         end
 
+        retry_limit = config.param(:retry_limit, :integer, default: 5)
+        retry_initial_wait_sec = config.param(:retry_initial_wait_sec, :integer, default: 1)
+        retryer = retryer(retry_limit, retry_initial_wait_sec)
+
         # TODO: we use 0..10 issues to guess config?
-        records = jira.search_issues(jql, max_results: GUESS_RECORDS_COUNT).map do |issue|
-          issue.to_record
+        records = retryer.with_retry do
+          jira.search_issues(jql, max_results: GUESS_RECORDS_COUNT).map do |issue|
+            issue.to_record
+          end
         end
 
         columns = JiraInputPluginUtils.guess_columns(records)
