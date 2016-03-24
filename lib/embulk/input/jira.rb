@@ -82,13 +82,7 @@ module Embulk
           config.auth_type = "basic"
         end
         @jql = task[:jql]
-        @retryer = PerfectRetry.new do |config|
-          config.limit = task[:retry_limit]
-          config.sleep = proc{|n| task[:retry_initial_wait_sec] ** n}
-          config.dont_rescues = [Embulk::ConfigError]
-          config.logger = Embulk.logger
-          config.log_level = nil
-        end
+        @retryer = self.class.retryer(task[:retry_limit], task[:retry_initial_wait_sec])
       end
 
       def run
@@ -117,6 +111,16 @@ module Embulk
 
       def self.logger
         Embulk.logger
+      end
+
+      def self.retryer(limit, initial_wait)
+        PerfectRetry.new do |config|
+          config.limit = limit
+          config.sleep = proc{|n| initial_wait + (2 ** n)}
+          config.dont_rescues = [Embulk::ConfigError]
+          config.logger = Embulk.logger
+          config.log_level = nil
+        end
       end
 
       def logger
