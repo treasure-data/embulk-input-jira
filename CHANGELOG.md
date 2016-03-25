@@ -1,3 +1,6 @@
+## 0.1.2 - 2016-03-25
+* [enhancement] Retry on guess [#42](https://github.com/treasure-data/embulk-input-jira/pull/42)
+
 ## 0.1.1 - 2015-12-04
 
 * [maintenance] Update dependency
