@@ -137,6 +137,8 @@ describe Embulk::Input::Jira do
       allow(config).to receive(:param).with(:password, :string).and_return(password)
       allow(config).to receive(:param).with(:uri, :string).and_return(uri)
       allow(config).to receive(:param).with(:jql, :string).and_return(jql)
+      allow(config).to receive(:param).with(:retry_limit, :integer, anything).and_return(0)
+      allow(config).to receive(:param).with(:retry_initial_wait_sec, :integer, anything).and_return(0)
     end
 
     it "setup Embulk::Input::JiraApi::Client" do

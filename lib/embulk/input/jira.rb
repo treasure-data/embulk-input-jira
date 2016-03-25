@@ -58,9 +58,15 @@ module Embulk
           jira_config.auth_type = "basic"
         end
 
+        retry_limit = config.param(:retry_limit, :integer, default: 5)
+        retry_initial_wait_sec = config.param(:retry_initial_wait_sec, :integer, default: 1)
+        retryer = retryer(retry_limit, retry_initial_wait_sec)
+
         # TODO: we use 0..10 issues to guess config?
-        records = jira.search_issues(jql, max_results: GUESS_RECORDS_COUNT).map do |issue|
-          issue.to_record
+        records = retryer.with_retry do
+          jira.search_issues(jql, max_results: GUESS_RECORDS_COUNT).map do |issue|
+            issue.to_record
+          end
         end
 
         columns = JiraInputPluginUtils.guess_columns(records)
@@ -82,13 +88,7 @@ module Embulk
           config.auth_type = "basic"
         end
         @jql = task[:jql]
-        @retryer = PerfectRetry.new do |config|
-          config.limit = task[:retry_limit]
-          config.sleep = proc{|n| task[:retry_initial_wait_sec] ** n}
-          config.dont_rescues = [Embulk::ConfigError]
-          config.logger = Embulk.logger
-          config.log_level = nil
-        end
+        @retryer = self.class.retryer(task[:retry_limit], task[:retry_initial_wait_sec])
       end
 
       def run
@@ -117,6 +117,16 @@ module Embulk
 
       def self.logger
         Embulk.logger
+      end
+
+      def self.retryer(limit, initial_wait)
+        PerfectRetry.new do |config|
+          config.limit = limit
+          config.sleep = proc{|n| initial_wait + (2 ** n)}
+          config.dont_rescues = [Embulk::ConfigError]
+          config.logger = Embulk.logger
+          config.log_level = nil
+        end
       end
 
       def logger
