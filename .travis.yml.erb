@@ -8,13 +8,12 @@ env:
 
 before_install:
   - |
-    # Currently, Travis can't treat jruby 9.0.1.0
-    if [[ ${TRAVIS_RUBY_VERSION} = "jruby-9.0.5.0" ]];then
-      rvm get head
-      rvm use jruby-9.0.5.0 --install
-      ruby -v
-      gem i bundler
-    fi
+    ruby -v
+    # Currently, Travis can't treat jruby 9.0.5.0
+    rvm get head
+    rvm use jruby-9.0.5.0 --install
+    ruby -v
+  - gem i bundler
 
 rvm: jruby-9.0.5.0
 
