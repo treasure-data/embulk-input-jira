@@ -1,9 +1,11 @@
 require "rubygems"
 require "bundler/setup"
 
-require File.expand_path("../support/prepare_embulk.rb", __FILE__)
-# Bundler.require should call after above line
 Bundler.require(:runtime, :development)
+
+require "embulk/command/embulk_run"
+require "embulk"
+Embulk.setup
 
 Dir["./spec/support/**/*.rb"].each{|file| require file }
 
@@ -20,5 +22,4 @@ require "embulk/input/jira"
 
 RSpec.configure do |config|
   config.include StdoutAndErrCapture
-  config.include PrepareEmbulk
 end
