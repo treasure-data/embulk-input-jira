@@ -123,7 +123,7 @@ module Embulk
         PerfectRetry.new do |config|
           config.limit = limit
           config.sleep = proc{|n| initial_wait + (2 ** n)}
-          config.dont_rescues = [Embulk::ConfigError]
+          config.dont_rescues = [Embulk::ConfigError, Embulk::DataError]
           config.logger = Embulk.logger
           config.log_level = nil
         end
