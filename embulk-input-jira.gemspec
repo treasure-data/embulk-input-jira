@@ -1,6 +1,6 @@
 Gem::Specification.new do |spec|
   spec.name          = "embulk-input-jira"
-  spec.version       = "0.1.2"
+  spec.version       = "0.2.0"
   spec.authors       = ["uu59", "yoshihara"]
   spec.summary       = "Jira input plugin for Embulk"
   spec.description   = "Loads records from Jira."

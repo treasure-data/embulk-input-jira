@@ -1,3 +1,9 @@
+## 0.2.0 - 2016-03-28
+
+**Embulk 0.8.7+ is required since this version**
+
+* [enhancement] Catch various config error [#44](https://github.com/treasure-data/embulk-input-jira/pull/44)
+
 ## 0.1.2 - 2016-03-25
 * [enhancement] Retry on guess [#42](https://github.com/treasure-data/embulk-input-jira/pull/42)
 
