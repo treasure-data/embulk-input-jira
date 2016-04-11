@@ -62,7 +62,13 @@ module Embulk
             if title
               # (a)
               Embulk.logger.warn "JIRA returns HTML: #{html}"
-              raise Embulk::ConfigError.new("JIRA returns error: #{title}")
+              case title
+              when "Atlassian Cloud Notifications - Page Unavailable"
+                # a.k.a. HTTP 503
+                raise title
+              when "Unauthorized (401)"
+                raise Embulk::ConfigError.new("JIRA returns error: #{title}")
+              end
             else
               # (b)
               count += 1
