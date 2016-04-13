@@ -123,5 +123,26 @@ describe Embulk::Input::JiraApi::Client do
       expect(Timeout).to receive(:timeout).with(wait).exactly(retry_times).times
       expect { subject }.to raise_error(Timeout::Error)
     end
+
+    describe "invalid JSON response" do
+      let(:block) { proc{ MultiJson.load("<title>#{title}</title>")} }
+      before { allow(Embulk.logger).to receive(:warn) }
+
+      context "Unauthorized" do
+        let(:title) { "Unauthorized (401)" }
+
+        it do
+          expect { subject }.to raise_error(Embulk::ConfigError)
+        end
+      end
+
+      context "Unavailable" do
+        let(:title) { "Atlassian Cloud Notifications - Page Unavailable"}
+
+        it do
+          expect { subject }.to raise_error(StandardError, title)
+        end
+      end
+    end
   end
 end
