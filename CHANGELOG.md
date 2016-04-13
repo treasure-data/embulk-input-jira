@@ -1,3 +1,7 @@
+## 0.2.1 - 2016-04-13
+
+* [fixed] Fix to retry when JIRA returns 503 reponse [#45](https://github.com/treasure-data/embulk-input-jira/pull/45)
+
 ## 0.2.0 - 2016-03-28
 
 **Embulk 0.8.7+ is required since this version**
