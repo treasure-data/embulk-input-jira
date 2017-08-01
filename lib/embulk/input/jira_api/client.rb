@@ -10,7 +10,7 @@ module Embulk
         PARALLEL_THREAD_COUNT = 50
         SEARCH_TIMEOUT_SECONDS = 5
         SEARCH_ISSUES_TIMEOUT_SECONDS = 60
-        DEFAULT_SEARCH_RETRY_TIMES = 10
+        DEFAULT_SEARCH_RETRY_TIMES = 30
 
         def self.setup(&block)
           Jiralicious.configure(&block)
@@ -67,7 +67,11 @@ module Embulk
                 # a.k.a. HTTP 503
                 raise title
               when "Unauthorized (401)"
-                raise Embulk::ConfigError.new("JIRA returns error: #{title}")
+                # JIRA API infrequently returns 401 response. Maybe JIRA's bug...
+                count += 1
+                sleep count # retry after some seconds for JIRA API perhaps under the overload
+                raise Embulk::ConfigError.new("JIRA returns error: #{title}") if count > retry_times
+                retry
               end
             else
               # (b)
