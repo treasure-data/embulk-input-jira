@@ -11,9 +11,10 @@ before_install:
     ruby -v
     # Currently, Travis can't treat jruby 9.0.5.0
     rvm get head
-    rvm use jruby-9.1.5.0 --install
+    rvm use jruby-9.0.5.0 --install
     ruby -v
-  - gem i bundler
+    gem i bundler
+    bundle install
 
 rvm: jruby-9.1.5.0
 
@@ -27,10 +28,10 @@ matrix:
   exclude:
     - jdk: oraclejdk8 # Ignore all matrix at first, use `include` to allow build
   include:
-    - {rvm: jruby-9.1.5.0, gemfile: gemfiles/embulk-0.8.0-latest}
-    - {rvm: jruby-9.1.5.0, gemfile: gemfiles/embulk-0.8.7}
-    - {rvm: jruby-9.1.5.0, gemfile: gemfiles/embulk-0.8.8}
-    - {rvm: jruby-9.1.5.0, gemfile: gemfiles/embulk-latest}
+    - {rvm: jruby-9.0.5.0, gemfile: gemfiles/embulk-0.8.0-latest}
+    - {rvm: jruby-9.0.5.0, gemfile: gemfiles/embulk-0.8.7}
+    - {rvm: jruby-9.0.5.0, gemfile: gemfiles/embulk-0.8.8}
+    - {rvm: jruby-9.0.5.0, gemfile: gemfiles/embulk-latest}
     
 
   allow_failures:

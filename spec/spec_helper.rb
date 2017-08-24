@@ -3,7 +3,6 @@ require "bundler/setup"
 
 Bundler.require(:runtime, :development)
 
-require "embulk/command/embulk_run"
 require "embulk"
 Embulk.setup
 
