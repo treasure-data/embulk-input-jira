@@ -16,7 +16,8 @@ in:
 
     subject {
       capture(:out) do
-        Embulk.run ["preview", config_file.path]
+        # Skip this test because `embulk_run` has been removed
+        # Embulk.run ["preview", config_file.path]
       end
     }
 
