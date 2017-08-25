@@ -16,7 +16,7 @@ before_install:
     gem i bundler
     bundle install
 
-rvm: jruby-9.1.5.0
+rvm: jruby-9.0.5.0
 
 gemfile:
   - gemfiles/embulk-0.8.0-latest
