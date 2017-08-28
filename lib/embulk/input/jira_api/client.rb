@@ -67,7 +67,7 @@ module Embulk
                 # a.k.a. HTTP 503
                 raise title
               when "Unauthorized (401)"
-                puts "JIRA returns error: #{title}"
+                Embulk.logger.warn "JIRA returns error: #{title}"
                 count += 1
                 retry
               end
