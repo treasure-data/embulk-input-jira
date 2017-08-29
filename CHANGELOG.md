@@ -1,3 +1,7 @@
+## 0.2.2 - 2017-08-29
+
+* [fixed] Added retry block to fix jiralicious authentication session [#48](https://github.com/treasure-data/embulk-input-jira/pull/48)
+
 ## 0.2.1 - 2016-04-13
 
 * [fixed] Fix to retry when JIRA returns 503 reponse [#45](https://github.com/treasure-data/embulk-input-jira/pull/45)
