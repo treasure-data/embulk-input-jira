@@ -63,7 +63,7 @@ module Embulk
         retryer = retryer(retry_limit, retry_initial_wait_sec)
 
         # Get credential before going to search issue
-        jira.get_user_credential(username)
+        jira.check_user_credential(username)
 
         # TODO: we use 0..10 issues to guess config?
         records = retryer.with_retry do
@@ -97,7 +97,7 @@ module Embulk
       def run
         return preview if preview?
 
-        @jira.get_user_credential(task[:username])
+        @jira.check_user_credential(task[:username])
         options = {}
         total_count = @jira.total_count(@jql)
         last_page = (total_count.to_f / PER_PAGE).ceil
@@ -141,7 +141,7 @@ module Embulk
       private
 
       def preview
-        @jira.get_user_credential(task[:username])
+        @jira.check_user_credential(task[:username])
 
         logger.debug "For preview mode, JIRA input plugin fetches records at most #{PREVIEW_RECORDS_COUNT}"
         @jira.search_issues(@jql, max_results: PREVIEW_RECORDS_COUNT).each do |issue|

@@ -40,7 +40,7 @@ module Embulk
           search(jql, max_results: 1).num_results
         end
 
-        def get_user_credential(username)
+        def check_user_credential(username)
           Jiralicious::Issue.find(username)
         rescue Jiralicious::JqlError, Jiralicious::AuthenticationError, Jiralicious::NotLoggedIn, Jiralicious::InvalidLogin => e
           raise Embulk::ConfigError.new(e.message)
