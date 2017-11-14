@@ -1,3 +1,7 @@
+## 0.2.3 - 2017-11-14
+
+* [fixed] Add a logic to check credentials before searching issues [#49](https://github.com/treasure-data/embulk-input-jira/pull/49)
+
 ## 0.2.2 - 2017-08-29
 
 * [fixed] Added retry block to fix jiralicious authentication session [#48](https://github.com/treasure-data/embulk-input-jira/pull/48)
