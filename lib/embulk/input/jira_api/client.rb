@@ -40,6 +40,19 @@ module Embulk
           search(jql, max_results: 1).num_results
         end
 
+        def check_user_credential(username)
+          Jiralicious::Issue.find(username)
+        rescue Jiralicious::JqlError, Jiralicious::AuthenticationError, Jiralicious::NotLoggedIn, Jiralicious::InvalidLogin => e
+          raise Embulk::ConfigError.new(e.message)
+        rescue ::SocketError => e
+          # wrong `uri` option given
+          raise Embulk::ConfigError.new(e.message)
+        rescue MultiJson::ParseError => e
+          html = e.message
+          title = html[%r|<title>(.*?)</title>|, 1] #=> e.g. "Unauthorized (401)"
+          raise ConfigError.new("Can not authorize with your credential.") if title == 'Unauthorized (401)'
+        end
+
         private
 
         def timeout_and_retry(wait, retry_times = DEFAULT_SEARCH_RETRY_TIMES, &block)
@@ -61,13 +74,12 @@ module Embulk
             title = html[%r|<title>(.*?)</title>|, 1] #=> e.g. "Unauthorized (401)"
             if title
               # (a)
-              Embulk.logger.warn "JIRA returns HTML: #{html}"
               case title
               when "Atlassian Cloud Notifications - Page Unavailable"
                 # a.k.a. HTTP 503
                 raise title
               when "Unauthorized (401)"
-                Embulk.logger.warn "JIRA returns error: #{title}"
+                Embulk.logger.warn "JIRA returns error: #{title}. Will go to retry"
                 count += 1
                 retry
               end

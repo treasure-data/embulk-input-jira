@@ -131,6 +131,7 @@ describe Embulk::Input::Jira do
     end
 
     before do
+      allow(jira_api).to receive(:check_user_credential).with(username).and_return(username)
       allow(jira_api).to receive(:search_issues).with(jql, max_results: described_class::GUESS_RECORDS_COUNT).and_return(jira_issues)
 
       allow(config).to receive(:param).with(:username, :string).and_return(username)
@@ -211,12 +212,14 @@ describe Embulk::Input::Jira do
     end
 
     let(:commit_report) { {} }
+    let(:username) { "jira-user" }
 
     before do
       allow(jira_api).to receive(:preview?).and_return(false)
 
       # TODO: create stubs without each `it` expected
       allow(Embulk::Input::JiraApi::Client).to receive(:setup).and_return(jira_api)
+      allow(jira_api).to receive(:check_user_credential).and_return(username)
 
       0.step(total_count, max_result) do |start_at|
         issues = jira_issues[start_at..(start_at + max_result - 1)]
@@ -256,6 +259,7 @@ describe Embulk::Input::Jira do
     let(:page_builder) { double("page_builder") }
     let(:jira_api) { Embulk::Input::JiraApi::Client.new }
     let(:jira_issues) { [Embulk::Input::JiraApi::Issue.new(attributes)] }
+    let(:username) { "jira-user" }
     let(:attributes) do
       {
         "id" => "100",
@@ -281,6 +285,7 @@ describe Embulk::Input::Jira do
       allow(Embulk::Input::JiraApi::Client).to receive(:setup).and_return(jira_api)
       allow(plugin).to receive(:logger).and_return(::Logger.new(File::NULL))
       allow(plugin).to receive(:preview?).and_return(true)
+      allow(jira_api).to receive(:check_user_credential).and_return(username)
       allow(jira_api).to receive(:search_issues).and_return(jira_issues)
       allow(page_builder).to receive(:add)
       allow(page_builder).to receive(:finish)
