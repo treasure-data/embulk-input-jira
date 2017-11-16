@@ -41,7 +41,7 @@ module Embulk
         end
 
         def check_user_credential(username)
-          Jiralicious::Issue.find(username)
+          Jiralicious::User.search(username)
         rescue Jiralicious::JqlError, Jiralicious::AuthenticationError, Jiralicious::NotLoggedIn, Jiralicious::InvalidLogin => e
           raise Embulk::ConfigError.new(e.message)
         rescue ::SocketError => e
