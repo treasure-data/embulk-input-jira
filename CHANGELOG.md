@@ -1,3 +1,7 @@
+## 0.2.4 - 2017-11-17
+
+* [fixed] Fixed checking credentials by `Jiralicious User` [#51](https://github.com/treasure-data/embulk-input-jira/pull/51)
+
 ## 0.2.3 - 2017-11-14
 
 * [fixed] Add a logic to check credentials before searching issues [#49](https://github.com/treasure-data/embulk-input-jira/pull/49)
