@@ -7,9 +7,11 @@ module Embulk
   module Input
     module JiraApi
       class Client
-        PARALLEL_THREAD_COUNT = 50
-        SEARCH_TIMEOUT_SECONDS = 5
-        SEARCH_ISSUES_TIMEOUT_SECONDS = 60
+        # According to this discussion https://community.developer.atlassian.com/t/are-there-rate-limits-for-jira-cloud-apis/4317/4
+        # So decided to choose the lower bound for safety
+        MAX_CONCURRENT_REQUESTS = 5
+        # Normal http request timeout is 300s
+        SEARCH_ISSUES_TIMEOUT_SECONDS = 300
         DEFAULT_SEARCH_RETRY_TIMES = 10
 
         def self.setup(&block)
@@ -18,11 +20,13 @@ module Embulk
         end
 
         def search_issues(jql, options={})
-          timeout_and_retry(SEARCH_ISSUES_TIMEOUT_SECONDS) do
+          number_of_processors = Parallel.processor_count
+          parallel_threads = (number_of_processors - 1) <=1 ? 2 : (number_of_processors - 1) > MAX_CONCURRENT_REQUESTS ? MAX_CONCURRENT_REQUESTS : (number_of_processors - 1)
+          # Maximum time to wait is (300 * maximum_number_of_request / parallel_threads)
+          timeout_and_retry(SEARCH_ISSUES_TIMEOUT_SECONDS * 50 / parallel_threads) do
             issues_raw = search(jql, options).issues_raw
-
             # TODO: below code has race-conditon.
-            Parallel.map(issues_raw, in_threads: PARALLEL_THREAD_COUNT) do |issue_raw|
+            Parallel.map(issues_raw, in_threads: parallel_threads) do |issue_raw|
               # https://github.com/dorack/jiralicious/blob/v0.4.0/lib/jiralicious/search_result.rb#L32-34
               issue = Jiralicious::Issue.find(issue_raw["key"])
               JiraApi::Issue.new(issue)
@@ -31,7 +35,7 @@ module Embulk
         end
 
         def search(jql, options={})
-          timeout_and_retry(SEARCH_TIMEOUT_SECONDS) do
+          timeout_and_retry(SEARCH_ISSUES_TIMEOUT_SECONDS) do
             Jiralicious.search(jql, options)
           end
         end
