@@ -30,7 +30,7 @@ describe Embulk::Input::JiraApi::Client do
       end
 
       it "retry DEFAULT_SEARCH_RETRY_TIMES times then raise error" do
-        expect(Timeout).to receive(:timeout).exactly(Embulk::Input::JiraApi::Client::DEFAULT_SEARCH_RETRY_TIMES)
+        expect(Timeout).to receive(:timeout).exactly(Embulk::Input::JiraApi::Client::DEFAULT_SEARCH_RETRY_TIMES + 1)
         expect { subject }.to raise_error
       end
     end
@@ -120,7 +120,7 @@ describe Embulk::Input::JiraApi::Client do
     it "Always timeout, raise error after N times retry" do
       allow(Timeout).to receive(:timeout) { raise Timeout::Error }
 
-      expect(Timeout).to receive(:timeout).with(wait).exactly(retry_times).times
+      expect(Timeout).to receive(:timeout).with(wait).exactly(retry_times + 1).times
       expect { subject }.to raise_error(Timeout::Error)
     end
 
