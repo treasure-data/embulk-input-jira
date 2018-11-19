@@ -1,6 +1,6 @@
 ## 0.2.5 - 2018-11-20
 
-* [fixed] Reduce the number of concurrent threads to search issues to maximum = 5 [#52](https://github.com/treasure-data/embulk-input-jira/pull/52)
+* [fixed] Automatically turning number of concurrent threads to search issues [#52](https://github.com/treasure-data/embulk-input-jira/pull/52)
 
 ## 0.2.4 - 2017-11-17
 

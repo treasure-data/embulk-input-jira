@@ -23,7 +23,6 @@ module Embulk
 
         def search_issues(jql, options={})
           parallel_threads = MAX_CONCURRENT_REQUESTS
-          # Maximum time to wait is (300 * maximum_number_of_request / parallel_threads)
           timeout_and_retry(SEARCH_ISSUES_TIMEOUT_SECONDS * MAX_CONCURRENT_REQUESTS ) do
             issues_raw = search(jql, options).issues_raw
             # TODO: below code has race-conditon.
@@ -35,7 +34,6 @@ module Embulk
             while issues_raw.length > 0 && search_issue_count <= DEFAULT_SEARCH_RETRY_TIMES do
               search_results = Parallel.map(issues_raw, in_threads: parallel_threads) do |issue_raw|
                 # https://github.com/dorack/jiralicious/blob/v0.4.0/lib/jiralicious/search_result.rb#L32-34
-                
                 begin
                   issue = Jiralicious::Issue.find(issue_raw["key"])
                   {

@@ -38,6 +38,8 @@ describe Embulk::Input::JiraApi::Client do
 
   describe "#search_issues" do
     let(:jql) { "project=FOO" }
+    let(:jira_api) { Embulk::Input::JiraApi::Client.new }
+    let(:title_401) { "Unauthorized (401)"}
     let(:results) do
       [
         {
@@ -67,14 +69,22 @@ describe Embulk::Input::JiraApi::Client do
       ]
     end
 
-    subject { Embulk::Input::JiraApi::Client.new.search_issues(jql) }
+    subject { jira_api.search_issues(jql) }
 
-    it do
+    it "Search issues successfully" do
       allow(Jiralicious).to receive_message_chain(:search, :issues_raw).and_return(results)
       allow(Jiralicious::Issue).to receive(:find).and_return(results.first)
 
       expect(subject).to be_kind_of Array
       expect(subject.map(&:class)).to match_array [Embulk::Input::JiraApi::Issue, Embulk::Input::JiraApi::Issue]
+    end
+
+    it "Search issues got 401 due to high concurrent load issues" do
+      allow(Jiralicious).to receive_message_chain(:search, :issues_raw).and_return(results)
+      allow(Jiralicious::Issue).to receive(:find){ MultiJson.load("<title>#{title_401}</title>")}
+      allow(jira_api).to receive(:sleep)
+
+      expect { subject }.to raise_error(StandardError, title_401)
     end
   end
 
