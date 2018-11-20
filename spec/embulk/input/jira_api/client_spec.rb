@@ -73,7 +73,7 @@ describe Embulk::Input::JiraApi::Client do
 
     it "Search issues successfully" do
       allow(Jiralicious).to receive_message_chain(:search, :issues_raw).and_return(results)
-      allow(Jiralicious::Issue).to receive(:find).and_return(results.first)
+      allow(jira_api).to receive(:find_issue).and_return(results.first)
 
       expect(subject).to be_kind_of Array
       expect(subject.map(&:class)).to match_array [Embulk::Input::JiraApi::Issue, Embulk::Input::JiraApi::Issue]

@@ -24,7 +24,6 @@ module Embulk
         end
 
         def search_issues(jql, options={})
-          Embulk.logger.warn "Process count #{Parallel.processor_count}"
           parallel_threads = MAX_CONCURRENT_REQUESTS
           timeout_and_retry(SEARCH_ISSUES_TIMEOUT_SECONDS * MAX_CONCURRENT_REQUESTS ) do
             issues_raw = search(jql, options).issues_raw
@@ -67,12 +66,12 @@ module Embulk
               raise errors[0] if search_issue_count > DEFAULT_SEARCH_RETRY_TIMES && errors.length > 0
               # Turning number of parallel threads based on number of success and failure items
               # Minumum is 2
-              Embulk.logger.info "All : #{issues_raw.length}"
-              Embulk.logger.info "Error : #{fail_items.length}"
-              Embulk.logger.info "Parallel : #{parallel_threads}"
+              # Embulk.logger.info "All : #{issues_raw.length}"
+              # Embulk.logger.info "Error : #{fail_items.length}"
+              # Embulk.logger.info "Parallel : #{parallel_threads}"
               
               parallel_threads = calculate_parallel_threads(parallel_threads, issues_raw.length, fail_items.length, search_issue_count)
-              Embulk.logger.info "New Parallel : #{parallel_threads}"
+              # Embulk.logger.info "New Parallel : #{parallel_threads}"
               sleep search_issue_count
               issues_raw = fail_items
               fail_items = []
@@ -106,7 +105,7 @@ module Embulk
         end
 
         def calculate_parallel_threads(current_parallel, all_items, fail_items, times)
-          Embulk.logger.warn "Tuning times : #{times}"
+          # Embulk.logger.warn "Tuning times : #{times}"
           success_items = all_items - fail_items
           return MIN_CONCURRENT_REQUESTS if times > DEFAULT_SEARCH_RETRY_TIMES/2 || success_items < MIN_CONCURRENT_REQUESTS
           return [fail_items, success_items, current_parallel*2].min
