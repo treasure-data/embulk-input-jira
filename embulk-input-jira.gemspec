@@ -1,6 +1,6 @@
 Gem::Specification.new do |spec|
   spec.name          = "embulk-input-jira"
-  spec.version       = "0.2.5"
+  spec.version       = "0.2.5.alpha.03"
   spec.authors       = ["uu59", "yoshihara"]
   spec.summary       = "Jira input plugin for Embulk"
   spec.description   = "Loads records from Jira."
@@ -14,6 +14,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency 'jiralicious', ['~> 0.5.0']
   spec.add_dependency 'parallel', ['~> 1.6.0']
+  spec.add_dependency 'ruby-limiter', ['~> 1.0']
   spec.add_dependency 'perfect_retry', ['~> 0.3']
   spec.add_development_dependency 'bundler', ['~> 1.0']
   spec.add_development_dependency 'rake', ['< 11.0']

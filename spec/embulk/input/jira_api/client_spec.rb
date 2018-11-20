@@ -81,7 +81,7 @@ describe Embulk::Input::JiraApi::Client do
 
     it "Search issues got 401 due to high concurrent load issues" do
       allow(Jiralicious).to receive_message_chain(:search, :issues_raw).and_return(results)
-      allow(Jiralicious::Issue).to receive(:find){ MultiJson.load("<title>#{title_401}</title>")}
+      allow(jira_api).to receive(:find_issue){ MultiJson.load("<title>#{title_401}</title>")}
       allow(jira_api).to receive(:sleep)
 
       expect { subject }.to raise_error(StandardError, title_401)

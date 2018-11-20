@@ -1,5 +1,6 @@
 require "jiralicious"
 require "parallel"
+require "limiter"
 require "embulk/input/jira_api/issue"
 require "timeout"
 
@@ -8,20 +9,22 @@ module Embulk
     module JiraApi
       class Client
         MAX_CONCURRENT_REQUESTS = 50
+        MIN_CONCURRENT_REQUESTS = 2
         # Normal http request timeout is 300s
         SEARCH_ISSUES_TIMEOUT_SECONDS = 300
         DEFAULT_SEARCH_RETRY_TIMES = 10
+
+        def initialize
+          @rate_limiter = Limiter::RateQueue.new(MAX_CONCURRENT_REQUESTS, interval: 2)
+        end
 
         def self.setup(&block)
           Jiralicious.configure(&block)
           new
         end
 
-        def find_at_key(array, key)
-          
-        end
-
         def search_issues(jql, options={})
+          Embulk.logger.warn "Process count #{Parallel.processor_count}"
           parallel_threads = MAX_CONCURRENT_REQUESTS
           timeout_and_retry(SEARCH_ISSUES_TIMEOUT_SECONDS * MAX_CONCURRENT_REQUESTS ) do
             issues_raw = search(jql, options).issues_raw
@@ -30,12 +33,13 @@ module Embulk
             fail_items = []
             errors = []
             search_issue_count = 0
+            @rate_limiter = Limiter::RateQueue.new(parallel_threads, interval: 2)
             
             while issues_raw.length > 0 && search_issue_count <= DEFAULT_SEARCH_RETRY_TIMES do
               search_results = Parallel.map(issues_raw, in_threads: parallel_threads) do |issue_raw|
                 # https://github.com/dorack/jiralicious/blob/v0.4.0/lib/jiralicious/search_result.rb#L32-34
                 begin
-                  issue = Jiralicious::Issue.find(issue_raw["key"])
+                  issue = find_issue(issue_raw["key"])
                   {
                     :error => nil,
                     :result => JiraApi::Issue.new(issue)
@@ -63,17 +67,13 @@ module Embulk
               raise errors[0] if search_issue_count > DEFAULT_SEARCH_RETRY_TIMES && errors.length > 0
               # Turning number of parallel threads based on number of success and failure items
               # Minumum is 2
-              number_of_success_item = issues_raw.length - fail_items.length
-              new_parallel_threads = 0;
-              if number_of_success_item < 2
-                new_parallel_threads = 2
-              elsif number_of_success_item > fail_items.length
-                new_parallel_threads = fail_items.length
-              else
-                new_parallel_threads = number_of_success_item
-              end
-              # Add limit for new parallel_threads to not greater than 2 times the current parallel threads
-              parallel_threads = (new_parallel_threads > parallel_threads * 2) ? parallel_threads * 2 : new_parallel_threads
+              Embulk.logger.info "All : #{issues_raw.length}"
+              Embulk.logger.info "Error : #{fail_items.length}"
+              Embulk.logger.info "Parallel : #{parallel_threads}"
+              
+              parallel_threads = calculate_parallel_threads(parallel_threads, issues_raw.length, fail_items.length, search_issue_count)
+              Embulk.logger.info "New Parallel : #{parallel_threads}"
+              sleep search_issue_count
               issues_raw = fail_items
               fail_items = []
               errors = []
@@ -103,6 +103,13 @@ module Embulk
           html = e.message
           title = html[%r|<title>(.*?)</title>|, 1] #=> e.g. "Unauthorized (401)"
           raise ConfigError.new("Can not authorize with your credential.") if title == 'Unauthorized (401)'
+        end
+
+        def calculate_parallel_threads(current_parallel, all_items, fail_items, times)
+          Embulk.logger.warn "Tuning times : #{times}"
+          success_items = all_items - fail_items
+          return MIN_CONCURRENT_REQUESTS if times > DEFAULT_SEARCH_RETRY_TIMES/2 || success_items < MIN_CONCURRENT_REQUESTS
+          return [fail_items, success_items, current_parallel*2].min
         end
 
         private
@@ -137,6 +144,11 @@ module Embulk
             sleep count # retry after some seconds for JIRA API perhaps under the overload
             retry
           end
+        end
+
+        def find_issue(issue_key)
+          @rate_limiter.shift
+          Jiralicious::Issue.find(issue_key)
         end
       end
     end
