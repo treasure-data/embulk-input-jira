@@ -173,4 +173,61 @@ describe Embulk::Input::JiraApi::Client do
       end
     end
   end
+
+  describe "#calculate_rate_limit" do
+    let(:jira_api) { Embulk::Input::JiraApi::Client.new }
+    it "current_limit = 50, all_items = 50, fail_items=50, times=1" do
+      current_limit = 50
+      all_items = 50
+      fail_items = 50
+      times = 1
+      expected_result = Embulk::Input::JiraApi::Client::MIN_RATE_LIMIT
+      expect(jira_api.calculate_rate_limit(current_limit, all_items, fail_items, times)).to eq expected_result
+    end
+
+    it "current_limit = 50, all_items = 50, fail_items=20, times=1" do
+      current_limit = 50
+      all_items = 50
+      fail_items = 20
+      times = 1
+      expected_result = 20
+      expect(jira_api.calculate_rate_limit(current_limit, all_items, fail_items, times)).to eq expected_result
+    end
+
+    it "current_limit = 50, all_items = 50, fail_items=50, times=1" do
+      current_limit = 50
+      all_items = 50
+      fail_items = 50
+      times = 1
+      expected_result = Embulk::Input::JiraApi::Client::MIN_RATE_LIMIT
+      expect(jira_api.calculate_rate_limit(current_limit, all_items, fail_items, times)).to eq expected_result
+    end
+
+    it "current_limit = MIN_RATE_LIMIT, all_items = 50, fail_items=20, times=2" do
+      current_limit = Embulk::Input::JiraApi::Client::MIN_RATE_LIMIT
+      all_items = 50
+      fail_items = 20
+      times = 2
+      expected_result = Embulk::Input::JiraApi::Client::MIN_RATE_LIMIT
+      expect(jira_api.calculate_rate_limit(current_limit, all_items, fail_items, times)).to eq expected_result
+    end
+
+    it "current_limit = 10, all_items = 30, fail_items=25, times=2" do
+      current_limit = 10
+      all_items = 30
+      fail_items = 25
+      times = 2
+      expected_result = 5
+      expect(jira_api.calculate_rate_limit(current_limit, all_items, fail_items, times)).to eq expected_result
+    end
+
+    it "current_limit = 50, all_items = 50, fail_items=20, times=DEFAULT_SEARCH_RETRY_TIMES/2" do
+      current_limit = 50
+      all_items = 50
+      fail_items = 20
+      times = Embulk::Input::JiraApi::Client::DEFAULT_SEARCH_RETRY_TIMES/2
+      expected_result = Embulk::Input::JiraApi::Client::MIN_RATE_LIMIT
+      expect(jira_api.calculate_rate_limit(current_limit, all_items, fail_items, times)).to eq expected_result
+    end
+  end
 end
