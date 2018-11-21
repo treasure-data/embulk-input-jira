@@ -1,6 +1,6 @@
-## 0.2.5 - 2018-11-20
+## 0.2.5 - 2018-11-27
 
-* [fixed] Automatically turning number of concurrent threads to find issues [#52](https://github.com/treasure-data/embulk-input-jira/pull/52)
+* [fixed] Fix infinitive 401 errors and dynamically adjust parallel threads [#52](https://github.com/treasure-data/embulk-input-jira/pull/52)
 
 ## 0.2.4 - 2017-11-17
 

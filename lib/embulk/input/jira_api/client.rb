@@ -8,14 +8,14 @@ module Embulk
   module Input
     module JiraApi
       class Client
-        MAX_CONCURRENT_REQUESTS = 50
-        MIN_CONCURRENT_REQUESTS = 2
+        MAX_RATE_LIMIT = 50
+        MIN_RATE_LIMIT = 2
         # Normal http request timeout is 300s
         SEARCH_ISSUES_TIMEOUT_SECONDS = 300
         DEFAULT_SEARCH_RETRY_TIMES = 10
 
         def initialize
-          @rate_limiter = Limiter::RateQueue.new(MAX_CONCURRENT_REQUESTS, interval: 2)
+          @rate_limiter = Limiter::RateQueue.new(MAX_RATE_LIMIT, interval: 2)
         end
 
         def self.setup(&block)
@@ -24,18 +24,17 @@ module Embulk
         end
 
         def search_issues(jql, options={})
-          parallel_threads = MAX_CONCURRENT_REQUESTS
-          timeout_and_retry(SEARCH_ISSUES_TIMEOUT_SECONDS * MAX_CONCURRENT_REQUESTS ) do
+          # Maximum number of issues to retrieve is 50
+          rate_limit = MAX_RATE_LIMIT
+          timeout_and_retry(SEARCH_ISSUES_TIMEOUT_SECONDS * MAX_RATE_LIMIT ) do
             issues_raw = search(jql, options).issues_raw
-            # TODO: below code has race-conditon.
             success_items = []
             fail_items = []
-            errors = []
-            search_issue_count = 0
-            @rate_limiter = Limiter::RateQueue.new(parallel_threads, interval: 2)
-            
-            while issues_raw.length > 0 && search_issue_count <= DEFAULT_SEARCH_RETRY_TIMES do
-              search_results = Parallel.map(issues_raw, in_threads: parallel_threads) do |issue_raw|
+            error_object = nil
+            find_issue_count = 0
+            @rate_limiter = Limiter::RateQueue.new(rate_limit, interval: 2)
+            while issues_raw.length > 0 && find_issue_count <= DEFAULT_SEARCH_RETRY_TIMES do
+              search_results = Parallel.map(issues_raw, in_threads: rate_limit) do |issue_raw|
                 # https://github.com/dorack/jiralicious/blob/v0.4.0/lib/jiralicious/search_result.rb#L32-34
                 begin
                   issue = find_issue(issue_raw["key"])
@@ -45,7 +44,10 @@ module Embulk
                   }
                 rescue MultiJson::ParseError => e
                   html = e.message
-                  title = html[%r|<title>(.*?)</title>|, 1] #=> e.g. "Unauthorized (401)"
+                  title = html[%r|<title>(.*?)</title>|, 1]
+                  # 401 due to high number of concurrent requests with current account
+                  # The number of concurrent requests is not fixed by every account
+                  # Hence catch the error item and retry later
                   raise title if title != "Unauthorized (401)"
                   {
                     :error => e,
@@ -54,28 +56,23 @@ module Embulk
                   }
                 end
               end
-              search_issue_count += 1
+              find_issue_count += 1
               for issue_result in search_results do
                 if !issue_result[:error].nil? 
                   fail_items.push(issue_result[:issue_raw])
-                  errors.push(issue_result[:error])
+                  error_object = issue_result[:error]
                 else
                   success_items.push(issue_result[:result])
                 end
               end
-              raise errors[0] if search_issue_count > DEFAULT_SEARCH_RETRY_TIMES && errors.length > 0
-              # Turning number of parallel threads based on number of success and failure items
-              # Minumum is 2
-              # Embulk.logger.info "All : #{issues_raw.length}"
-              # Embulk.logger.info "Error : #{fail_items.length}"
-              # Embulk.logger.info "Parallel : #{parallel_threads}"
+              raise error_object if find_issue_count > DEFAULT_SEARCH_RETRY_TIMES && !error_object.nil?
               
-              parallel_threads = calculate_parallel_threads(parallel_threads, issues_raw.length, fail_items.length, search_issue_count)
-              # Embulk.logger.info "New Parallel : #{parallel_threads}"
-              sleep search_issue_count
+              rate_limit = calculate_rate_limit(rate_limit, issues_raw.length, fail_items.length, find_issue_count)
+              # Sleep after some seconds for JIRA API perhaps under the overload
+              sleep find_issue_count if fail_items.length > 0
               issues_raw = fail_items
               fail_items = []
-              errors = []
+              error_object = nil
             end
             success_items
           end
@@ -104,11 +101,13 @@ module Embulk
           raise ConfigError.new("Can not authorize with your credential.") if title == 'Unauthorized (401)'
         end
 
-        def calculate_parallel_threads(current_parallel, all_items, fail_items, times)
-          # Embulk.logger.warn "Tuning times : #{times}"
+        # Calculate rate limit based on previous run result
+        # Return 2 MIN_RATE_LIMIT in case turning from the 5th times or success_items is less than 2
+        # Otherwise return the min number between fail_items, success_items and current_limit
+        def calculate_rate_limit(current_limit, all_items, fail_items, times)
           success_items = all_items - fail_items
-          return MIN_CONCURRENT_REQUESTS if times > DEFAULT_SEARCH_RETRY_TIMES/2 || success_items < MIN_CONCURRENT_REQUESTS
-          return [fail_items, success_items, current_parallel*2].min
+          return MIN_RATE_LIMIT if times >= DEFAULT_SEARCH_RETRY_TIMES/2 || success_items < MIN_RATE_LIMIT
+          return [fail_items, success_items, current_limit].min
         end
 
         private
