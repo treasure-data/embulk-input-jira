@@ -36,7 +36,7 @@ module Embulk
             @rate_limiter = Limiter::RateQueue.new(rate_limit, interval: 2)
             error_object = nil
             while issues_raw.length > 0 && retry_count <= DEFAULT_SEARCH_RETRY_TIMES do
-              search_results = Parallel.each(issues_raw, in_threads: rate_limit) do |issue_raw|
+              Parallel.each(issues_raw, in_threads: rate_limit) do |issue_raw|
                 # https://github.com/dorack/jiralicious/blob/v0.4.0/lib/jiralicious/search_result.rb#L32-34
                 begin
                   issue = find_issue(issue_raw["key"])
