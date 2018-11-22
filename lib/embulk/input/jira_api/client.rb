@@ -24,23 +24,23 @@ module Embulk
         end
 
         def search_issues(jql, options={})
-          # Maximum number of issues to retrieve is 50
-          rate_limit = MAX_RATE_LIMIT
           timeout_and_retry(SEARCH_ISSUES_TIMEOUT_SECONDS * MAX_RATE_LIMIT ) do
+            # Maximum number of issues to retrieve is 50
+            rate_limit = MAX_RATE_LIMIT
             issues_raw = search(jql, options).issues_raw
             success_items = []
             fail_items = []
             error_object = nil
-            find_issue_count = 0
+            retry_count = 0
+            semaphore = Mutex.new
             @rate_limiter = Limiter::RateQueue.new(rate_limit, interval: 2)
-            while issues_raw.length > 0 && find_issue_count <= DEFAULT_SEARCH_RETRY_TIMES do
-              search_results = Parallel.map(issues_raw, in_threads: rate_limit) do |issue_raw|
+            while issues_raw.length > 0 && retry_count <= DEFAULT_SEARCH_RETRY_TIMES do
+              search_results = Parallel.each(issues_raw, in_threads: rate_limit) do |issue_raw|
                 # https://github.com/dorack/jiralicious/blob/v0.4.0/lib/jiralicious/search_result.rb#L32-34
                 begin
                   issue = find_issue(issue_raw["key"])
-                  {
-                    :error => nil,
-                    :result => JiraApi::Issue.new(issue)
+                  semaphore.synchronize {
+                    success_items.push(JiraApi::Issue.new(issue))
                   }
                 rescue MultiJson::ParseError => e
                   html = e.message
@@ -49,27 +49,17 @@ module Embulk
                   # The number of concurrent requests is not fixed by every account
                   # Hence catch the error item and retry later
                   raise title if title != "Unauthorized (401)"
-                  {
-                    :error => e,
-                    :issue_raw => issue_raw,
-                    :result => nil
+                  semaphore.synchronize {
+                    fail_items.push(issue_raw)
+                    error_object = e
                   }
                 end
               end
-              find_issue_count += 1
-              for issue_result in search_results do
-                if !issue_result[:error].nil? 
-                  fail_items.push(issue_result[:issue_raw])
-                  error_object = issue_result[:error]
-                else
-                  success_items.push(issue_result[:result])
-                end
-              end
-              raise error_object if find_issue_count > DEFAULT_SEARCH_RETRY_TIMES && !error_object.nil?
-              
-              rate_limit = calculate_rate_limit(rate_limit, issues_raw.length, fail_items.length, find_issue_count)
+              retry_count += 1
+              raise error_object if retry_count > DEFAULT_SEARCH_RETRY_TIMES && !error_object.nil?
+              rate_limit = calculate_rate_limit(rate_limit, issues_raw.length, fail_items.length, retry_count)
               # Sleep after some seconds for JIRA API perhaps under the overload
-              sleep find_issue_count if fail_items.length > 0
+              sleep retry_count if fail_items.length > 0
               issues_raw = fail_items
               fail_items = []
               error_object = nil
