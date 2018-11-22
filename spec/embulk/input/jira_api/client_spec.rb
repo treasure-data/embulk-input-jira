@@ -194,15 +194,6 @@ describe Embulk::Input::JiraApi::Client do
       expect(jira_api.calculate_rate_limit(current_limit, all_items, fail_items, times)).to eq expected_result
     end
 
-    it "current_limit = 50, all_items = 50, fail_items=50, times=1" do
-      current_limit = 50
-      all_items = 50
-      fail_items = 50
-      times = 1
-      expected_result = Embulk::Input::JiraApi::Client::MIN_RATE_LIMIT
-      expect(jira_api.calculate_rate_limit(current_limit, all_items, fail_items, times)).to eq expected_result
-    end
-
     it "current_limit = MIN_RATE_LIMIT, all_items = 50, fail_items=20, times=2" do
       current_limit = Embulk::Input::JiraApi::Client::MIN_RATE_LIMIT
       all_items = 50
