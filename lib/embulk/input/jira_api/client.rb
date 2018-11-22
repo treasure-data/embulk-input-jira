@@ -24,16 +24,17 @@ module Embulk
         end
 
         def search_issues(jql, options={})
+          issues_raw = search(jql, options).issues_raw
+          # Maximum number of issues to retrieve is 50
+          rate_limit = MAX_RATE_LIMIT
+          success_items = []
+          fail_items = []
+          error_object = nil
           timeout_and_retry(SEARCH_ISSUES_TIMEOUT_SECONDS * MAX_RATE_LIMIT ) do
-            # Maximum number of issues to retrieve is 50
-            rate_limit = MAX_RATE_LIMIT
-            issues_raw = search(jql, options).issues_raw
-            success_items = []
-            fail_items = []
-            error_object = nil
             retry_count = 0
             semaphore = Mutex.new
             @rate_limiter = Limiter::RateQueue.new(rate_limit, interval: 2)
+            error_object = nil
             while issues_raw.length > 0 && retry_count <= DEFAULT_SEARCH_RETRY_TIMES do
               search_results = Parallel.each(issues_raw, in_threads: rate_limit) do |issue_raw|
                 # https://github.com/dorack/jiralicious/blob/v0.4.0/lib/jiralicious/search_result.rb#L32-34
@@ -56,13 +57,12 @@ module Embulk
                 end
               end
               retry_count += 1
-              raise error_object if retry_count > DEFAULT_SEARCH_RETRY_TIMES && !error_object.nil?
               rate_limit = calculate_rate_limit(rate_limit, issues_raw.length, fail_items.length, retry_count)
-              # Sleep after some seconds for JIRA API perhaps under the overload
-              sleep retry_count if fail_items.length > 0
               issues_raw = fail_items
               fail_items = []
-              error_object = nil
+              raise error_object if retry_count > DEFAULT_SEARCH_RETRY_TIMES && !error_object.nil?
+              # Sleep after some seconds for JIRA API perhaps under the overload
+              sleep retry_count if fail_items.length > 0
             end
             success_items
           end
