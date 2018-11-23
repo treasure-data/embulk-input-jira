@@ -30,7 +30,7 @@ describe Embulk::Input::JiraApi::Client do
       end
 
       it "retry DEFAULT_SEARCH_RETRY_TIMES times then raise error" do
-        expect(Timeout).to receive(:timeout).exactly(Embulk::Input::JiraApi::Client::DEFAULT_SEARCH_RETRY_TIMES)
+        expect(Timeout).to receive(:timeout).exactly(Embulk::Input::JiraApi::Client::DEFAULT_SEARCH_RETRY_TIMES + 1)
         expect { subject }.to raise_error
       end
     end
@@ -38,6 +38,9 @@ describe Embulk::Input::JiraApi::Client do
 
   describe "#search_issues" do
     let(:jql) { "project=FOO" }
+    let(:jira_api) { Embulk::Input::JiraApi::Client.new }
+    let(:title_401) { "Unauthorized (401)"}
+    let(:multi_json_error) {MultiJson::ParseError.build(StandardError.new("<title>#{title_401}</title>"), {})}
     let(:results) do
       [
         {
@@ -67,14 +70,38 @@ describe Embulk::Input::JiraApi::Client do
       ]
     end
 
-    subject { Embulk::Input::JiraApi::Client.new.search_issues(jql) }
+    subject { jira_api.search_issues(jql) }
 
-    it do
+    it "Search issues successfully" do
       allow(Jiralicious).to receive_message_chain(:search, :issues_raw).and_return(results)
-      allow(Jiralicious::Issue).to receive(:find).and_return(results.first)
+      allow(jira_api).to receive(:find_issue).and_return(results.first)
 
       expect(subject).to be_kind_of Array
       expect(subject.map(&:class)).to match_array [Embulk::Input::JiraApi::Issue, Embulk::Input::JiraApi::Issue]
+    end
+
+    it "Search issues successfully when first item success - 401 - second items success" do
+      allow(Jiralicious).to receive_message_chain(:search, :issues_raw).and_return(results)
+      allow(jira_api).to receive(:find_issue).and_return(results.first).and_raise(multi_json_error).and_return(results.first)
+
+      expect(subject).to be_kind_of Array
+      expect(subject.map(&:class)).to match_array [Embulk::Input::JiraApi::Issue, Embulk::Input::JiraApi::Issue]
+    end
+
+    it "Search issues successfully when 401 - first and second items success" do
+      allow(Jiralicious).to receive_message_chain(:search, :issues_raw).and_return(results)
+      allow(jira_api).to receive(:find_issue).and_raise(multi_json_error).and_return(results.first)
+
+      expect(subject).to be_kind_of Array
+      expect(subject.map(&:class)).to match_array [Embulk::Input::JiraApi::Issue, Embulk::Input::JiraApi::Issue]
+    end
+
+    it "Search issues got 401 due to high concurrent load issues" do
+      allow(Jiralicious).to receive_message_chain(:search, :issues_raw).and_return(results)
+      allow(jira_api).to receive(:find_issue).and_raise(multi_json_error)
+      allow(jira_api).to receive(:sleep)
+
+      expect { subject }.to raise_error(StandardError, title_401)
     end
   end
 
@@ -120,7 +147,7 @@ describe Embulk::Input::JiraApi::Client do
     it "Always timeout, raise error after N times retry" do
       allow(Timeout).to receive(:timeout) { raise Timeout::Error }
 
-      expect(Timeout).to receive(:timeout).with(wait).exactly(retry_times).times
+      expect(Timeout).to receive(:timeout).with(wait).exactly(retry_times + 1).times
       expect { subject }.to raise_error(Timeout::Error)
     end
 
@@ -144,6 +171,54 @@ describe Embulk::Input::JiraApi::Client do
           expect { subject }.to raise_error(StandardError, title)
         end
       end
+    end
+  end
+
+  describe "#calculate_rate_limit" do
+    let(:jira_api) { Embulk::Input::JiraApi::Client.new }
+    it "current_limit = 50, all_items = 50, fail_items=50, times=1" do
+      current_limit = 50
+      all_items = 50
+      fail_items = 50
+      times = 1
+      expected_result = Embulk::Input::JiraApi::Client::MIN_RATE_LIMIT
+      expect(jira_api.calculate_rate_limit(current_limit, all_items, fail_items, times)).to eq expected_result
+    end
+
+    it "current_limit = 50, all_items = 50, fail_items=20, times=1" do
+      current_limit = 50
+      all_items = 50
+      fail_items = 20
+      times = 1
+      expected_result = 20
+      expect(jira_api.calculate_rate_limit(current_limit, all_items, fail_items, times)).to eq expected_result
+    end
+
+    it "current_limit = MIN_RATE_LIMIT, all_items = 50, fail_items=20, times=2" do
+      current_limit = Embulk::Input::JiraApi::Client::MIN_RATE_LIMIT
+      all_items = 50
+      fail_items = 20
+      times = 2
+      expected_result = Embulk::Input::JiraApi::Client::MIN_RATE_LIMIT
+      expect(jira_api.calculate_rate_limit(current_limit, all_items, fail_items, times)).to eq expected_result
+    end
+
+    it "current_limit = 10, all_items = 30, fail_items=25, times=2" do
+      current_limit = 10
+      all_items = 30
+      fail_items = 25
+      times = 2
+      expected_result = 5
+      expect(jira_api.calculate_rate_limit(current_limit, all_items, fail_items, times)).to eq expected_result
+    end
+
+    it "current_limit = 50, all_items = 50, fail_items=20, times=DEFAULT_SEARCH_RETRY_TIMES/2" do
+      current_limit = 50
+      all_items = 50
+      fail_items = 20
+      times = Embulk::Input::JiraApi::Client::DEFAULT_SEARCH_RETRY_TIMES/2
+      expected_result = Embulk::Input::JiraApi::Client::MIN_RATE_LIMIT
+      expect(jira_api.calculate_rate_limit(current_limit, all_items, fail_items, times)).to eq expected_result
     end
   end
 end

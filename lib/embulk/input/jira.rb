@@ -103,7 +103,7 @@ module Embulk
         last_page = (total_count.to_f / PER_PAGE).ceil
 
         0.step(total_count, PER_PAGE).with_index(1) do |start_at, page|
-          logger.debug "Fetching #{page} / #{last_page} page"
+          logger.info "Fetching #{page} / #{last_page} page"
           @retryer.with_retry do
             @jira.search_issues(@jql, options.merge(start_at: start_at)).each do |issue|
               values = @attributes.map do |(attribute_name, type)|
