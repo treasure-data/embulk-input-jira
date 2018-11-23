@@ -122,7 +122,7 @@ module Embulk
             raise title if title == "Atlassian Cloud Notifications - Page Unavailable"
             count += 1
             raise title.nil? ? "Unknown Error" : title if count > retry_times
-            Embulk.logger.warn "JIRA returns error: #{title}."
+            Embulk.logger.warn "JIRA returns error: #{title == 'Unauthorized (401)' ? title + " due to overloading API requests. Retrying on failed items only" : title}."
             sleep count
             retry
           rescue Timeout::Error => e
