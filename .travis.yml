@@ -8,4 +8,4 @@ env:
 
 script:
   - ./gradlew gem
-  - ./gradlew --info check jacocoTestReport
+  - ./gradlew checkstyle test jacocoTestReport

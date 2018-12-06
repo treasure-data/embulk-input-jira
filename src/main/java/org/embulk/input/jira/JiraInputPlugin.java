@@ -1,7 +1,5 @@
 package org.embulk.input.jira;
 
-import java.util.List;
-
 import com.google.common.base.Optional;
 
 import org.embulk.config.Config;
@@ -16,6 +14,8 @@ import org.embulk.spi.InputPlugin;
 import org.embulk.spi.PageOutput;
 import org.embulk.spi.Schema;
 import org.embulk.spi.SchemaConfig;
+
+import java.util.List;
 
 public class JiraInputPlugin
         implements InputPlugin
