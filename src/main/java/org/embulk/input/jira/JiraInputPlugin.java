@@ -1,4 +1,8 @@
 package org.embulk.input.jira;
+
+import com.atlassian.jira.rest.client.api.JiraRestClient;
+import com.google.common.base.Throwables;
+
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigDiff;
@@ -90,6 +94,11 @@ public class JiraInputPlugin
     {
         PluginTask task = taskSource.loadTask(PluginTask.class);
         JiraUtil.validateTaskConfig(task);
+        try (JiraRestClient client = JiraUtil.createJiraRestClient(task)) {
+            JiraUtil.checkUserCredentials(client, task);
+        } catch (Exception e) {
+            throw Throwables.propagate(e);
+        }
 
         // Write your code here :)
         throw new UnsupportedOperationException("JiraInputPlugin.run method is not implemented yet");

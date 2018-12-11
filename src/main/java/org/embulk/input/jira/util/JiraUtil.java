@@ -1,10 +1,23 @@
 package org.embulk.input.jira.util;
 
+import com.atlassian.jira.rest.client.api.JiraRestClient;
+import com.atlassian.jira.rest.client.api.MyPermissionsRestClient;
+import com.atlassian.jira.rest.client.api.RestClientException;
+import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
+import com.google.common.base.Optional;
+
 import org.embulk.config.ConfigException;
+import org.embulk.input.jira.AuthenticateMethod;
 import org.embulk.input.jira.JiraInputPlugin.PluginTask;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.concurrent.ExecutionException;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
 public class JiraUtil
 {
     private JiraUtil() {}
@@ -21,7 +34,22 @@ public class JiraUtil
         }
         String uri = task.getUri();
         if (isNullOrEmpty(uri)) {
-            throw new ConfigException("URI could not be empty");
+            throw new ConfigException("JIRA API endpoint could not be empty");
+        }
+        HttpURLConnection connection = null;
+        try {
+            URL u = new URL(uri);
+            connection = (HttpURLConnection) u.openConnection();
+            connection.setRequestMethod("GET");
+            connection.getResponseCode();
+        }
+        catch (IOException e) {
+            throw new ConfigException("JIRA API endpoint is incorrect or not available");
+        }
+        finally {
+            if (connection != null) {
+                connection.disconnect();
+            }
         }
         String jql = task.getJQL();
         if (isNullOrEmpty(jql)) {
@@ -34,6 +62,37 @@ public class JiraUtil
         int retryLimit = task.getRetryLimit();
         if (retryLimit < 0 || retryLimit > 10) {
             throw new ConfigException("Retry limit should between 0 and 10");
+        }
+    }
+
+    public static JiraRestClient createJiraRestClient(final PluginTask task) throws URISyntaxException
+    {
+        AuthenticateMethod authMethod = task.getAuthMethod();
+        JiraRestClient jiraRestClient = null;
+        // Currently only support basic authentication but will support more methods in the future
+        switch (authMethod) {
+        case BASIC:
+            jiraRestClient = new AsynchronousJiraRestClientFactory().createWithBasicHttpAuthentication(new URI(task.getUri()), task.getUsername(), task.getPassword());
+            break;
+        default:
+            jiraRestClient = new AsynchronousJiraRestClientFactory().createWithBasicHttpAuthentication(new URI(task.getUri()), task.getUsername(), task.getPassword());
+            break;
+        }
+        return jiraRestClient;
+    }
+
+    public static void checkUserCredentials(final JiraRestClient client, final PluginTask task) throws InterruptedException, ExecutionException
+    {
+        MyPermissionsRestClient myPermissionsRestClient = client.getMyPermissionsRestClient();
+        try {
+            myPermissionsRestClient.getMyPermissions(null).claim();
+        }
+        catch (RestClientException e) {
+            Optional<Integer> statusCode = e.getStatusCode();
+            if (statusCode.isPresent() && statusCode.get().equals(401)) {
+                throw new ConfigException("Can not authorize with your credential.");
+            }
+            throw new ConfigException(String.format("JIRA return \"%s\" Error ", statusCode.isPresent() ? statusCode.get() : "Unknown"));
         }
     }
 }
