@@ -1,7 +1,5 @@
 package org.embulk.input.jira;
 
-import com.google.common.base.Optional;
-
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigDiff;
@@ -24,20 +22,27 @@ public class JiraInputPlugin
             extends Task
     {
         // configuration option 1 (required integer)
-        @Config("option1")
-        public int getOption1();
+        @Config("username")
+        public int getUsername();
 
         // configuration option 2 (optional string, null is not allowed)
-        @Config("option2")
-        @ConfigDefault("\"myvalue\"")
-        public String getOption2();
+        @Config("password")
+        public String getPassword();
 
-        // configuration option 3 (optional string, null is allowed)
-        @Config("option3")
-        @ConfigDefault("null")
-        public Optional<String> getOption3();
+        @Config("uri")
+        public String getUri();
 
-        // if you get schema from config
+        @Config("retry_initial_wait_sec")
+        @ConfigDefault("1")
+        public int getRetryInitialWaitSec();
+
+        @Config("retry_limit")
+        @ConfigDefault("5")
+        public int getRetryLimit();
+
+        @Config("jql")
+        public String getJQL();
+
         @Config("columns")
         public SchemaConfig getColumns();
     }
