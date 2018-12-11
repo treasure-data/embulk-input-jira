@@ -1,4 +1,4 @@
-package org.embulk.input.jira;
+package org.embulk.input.jira.util;
 
 import org.embulk.config.ConfigException;
 import org.embulk.input.jira.JiraInputPlugin.PluginTask;
