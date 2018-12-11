@@ -1,5 +1,4 @@
 package org.embulk.input.jira;
-
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigDiff;
@@ -12,18 +11,21 @@ import org.embulk.spi.InputPlugin;
 import org.embulk.spi.PageOutput;
 import org.embulk.spi.Schema;
 import org.embulk.spi.SchemaConfig;
+import org.slf4j.Logger;
 
 import java.util.List;
 
 public class JiraInputPlugin
         implements InputPlugin
 {
+    private static final Logger LOGGER = Exec.getLogger(JiraInputPlugin.class);
+
     public interface PluginTask
             extends Task
     {
         // configuration option 1 (required integer)
         @Config("username")
-        public int getUsername();
+        public String getUsername();
 
         // configuration option 2 (optional string, null is not allowed)
         @Config("password")
@@ -45,6 +47,11 @@ public class JiraInputPlugin
 
         @Config("columns")
         public SchemaConfig getColumns();
+
+        // For future support of other authentication method
+        @Config("auth_method")
+        @ConfigDefault("\"basic\"")
+        public AuthenticateMethod getAuthMethod();
     }
 
     @Override
@@ -81,6 +88,7 @@ public class JiraInputPlugin
             PageOutput output)
     {
         PluginTask task = taskSource.loadTask(PluginTask.class);
+        JiraUtil.validateTaskConfig(task);
 
         // Write your code here :)
         throw new UnsupportedOperationException("JiraInputPlugin.run method is not implemented yet");
