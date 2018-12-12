@@ -26,6 +26,8 @@ dependencies {
     compile group: 'com.atlassian.jira', name: 'jira-rest-java-client-core', version: '5.1.0'
     compile group: 'com.atlassian.jira', name: 'jira-rest-java-client-api', version: '5.1.0'
     compile group: 'io.atlassian.fugue', name: 'fugue', version: '4.5.0'
+    // https://mvnrepository.com/artifact/com.google.guava/guava
+    compile group: 'com.google.guava', name: 'guava', version: '27.0.1-jre'
     testCompile "junit:junit:4.+"
 }
 

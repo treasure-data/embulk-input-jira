@@ -1,7 +1,9 @@
 package org.embulk.input.jira;
 
 import com.atlassian.jira.rest.client.api.JiraRestClient;
-import com.google.common.base.Throwables;
+import com.atlassian.jira.rest.client.api.RestClientException;
+import com.atlassian.jira.rest.client.api.domain.Issue;
+import com.google.common.util.concurrent.RateLimiter;
 
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
@@ -10,6 +12,8 @@ import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
 import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
+import org.embulk.input.helpers.jira.IssueResult;
+import org.embulk.input.helpers.jira.IssueTask;
 import org.embulk.input.jira.util.JiraUtil;
 import org.embulk.spi.Exec;
 import org.embulk.spi.InputPlugin;
@@ -18,7 +22,12 @@ import org.embulk.spi.Schema;
 import org.embulk.spi.SchemaConfig;
 import org.slf4j.Logger;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class JiraInputPlugin
         implements InputPlugin
@@ -105,13 +114,11 @@ public class JiraInputPlugin
             while (currentPage < totalPage) {
                 LOGGER.info(String.format("Fetching page %d/%d", (currentPage + 1), totalPage));
                 List<String> rawIssuesList = JiraUtil.getRawIssues(client, jql, currentPage, MAX_RESULTS);
-                for (String issueKey : rawIssuesList) {
-                    JiraUtil.getIssue(client, issueKey);
-                }
+                searchIssues(client, rawIssuesList);
                 currentPage++;
             }
         } catch (Exception e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
 
         // Write your code here :)
@@ -122,5 +129,50 @@ public class JiraInputPlugin
     public ConfigDiff guess(ConfigSource config)
     {
         return Exec.newConfigDiff();
+    }
+
+    private List<Issue> searchIssues(JiraRestClient client, List<String> rawIssuesList) throws InterruptedException, ExecutionException
+    {
+        List<Issue> result = new ArrayList<>();
+        int maximumRunCount = 10;
+        int runCount = 0;
+        int threadCount = MAX_RESULTS;
+        while (runCount < maximumRunCount && !rawIssuesList.isEmpty()) {
+            List<String> failResult = new ArrayList<>();
+            ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+            RateLimiter rateLimiter = RateLimiter.create(threadCount);
+            RestClientException exception = null;
+            try {
+                List<Future<IssueResult>> allIssueTasks = new ArrayList<>();
+                for (String issueKey : rawIssuesList) {
+                    allIssueTasks.add(executorService.submit(new IssueTask(client, issueKey, rateLimiter)));
+                }
+
+                for (Future<IssueResult> issueTask : allIssueTasks) {
+                    IssueResult issueResult = issueTask.get();
+                    if (issueResult.getException() == null) {
+                        result.add(issueResult.getIssue());
+                    }
+                    else {
+                        failResult.add(issueResult.getIssueKey());
+                        exception = issueResult.getException();
+                    }
+                }
+            }
+            finally {
+                executorService.shutdown();
+            }
+            runCount++;
+            if (runCount == maximumRunCount && exception != null) {
+                throw exception;
+            }
+            if (exception != null) {
+                LOGGER.warn("JIRA return error 401 due to overloading API requests. Retrying on failed items only");
+                // Sleep current threads for a while if there still errors
+                Thread.sleep(1000 * runCount);
+            }
+            rawIssuesList = failResult;
+        }
+        return result;
     }
 }

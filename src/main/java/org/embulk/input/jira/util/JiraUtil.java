@@ -123,9 +123,9 @@ public class JiraUtil
         return StreamSupport.stream(result.claim().getIssues().spliterator(), false).map(issue -> issue.getKey()).collect(Collectors.toList());
     }
 
-    public static Issue getIssue(final JiraRestClient client, String issueKey)
+    public static Promise<Issue> getIssue(final JiraRestClient client, String issueKey)
     {
         IssueRestClient issueRestClient = client.getIssueClient();
-        return issueRestClient.getIssue(issueKey).claim();
+        return issueRestClient.getIssue(issueKey);
     }
 }
