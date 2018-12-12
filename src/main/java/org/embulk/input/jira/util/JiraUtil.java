@@ -115,14 +115,14 @@ public class JiraUtil
     {
         return (int) Math.ceil((double) totalCount / resultPerPage);
     }
-    
+
     public static List<String> getRawIssues(final JiraRestClient client, String jql, int startAt, int maxResults)
     {
         SearchRestClient searchClient = client.getSearchClient();
         Promise<SearchResult> result = searchClient.searchJql(jql, maxResults, startAt, null);
-        return StreamSupport.stream(result.claim().getIssues().spliterator(), false).map((issue) -> issue.getKey()).collect(Collectors.toList());
+        return StreamSupport.stream(result.claim().getIssues().spliterator(), false).map(issue -> issue.getKey()).collect(Collectors.toList());
     }
-    
+
     public static Issue getIssue(final JiraRestClient client, String issueKey)
     {
         IssueRestClient issueRestClient = client.getIssueClient();

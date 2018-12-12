@@ -102,10 +102,10 @@ public class JiraInputPlugin
             int totalPage = JiraUtil.calculateTotalPage(totalCount, MAX_RESULTS);
             LOGGER.info(String.format("Total pages (%d)", totalPage));
             int currentPage = 0;
-            while(currentPage < totalPage) {
+            while (currentPage < totalPage) {
                 LOGGER.info(String.format("Fetching page %d/%d", (currentPage + 1), totalPage));
                 List<String> rawIssuesList = JiraUtil.getRawIssues(client, jql, currentPage, MAX_RESULTS);
-                for(String issueKey : rawIssuesList) {
+                for (String issueKey : rawIssuesList) {
                     JiraUtil.getIssue(client, issueKey);
                 }
                 currentPage++;
