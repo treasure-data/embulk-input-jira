@@ -3,6 +3,8 @@ package org.embulk.input.jira.util;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
 import com.atlassian.jira.rest.client.api.MyPermissionsRestClient;
 import com.atlassian.jira.rest.client.api.RestClientException;
+import com.atlassian.jira.rest.client.api.SearchRestClient;
+import com.atlassian.jira.rest.client.api.domain.SearchResult;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
 import com.google.common.base.Optional;
 
@@ -15,7 +17,6 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.concurrent.ExecutionException;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 public class JiraUtil
@@ -68,20 +69,20 @@ public class JiraUtil
     public static JiraRestClient createJiraRestClient(final PluginTask task) throws URISyntaxException
     {
         AuthenticateMethod authMethod = task.getAuthMethod();
-        JiraRestClient jiraRestClient = null;
+        JiraRestClient client = null;
         // Currently only support basic authentication but will support more methods in the future
         switch (authMethod) {
         case BASIC:
-            jiraRestClient = new AsynchronousJiraRestClientFactory().createWithBasicHttpAuthentication(new URI(task.getUri()), task.getUsername(), task.getPassword());
+            client = new AsynchronousJiraRestClientFactory().createWithBasicHttpAuthentication(new URI(task.getUri()), task.getUsername(), task.getPassword());
             break;
         default:
-            jiraRestClient = new AsynchronousJiraRestClientFactory().createWithBasicHttpAuthentication(new URI(task.getUri()), task.getUsername(), task.getPassword());
+            client = new AsynchronousJiraRestClientFactory().createWithBasicHttpAuthentication(new URI(task.getUri()), task.getUsername(), task.getPassword());
             break;
         }
-        return jiraRestClient;
+        return client;
     }
 
-    public static void checkUserCredentials(final JiraRestClient client, final PluginTask task) throws InterruptedException, ExecutionException
+    public static void checkUserCredentials(final JiraRestClient client, final PluginTask task)
     {
         MyPermissionsRestClient myPermissionsRestClient = client.getMyPermissionsRestClient();
         try {
@@ -90,9 +91,21 @@ public class JiraUtil
         catch (RestClientException e) {
             Optional<Integer> statusCode = e.getStatusCode();
             if (statusCode.isPresent() && statusCode.get().equals(401)) {
-                throw new ConfigException("Can not authorize with your credential.");
+                throw new ConfigException("Could not authorize with your credential.");
             }
             throw new ConfigException(String.format("JIRA return \"%s\" Error ", statusCode.isPresent() ? statusCode.get() : "Unknown"));
         }
+    }
+
+    public static int getTotalCount(final JiraRestClient client, String jql)
+    {
+        SearchRestClient searchClient = client.getSearchClient();
+        SearchResult abc = searchClient.searchJql(jql, 1, 0, null).claim();
+        return abc.getTotal();
+    }
+
+    public static int calculateTotalPage(int totalCount, int resultPerPage)
+    {
+        return (int) Math.ceil((double) totalCount / resultPerPage);
     }
 }

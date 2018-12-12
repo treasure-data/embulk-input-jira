@@ -24,6 +24,7 @@ public class JiraInputPlugin
         implements InputPlugin
 {
     private static final Logger LOGGER = Exec.getLogger(JiraInputPlugin.class);
+    private static final int MAX_RESULT = 50;
 
     public interface PluginTask
             extends Task
@@ -96,6 +97,9 @@ public class JiraInputPlugin
         JiraUtil.validateTaskConfig(task);
         try (JiraRestClient client = JiraUtil.createJiraRestClient(task)) {
             JiraUtil.checkUserCredentials(client, task);
+            int totalCount = JiraUtil.getTotalCount(client, task.getJQL());
+            int totalPage = JiraUtil.calculateTotalPage(totalCount, MAX_RESULT);
+            LOGGER.info(String.format("Total pages (%d)", totalPage));
         } catch (Exception e) {
             throw Throwables.propagate(e);
         }
