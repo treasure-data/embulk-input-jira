@@ -1,12 +1,16 @@
 package org.embulk.input.jira.util;
 
+import com.atlassian.jira.rest.client.api.IssueRestClient;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
 import com.atlassian.jira.rest.client.api.MyPermissionsRestClient;
 import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.SearchRestClient;
+import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.SearchResult;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
 import com.google.common.base.Optional;
+
+import io.atlassian.util.concurrent.Promise;
 
 import org.embulk.config.ConfigException;
 import org.embulk.input.jira.AuthenticateMethod;
@@ -17,6 +21,9 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 public class JiraUtil
@@ -100,12 +107,25 @@ public class JiraUtil
     public static int getTotalCount(final JiraRestClient client, String jql)
     {
         SearchRestClient searchClient = client.getSearchClient();
-        SearchResult abc = searchClient.searchJql(jql, 1, 0, null).claim();
-        return abc.getTotal();
+        SearchResult result = searchClient.searchJql(jql, 1, 0, null).claim();
+        return result.getTotal();
     }
 
     public static int calculateTotalPage(int totalCount, int resultPerPage)
     {
         return (int) Math.ceil((double) totalCount / resultPerPage);
+    }
+    
+    public static List<String> getRawIssues(final JiraRestClient client, String jql, int startAt, int maxResults)
+    {
+        SearchRestClient searchClient = client.getSearchClient();
+        Promise<SearchResult> result = searchClient.searchJql(jql, maxResults, startAt, null);
+        return StreamSupport.stream(result.claim().getIssues().spliterator(), false).map((issue) -> issue.getKey()).collect(Collectors.toList());
+    }
+    
+    public static Issue getIssue(final JiraRestClient client, String issueKey)
+    {
+        IssueRestClient issueRestClient = client.getIssueClient();
+        return issueRestClient.getIssue(issueKey).claim();
     }
 }

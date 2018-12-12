@@ -24,7 +24,7 @@ public class JiraInputPlugin
         implements InputPlugin
 {
     private static final Logger LOGGER = Exec.getLogger(JiraInputPlugin.class);
-    private static final int MAX_RESULT = 50;
+    private static final int MAX_RESULTS = 50;
 
     public interface PluginTask
             extends Task
@@ -97,9 +97,19 @@ public class JiraInputPlugin
         JiraUtil.validateTaskConfig(task);
         try (JiraRestClient client = JiraUtil.createJiraRestClient(task)) {
             JiraUtil.checkUserCredentials(client, task);
-            int totalCount = JiraUtil.getTotalCount(client, task.getJQL());
-            int totalPage = JiraUtil.calculateTotalPage(totalCount, MAX_RESULT);
+            String jql = task.getJQL();
+            int totalCount = JiraUtil.getTotalCount(client, jql);
+            int totalPage = JiraUtil.calculateTotalPage(totalCount, MAX_RESULTS);
             LOGGER.info(String.format("Total pages (%d)", totalPage));
+            int currentPage = 0;
+            while(currentPage < totalPage) {
+                LOGGER.info(String.format("Fetching page %d/%d", (currentPage + 1), totalPage));
+                List<String> rawIssuesList = JiraUtil.getRawIssues(client, jql, currentPage, MAX_RESULTS);
+                for(String issueKey : rawIssuesList) {
+                    JiraUtil.getIssue(client, issueKey);
+                }
+                currentPage++;
+            }
         } catch (Exception e) {
             throw Throwables.propagate(e);
         }
