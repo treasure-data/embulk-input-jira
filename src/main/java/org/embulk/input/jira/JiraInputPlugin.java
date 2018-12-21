@@ -23,6 +23,8 @@ import org.embulk.spi.SchemaConfig;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -34,6 +36,8 @@ public class JiraInputPlugin
 {
     private static final Logger LOGGER = Exec.getLogger(JiraInputPlugin.class);
     private static final int MAX_RESULTS = 50;
+    private static final int MAX_RUN_COUNT = 10;
+    private static final int MIN_RATE_LIMIT = 2;
 
     public interface PluginTask
             extends Task
@@ -134,13 +138,13 @@ public class JiraInputPlugin
     private List<Issue> searchIssues(JiraRestClient client, List<String> rawIssuesList) throws InterruptedException, ExecutionException
     {
         List<Issue> result = new ArrayList<>();
-        int maximumRunCount = 10;
         int runCount = 0;
-        int threadCount = MAX_RESULTS;
-        while (runCount < maximumRunCount && !rawIssuesList.isEmpty()) {
+        int rateLimit = rawIssuesList.size() < MAX_RESULTS ? rawIssuesList.size() : MAX_RESULTS;
+        while (runCount < MAX_RUN_COUNT && !rawIssuesList.isEmpty()) {
+            LOGGER.info(String.format("Current rateLimit %d", rateLimit));
             List<String> failResult = new ArrayList<>();
-            ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
-            RateLimiter rateLimiter = RateLimiter.create(threadCount);
+            ExecutorService executorService = Executors.newFixedThreadPool(rateLimit);
+            RateLimiter rateLimiter = RateLimiter.create(rateLimit);
             RestClientException exception = null;
             try {
                 List<Future<IssueResult>> allIssueTasks = new ArrayList<>();
@@ -163,7 +167,7 @@ public class JiraInputPlugin
                 executorService.shutdown();
             }
             runCount++;
-            if (runCount == maximumRunCount && exception != null) {
+            if (runCount == MAX_RUN_COUNT && exception != null) {
                 throw exception;
             }
             if (exception != null) {
@@ -171,8 +175,19 @@ public class JiraInputPlugin
                 // Sleep current threads for a while if there still errors
                 Thread.sleep(1000 * runCount);
             }
+            rateLimit = tuningRateLimit(rateLimit, rawIssuesList.size(), failResult.size(), runCount);
+            LOGGER.info(String.format("New rateLimit %d count %d", rateLimit, runCount));
             rawIssuesList = failResult;
         }
         return result;
+    }
+
+    private int tuningRateLimit(int currentLimit, int allItems, int failItems, int runCount)
+    {
+        int successItems = allItems - failItems;
+        if (runCount >= MAX_RUN_COUNT / 2 || successItems <= MIN_RATE_LIMIT) {
+            return MIN_RATE_LIMIT;
+        }
+        return Collections.min(Arrays.asList(currentLimit, successItems, failItems));
     }
 }
