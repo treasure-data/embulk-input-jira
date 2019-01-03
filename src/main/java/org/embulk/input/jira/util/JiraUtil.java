@@ -9,14 +9,26 @@ import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.SearchResult;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
 import com.google.common.base.Optional;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 
 import io.atlassian.util.concurrent.Promise;
 
+import org.codehaus.jettison.json.JSONObject;
 import org.embulk.config.ConfigException;
 import org.embulk.input.jira.AuthenticateMethod;
 import org.embulk.input.jira.JiraInputPlugin.PluginTask;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -127,5 +139,31 @@ public class JiraUtil
     {
         IssueRestClient issueRestClient = client.getIssueClient();
         return issueRestClient.getIssue(issueKey);
+    }
+
+    public static JsonObject serializeIssueToJson(Issue issue)
+    {
+        Gson gson = new GsonBuilder().registerTypeAdapter(DateTime.class, new JsonSerializer<DateTime>()
+        {
+            @Override
+            public JsonElement serialize(DateTime src, Type typeOfSrc, JsonSerializationContext context)
+            {
+                if (src != null) {
+                    return new JsonPrimitive(src.toDateTime(DateTimeZone.UTC).toString());
+                }
+                return null;
+            }
+        }).registerTypeAdapter(JSONObject.class, new JsonSerializer<JSONObject>()
+        {
+            @Override
+            public JsonElement serialize(JSONObject src, Type typeOfSrc, JsonSerializationContext context)
+            {
+                if (src != null) {
+                    return new JsonParser().parse(src.toString());
+                }
+                return null;
+            }
+        }).serializeNulls().create();
+        return gson.toJsonTree(issue).getAsJsonObject();
     }
 }
