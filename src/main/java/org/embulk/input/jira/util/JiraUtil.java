@@ -1,46 +1,43 @@
 package org.embulk.input.jira.util;
 
-import com.atlassian.jira.rest.client.api.IssueRestClient;
-import com.atlassian.jira.rest.client.api.JiraRestClient;
-import com.atlassian.jira.rest.client.api.MyPermissionsRestClient;
-import com.atlassian.jira.rest.client.api.RestClientException;
-import com.atlassian.jira.rest.client.api.SearchRestClient;
-import com.atlassian.jira.rest.client.api.domain.Issue;
-import com.atlassian.jira.rest.client.api.domain.SearchResult;
-import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
-import com.google.common.base.Optional;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.JsonPrimitive;
-import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
 
-import io.atlassian.util.concurrent.Promise;
-
-import org.codehaus.jettison.json.JSONObject;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
 import org.embulk.config.ConfigException;
-import org.embulk.input.jira.AuthenticateMethod;
 import org.embulk.input.jira.JiraInputPlugin.PluginTask;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
+import org.embulk.spi.Exec;
+import org.embulk.spi.util.RetryExecutor.RetryGiveupException;
+import org.embulk.spi.util.RetryExecutor.Retryable;
+import org.slf4j.Logger;
+
+import javax.ws.rs.core.UriBuilder;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static java.util.Base64.getEncoder;
+import static org.apache.http.HttpHeaders.ACCEPT;
+import static org.apache.http.HttpHeaders.AUTHORIZATION;
+import static org.apache.http.HttpHeaders.CONTENT_TYPE;
+import static org.embulk.spi.util.RetryExecutor.retryExecutor;
+
 public class JiraUtil
 {
     private JiraUtil() {}
+
+    private static final int CONNECTION_TIME_OUT = 300000;
+
+    private static final Logger LOGGER = Exec.getLogger(JiraUtil.class);
 
     public static void validateTaskConfig(final PluginTask task)
     {
@@ -75,7 +72,7 @@ public class JiraUtil
         if (isNullOrEmpty(jql)) {
             throw new ConfigException("JQL could not be empty");
         }
-        int retryInitialWaitSec = task.getRetryInitialWaitSec();
+        int retryInitialWaitSec = task.getInitialRetryIntervalMillis();
         if (retryInitialWaitSec < 1) {
             throw new ConfigException("Initial retry delay should be equal or greater than 1");
         }
@@ -85,85 +82,173 @@ public class JiraUtil
         }
     }
 
-    public static JiraRestClient createJiraRestClient(final PluginTask task) throws URISyntaxException
+    public static void checkUserCredentials(final PluginTask task)
     {
-        AuthenticateMethod authMethod = task.getAuthMethod();
-        JiraRestClient client = null;
-        // Currently only support basic authentication but will support more methods in the future
-        switch (authMethod) {
-        case BASIC:
-            client = new AsynchronousJiraRestClientFactory().createWithBasicHttpAuthentication(new URI(task.getUri()), task.getUsername(), task.getPassword());
-            break;
-        default:
-            client = new AsynchronousJiraRestClientFactory().createWithBasicHttpAuthentication(new URI(task.getUri()), task.getUsername(), task.getPassword());
-            break;
+        try {
+            authorizeAndRequestWithGet(task, buildPermissionUrl(task.getUri()));
         }
+        catch (JiraException e) {
+            LOGGER.error(String.format("JIRA return status (%s), reason (%s)", e.getStatusCode(), e.getMessage()));
+            if (e.getStatusCode() == HttpStatus.SC_UNAUTHORIZED) {
+                throw new ConfigException("Could not authorize with your credential.");
+            }
+            else {
+                throw new ConfigException("Could not authorize with your credential due to problem when contacting JIRA API");
+            }
+        }
+    }
+
+    public static JsonObject searchIssues(final PluginTask task, int currentPage, int maxResults)
+    {
+        String response = searchJiraAPI(task, currentPage, maxResults);
+        JsonParser parser = new JsonParser();
+        JsonObject result = parser.parse(response).getAsJsonObject();
+        return result;
+    }
+
+    public static int getTotalCount(final PluginTask task)
+    {
+        String response = searchJiraAPI(task, 0, 1);
+        JsonParser parser = new JsonParser();
+        JsonObject result = parser.parse(response).getAsJsonObject();
+        return result.get("total").getAsInt();
+    }
+
+    private static String searchJiraAPI(final PluginTask task, int currentPage, int maxResults)
+    {
+        try {
+            return retryExecutor().withRetryLimit(task.getRetryLimit())
+            .withInitialRetryWait(task.getInitialRetryIntervalMillis())
+            .withMaxRetryWait(task.getMaximumRetryIntervalMillis())
+            .runInterruptible(new Retryable<String>()
+            {
+                @Override
+                public String call() throws Exception
+                {
+                    return authorizeAndRequestWithGet(task, buildSearchUrl(task, currentPage, maxResults));
+                }
+
+                @Override
+                public boolean isRetryableException(Exception exception)
+                {
+                    if (exception instanceof JiraException) {
+                        int statusCode = ((JiraException) exception).getStatusCode();
+                        if (statusCode / 100 == 4 && statusCode != HttpStatus.SC_UNAUTHORIZED && statusCode != 429) {
+                            return false;
+                        }
+                        return true;
+                    }
+                    return false;
+                }
+
+                @Override
+                public void onRetry(Exception exception, int retryCount, int retryLimit, int retryWait)
+                        throws RetryGiveupException
+                {
+                    if (exception instanceof JiraException) {
+                        String message = String
+                                .format("Retrying %d/%d after %d seconds. HTTP status code: %s",
+                                        retryCount, retryLimit,
+                                        retryWait / 1000,
+                                        ((JiraException) exception).getStatusCode());
+                        LOGGER.warn(message);
+                    }
+                    else {
+                        String message = String
+                                .format("Retrying %d/%d after %d seconds. Message: %s",
+                                        retryCount, retryLimit,
+                                        retryWait / 1000,
+                                        exception.getMessage());
+                        LOGGER.warn(message, exception);
+                    }
+                }
+
+                @Override
+                public void onGiveup(Exception firstException, Exception lastException) throws RetryGiveupException
+                {
+                    LOGGER.warn("Retry Limits Completed");
+                }
+            });
+        }
+        catch (RetryGiveupException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static String authorizeAndRequestWithGet(final PluginTask task, String url) throws JiraException
+    {
+        try {
+            HttpClient client = createHttpClient();
+            HttpGet request = createGetRequest(client, task, url);
+            HttpResponse response = client.execute(request);
+            // Check for HTTP response code : 200 : SUCCESS
+            int statusCode = response.getStatusLine().getStatusCode();
+            if (statusCode != HttpStatus.SC_OK) {
+                throw new JiraException(statusCode,
+                        "JIRA API Request Failed: " + EntityUtils.toString(response.getEntity()));
+            }
+            return EntityUtils.toString(response.getEntity());
+        }
+        catch (IOException e) {
+            throw new JiraException(-1, e.getMessage());
+        }
+    }
+
+    private static String buildPermissionUrl(String url)
+    {
+        UriBuilder builder = UriBuilder.fromUri(url);
+        URI uri = builder.path("rest")
+                        .path("api")
+                        .path("latest")
+                        .path("myself").build();
+        return uri.toString();
+    }
+
+    private static String buildSearchUrl(PluginTask task, int currentPage, int maxResults)
+    {
+        UriBuilder builder = UriBuilder.fromUri(task.getUri());
+        URI uri = builder.path("rest")
+                        .path("api")
+                        .path("latest")
+                        .path("search")
+                        .queryParam("jql", task.getJQL())
+                        .queryParam("startAt", currentPage)
+                        .queryParam("maxResults", maxResults)
+                        .queryParam("fields", "*all")
+                        .build();
+        return uri.toString();
+    }
+
+    private static HttpClient createHttpClient()
+    {
+        RequestConfig config = RequestConfig.custom()
+                .setConnectTimeout(CONNECTION_TIME_OUT)
+                .setConnectionRequestTimeout(CONNECTION_TIME_OUT)
+                .build();
+        HttpClient client = HttpClientBuilder.create().setDefaultRequestConfig(config).build();
         return client;
     }
 
-    public static void checkUserCredentials(final JiraRestClient client, final PluginTask task)
+    private static HttpGet createGetRequest(HttpClient client, PluginTask task, String url)
     {
-        MyPermissionsRestClient myPermissionsRestClient = client.getMyPermissionsRestClient();
-        try {
-            myPermissionsRestClient.getMyPermissions(null).claim();
+        HttpGet request = new HttpGet(url);
+        switch (task.getAuthMethod()) {
+        default:
+            request.setHeader(
+                    AUTHORIZATION,
+                    String.format("Basic %s",
+                                getEncoder().encodeToString(String.format("%s:%s",
+                                task.getUsername(),
+                                task.getPassword()).getBytes())));
+            request.setHeader(ACCEPT, "application/json");
+            request.setHeader(CONTENT_TYPE, "application/json");
+            break;
         }
-        catch (RestClientException e) {
-            Optional<Integer> statusCode = e.getStatusCode();
-            if (statusCode.isPresent() && statusCode.get().equals(401)) {
-                throw new ConfigException("Could not authorize with your credential.");
-            }
-            throw new ConfigException(String.format("JIRA return \"%s\" Error ", statusCode.isPresent() ? statusCode.get() : "Unknown"));
-        }
-    }
-
-    public static int getTotalCount(final JiraRestClient client, String jql)
-    {
-        SearchRestClient searchClient = client.getSearchClient();
-        SearchResult result = searchClient.searchJql(jql, 1, 0, null).claim();
-        return result.getTotal();
+        return request;
     }
 
     public static int calculateTotalPage(int totalCount, int resultPerPage)
     {
         return (int) Math.ceil((double) totalCount / resultPerPage);
-    }
-
-    public static List<String> getRawIssues(final JiraRestClient client, String jql, int startAt, int maxResults)
-    {
-        SearchRestClient searchClient = client.getSearchClient();
-        Promise<SearchResult> result = searchClient.searchJql(jql, maxResults, startAt, null);
-        return StreamSupport.stream(result.claim().getIssues().spliterator(), false).map(issue -> issue.getKey()).collect(Collectors.toList());
-    }
-
-    public static Promise<Issue> getIssue(final JiraRestClient client, String issueKey)
-    {
-        IssueRestClient issueRestClient = client.getIssueClient();
-        return issueRestClient.getIssue(issueKey);
-    }
-
-    public static JsonObject serializeIssueToJson(Issue issue)
-    {
-        Gson gson = new GsonBuilder().registerTypeAdapter(DateTime.class, new JsonSerializer<DateTime>()
-        {
-            @Override
-            public JsonElement serialize(DateTime src, Type typeOfSrc, JsonSerializationContext context)
-            {
-                if (src != null) {
-                    return new JsonPrimitive(src.toDateTime(DateTimeZone.UTC).toString());
-                }
-                return null;
-            }
-        }).registerTypeAdapter(JSONObject.class, new JsonSerializer<JSONObject>()
-        {
-            @Override
-            public JsonElement serialize(JSONObject src, Type typeOfSrc, JsonSerializationContext context)
-            {
-                if (src != null) {
-                    return new JsonParser().parse(src.toString());
-                }
-                return null;
-            }
-        }).serializeNulls().create();
-        return gson.toJsonTree(issue).getAsJsonObject();
     }
 }
