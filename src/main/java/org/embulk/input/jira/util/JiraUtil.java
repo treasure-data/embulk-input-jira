@@ -98,9 +98,9 @@ public class JiraUtil
         }
     }
 
-    public static JsonObject searchIssues(final PluginTask task, int currentPage, int maxResults)
+    public static JsonObject searchIssues(final PluginTask task, int startAt, int maxResults)
     {
-        String response = searchJiraAPI(task, currentPage, maxResults);
+        String response = searchJiraAPI(task, startAt, maxResults);
         JsonParser parser = new JsonParser();
         JsonObject result = parser.parse(response).getAsJsonObject();
         return result;
@@ -114,7 +114,7 @@ public class JiraUtil
         return result.get("total").getAsInt();
     }
 
-    private static String searchJiraAPI(final PluginTask task, int currentPage, int maxResults)
+    private static String searchJiraAPI(final PluginTask task, int startAt, int maxResults)
     {
         try {
             return retryExecutor().withRetryLimit(task.getRetryLimit())
@@ -125,7 +125,7 @@ public class JiraUtil
                 @Override
                 public String call() throws Exception
                 {
-                    return authorizeAndRequestWithGet(task, buildSearchUrl(task, currentPage, maxResults));
+                    return authorizeAndRequestWithGet(task, buildSearchUrl(task, startAt, maxResults));
                 }
 
                 @Override
@@ -204,7 +204,7 @@ public class JiraUtil
         return uri.toString();
     }
 
-    private static String buildSearchUrl(PluginTask task, int currentPage, int maxResults)
+    private static String buildSearchUrl(PluginTask task, int startAt, int maxResults)
     {
         UriBuilder builder = UriBuilder.fromUri(task.getUri());
         URI uri = builder.path("rest")
@@ -212,10 +212,11 @@ public class JiraUtil
                         .path("latest")
                         .path("search")
                         .queryParam("jql", task.getJQL())
-                        .queryParam("startAt", currentPage)
+                        .queryParam("startAt", startAt)
                         .queryParam("maxResults", maxResults)
                         .queryParam("fields", "*all")
                         .build();
+        LOGGER.info(uri.toString());
         return uri.toString();
     }
 

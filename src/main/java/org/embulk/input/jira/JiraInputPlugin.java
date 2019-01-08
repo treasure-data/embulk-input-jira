@@ -107,9 +107,9 @@ public class JiraInputPlugin
         LOGGER.info(String.format("Total pages (%d)", totalPage));
         int currentPage = 0;
         while (currentPage < totalPage) {
+            LOGGER.info(String.format("Fetching page %d/%d", (currentPage + 1), totalPage));
+            JiraUtil.searchIssues(task, (currentPage * MAX_RESULTS), MAX_RESULTS);
             currentPage++;
-            LOGGER.info(String.format("Fetching page %d/%d", currentPage, totalPage));
-            JiraUtil.searchIssues(task, currentPage, MAX_RESULTS);
         }
 
         // Write your code here :)
