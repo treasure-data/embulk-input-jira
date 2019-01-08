@@ -1,5 +1,6 @@
 package org.embulk.input.jira.util;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -23,6 +24,11 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.Base64.getEncoder;
@@ -103,6 +109,20 @@ public class JiraUtil
         String response = searchJiraAPI(task, startAt, maxResults);
         JsonParser parser = new JsonParser();
         JsonObject result = parser.parse(response).getAsJsonObject();
+        List<JsonObject> issues = StreamSupport.stream(result.get("issues").getAsJsonArray().spliterator(), false)
+                                                .map(
+                                                        jsonElement -> {
+                                                            JsonObject json = jsonElement.getAsJsonObject();
+                                                            JsonObject fields = json.get("fields").getAsJsonObject();
+                                                            Set<Entry<String, JsonElement>> entries = fields.entrySet();
+                                                            json.remove("fields");
+                                                            // Merged all properties in fields to the object
+                                                            for (Entry<String, JsonElement> entry : entries) {
+                                                                json.add(entry.getKey(), entry.getValue());
+                                                            }
+                                                            return json;
+                                                        })
+                                                .collect(Collectors.toList());
         return result;
     }
 
