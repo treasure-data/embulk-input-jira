@@ -46,5 +46,5 @@ in:
 ## Build
 
 ```
-$ bundle exec rake build
+$ ./gradlew gem       # -t to watch change of files and rebuild continuously
 ```
