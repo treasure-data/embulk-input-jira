@@ -31,6 +31,12 @@ public class Issue
         this.json = original;
     }
 
+    public void getValues(String prefix)
+    {
+        List<String> keys = Arrays.asList(prefix.split("."));
+        System.out.println(keys);
+    }
+
     public void toRecord()
     {
         flatten = new JsonObject();

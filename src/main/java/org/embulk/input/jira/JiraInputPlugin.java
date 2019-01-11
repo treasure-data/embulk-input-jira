@@ -7,9 +7,11 @@ import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
 import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
+import org.embulk.input.jira.client.JiraClient;
 import org.embulk.input.jira.util.JiraUtil;
 import org.embulk.spi.Exec;
 import org.embulk.spi.InputPlugin;
+import org.embulk.spi.PageBuilder;
 import org.embulk.spi.PageOutput;
 import org.embulk.spi.Schema;
 import org.embulk.spi.SchemaConfig;
@@ -101,19 +103,33 @@ public class JiraInputPlugin
     {
         PluginTask task = taskSource.loadTask(PluginTask.class);
         JiraUtil.validateTaskConfig(task);
-        JiraUtil.checkUserCredentials(task);
-        int totalCount = JiraUtil.getTotalCount(task);
+        JiraClient jiraClient = getJiraClient();
+        jiraClient.checkUserCredentials(task);
+        int totalCount = jiraClient.getTotalCount(task);
         int totalPage = JiraUtil.calculateTotalPage(totalCount, MAX_RESULTS);
         LOGGER.info(String.format("Total pages (%d)", totalPage));
         int currentPage = 0;
-        while (currentPage < totalPage) {
-            LOGGER.info(String.format("Fetching page %d/%d", (currentPage + 1), totalPage));
-            JiraUtil.searchIssues(task, (currentPage * MAX_RESULTS), MAX_RESULTS);
-            currentPage++;
+        SchemaConfig columns = task.getColumns();
+        System.out.println(columns.getColumns());
+        try (final PageBuilder pageBuilder = new PageBuilder(Exec.getBufferAllocator(), schema, output)) {
+            while (currentPage < totalPage) {
+                LOGGER.info(String.format("Fetching page %d/%d", (currentPage + 1), totalPage));
+                List<Issue> issues = jiraClient.searchIssues(task, (currentPage * MAX_RESULTS), MAX_RESULTS);
+                for (Issue issue : issues) {
+                    issue.toRecord();
+                    System.out.println(issue.getFlatten());
+                }
+                currentPage++;
+            }
+            pageBuilder.finish();
         }
-
         // Write your code here :)
         throw new UnsupportedOperationException("JiraInputPlugin.run method is not implemented yet");
+    }
+
+    private JiraClient getJiraClient()
+    {
+        return new JiraClient();
     }
 
     @Override
