@@ -31,10 +31,46 @@ public class Issue
         this.json = original;
     }
 
-    public void getValues(String prefix)
+    public JsonElement fetchValue(String path)
     {
-        List<String> keys = Arrays.asList(prefix.split("."));
-        System.out.println(keys);
+        List<String> keys = new ArrayList<>(Arrays.asList(path.split("\\.")));
+        return fetch(json, keys);
+    }
+
+    private JsonElement fetch(JsonElement json, List<String> keys)
+    {
+        if (json == null || json.isJsonNull()) {
+            return JsonNull.INSTANCE;
+        }
+        else if (json.isJsonArray() && json.getAsJsonArray().size() == 0) {
+            return json;
+        }
+        if (keys.isEmpty()) {
+            if (json.isJsonArray()) {
+                return new JsonPrimitive(String.join(",", StreamSupport.stream(json.getAsJsonArray().spliterator(), false).map(obj -> obj.toString()).collect(Collectors.toList())));
+            }
+            else {
+                return json;
+            }
+        }
+        String key = keys.get(0);
+        keys.remove(0);
+        if (json.isJsonArray()) {
+            JsonArray arrays = new JsonArray();
+            StreamSupport.stream(json.getAsJsonArray().spliterator(), false)
+                        .forEach(obj -> {
+                            if (obj.isJsonObject()) {
+                                arrays.add(obj.getAsJsonObject().get(key));
+                            }
+                            else {
+                                arrays.add(obj);
+                            }
+                        });
+            return fetch(arrays, keys);
+        }
+        else {
+            return fetch(json.getAsJsonObject().get(key), keys);
+        }
     }
 
     public void toRecord()

@@ -109,22 +109,19 @@ public class JiraInputPlugin
         int totalPage = JiraUtil.calculateTotalPage(totalCount, MAX_RESULTS);
         LOGGER.info(String.format("Total pages (%d)", totalPage));
         int currentPage = 0;
-        SchemaConfig columns = task.getColumns();
-        System.out.println(columns.getColumns());
         try (final PageBuilder pageBuilder = new PageBuilder(Exec.getBufferAllocator(), schema, output)) {
             while (currentPage < totalPage) {
                 LOGGER.info(String.format("Fetching page %d/%d", (currentPage + 1), totalPage));
                 List<Issue> issues = jiraClient.searchIssues(task, (currentPage * MAX_RESULTS), MAX_RESULTS);
                 for (Issue issue : issues) {
                     issue.toRecord();
-                    System.out.println(issue.getFlatten());
+                    JiraUtil.addRecord(issue, schema, task, pageBuilder);
                 }
                 currentPage++;
             }
             pageBuilder.finish();
         }
-        // Write your code here :)
-        throw new UnsupportedOperationException("JiraInputPlugin.run method is not implemented yet");
+        return Exec.newTaskReport();
     }
 
     private JiraClient getJiraClient()
