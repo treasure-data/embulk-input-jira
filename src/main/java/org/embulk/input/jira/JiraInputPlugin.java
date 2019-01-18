@@ -76,6 +76,7 @@ public class JiraInputPlugin
         public String getJQL();
 
         @Config("columns")
+        @ConfigDefault("[]")
         public SchemaConfig getColumns();
 
         // For future support of other authentication method
