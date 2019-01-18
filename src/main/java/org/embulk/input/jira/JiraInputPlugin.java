@@ -148,7 +148,7 @@ public class JiraInputPlugin
     @Override
     public ConfigDiff guess(ConfigSource config)
     {
-        // Added columns in case missing on config
+        // Reset columns in case already have or missing on configuration
         config.set("columns", new ObjectMapper().createArrayNode());
         ConfigSource guessConfig = createGuessConfig();
         GuessExecutor guessExecutor = Exec.getInjector().getInstance(GuessExecutor.class);

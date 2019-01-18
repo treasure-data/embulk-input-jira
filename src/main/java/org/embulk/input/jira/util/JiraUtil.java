@@ -23,6 +23,7 @@ import java.net.URL;
 import java.util.List;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static org.embulk.input.jira.Constant.DEFAULT_TIMESTAMP_PATTERN;
 
 public final class JiraUtil
 {
@@ -101,95 +102,154 @@ public final class JiraUtil
         }
     }
 
+    /*
+     * For getting the timestamp value of the node
+     * Sometime if the parser could not parse the value then return null
+     * */
     private static Timestamp getTimestampValue(PluginTask task, Column column, String value)
     {
         List<ColumnConfig> columnConfigs = task.getColumns().getColumns();
-        String pattern = "%Y-%m-%dT%H:%M:%S.%L%z";
+        String pattern = DEFAULT_TIMESTAMP_PATTERN;
         for (ColumnConfig config : columnConfigs) {
-            if (config.getName().equals(column.getName()) && config.getConfigSource() != null && config.getConfigSource().getObjectNode() != null && config.getConfigSource().getObjectNode().get("format").isTextual()) {
+            if (config.getName().equals(column.getName())
+                    && config.getConfigSource() != null
+                    && config.getConfigSource().getObjectNode() != null
+                    && config.getConfigSource().getObjectNode().get("format") != null
+                    && config.getConfigSource().getObjectNode().get("format").isTextual()) {
                 pattern = config.getConfigSource().getObjectNode().get("format").asText();
                 break;
             }
         }
         TimestampParser parser = TimestampParser.of(pattern, "UTC");
-        return parser.parse(value);
+        Timestamp result = null;
+        try {
+            result = parser.parse(value);
+        }
+        catch (Exception e) {
+        }
+        return result;
+    }
+
+    /*
+     * For getting the Long value of the node
+     * Sometime if error occurs (i.e a JSON value but user modified it as long) then return null
+     * */
+    private static Long getLongValue(JsonElement value)
+    {
+        Long result = null;
+        try {
+            result = value.getAsLong();
+        }
+        catch (Exception e) {
+        }
+        return result;
+    }
+
+    /*
+     * For getting the Double value of the node
+     * Sometime if error occurs (i.e a JSON value but user modified it as double) then return null
+     * */
+    private static Double getDoubleValue(JsonElement value)
+    {
+        Double result = null;
+        try {
+            result = value.getAsDouble();
+        }
+        catch (Exception e) {
+        }
+        return result;
+    }
+
+    /*
+     * For getting the Boolean value of the node
+     * Sometime if error occurs (i.e a JSON value but user modified it as boolean) then return null
+     * */
+    private static Boolean getBooleanValue(JsonElement value)
+    {
+        Boolean result = null;
+        try {
+            result = value.getAsBoolean();
+        }
+        catch (Exception e) {
+        }
+        return result;
     }
 
     public static void addRecord(Issue issue, Schema schema, PluginTask task, PageBuilder pageBuilder)
     {
         schema.visitColumns(new ColumnVisitor() {
             @Override
-            public void timestampColumn(Column column)
+            public void jsonColumn(Column column)
             {
-                JsonElement value = issue.fetchValue(column.getName());
-                if (value.isJsonNull()) {
+                JsonElement data = issue.fetchValue(column.getName());
+                if (data.isJsonNull() || data.isJsonPrimitive()) {
                     pageBuilder.setNull(column);
                 }
                 else {
-                    pageBuilder.setTimestamp(column, getTimestampValue(task, column, value.getAsString()));
+                    pageBuilder.setJson(column, new JsonParser().parse(data.toString()));
                 }
             }
 
             @Override
             public void stringColumn(Column column)
             {
-                JsonElement value = issue.fetchValue(column.getName());
-                if (value.isJsonNull()) {
+                JsonElement data = issue.fetchValue(column.getName());
+                if (data.isJsonNull()) {
                     pageBuilder.setNull(column);
                 }
-                else if (value.isJsonPrimitive()) {
-                    pageBuilder.setString(column, value.getAsString());
+                else if (data.isJsonPrimitive()) {
+                    pageBuilder.setString(column, data.getAsString());
                 }
                 else {
-                    pageBuilder.setString(column, value.toString());
+                    pageBuilder.setString(column, data.toString());
                 }
             }
 
             @Override
-            public void longColumn(Column column)
+            public void timestampColumn(Column column)
             {
-                JsonElement value = issue.fetchValue(column.getName());
-                if (value.isJsonPrimitive()) {
-                    pageBuilder.setLong(column, value.getAsLong());
-                }
-                else {
-                    pageBuilder.setNull(column);
-                }
-            }
-
-            @Override
-            public void jsonColumn(Column column)
-            {
-                JsonElement value = issue.fetchValue(column.getName());
-                if (value.isJsonNull()) {
+                JsonElement data = issue.fetchValue(column.getName());
+                if (data.isJsonNull()) {
                     pageBuilder.setNull(column);
                 }
                 else {
-                    pageBuilder.setJson(column, new JsonParser().parse(value.toString()));
-                }
-            }
-
-            @Override
-            public void doubleColumn(Column column)
-            {
-                JsonElement value = issue.fetchValue(column.getName());
-                if (value.isJsonPrimitive()) {
-                    pageBuilder.setDouble(column, value.getAsDouble());
-                }
-                else {
-                    pageBuilder.setNull(column);
+                    pageBuilder.setTimestamp(column, getTimestampValue(task, column, data.getAsString()));
                 }
             }
 
             @Override
             public void booleanColumn(Column column)
             {
-                JsonElement value = issue.fetchValue(column.getName());
-                if (value.isJsonPrimitive()) {
-                    pageBuilder.setBoolean(column, value.getAsBoolean());
+                Boolean value = getBooleanValue(issue.fetchValue(column.getName()));
+                if (value == null) {
+                    pageBuilder.setNull(column);
                 }
                 else {
+                    pageBuilder.setBoolean(column, value);
+                }
+            }
+
+            @Override
+            public void longColumn(Column column)
+            {
+                Long value = getLongValue(issue.fetchValue(column.getName()));
+                if (value == null) {
                     pageBuilder.setNull(column);
+                }
+                else {
+                    pageBuilder.setLong(column, value);
+                }
+            }
+
+            @Override
+            public void doubleColumn(Column column)
+            {
+                Double value = getDoubleValue(issue.fetchValue(column.getName()));
+                if (value == null) {
+                    pageBuilder.setNull(column);
+                }
+                else {
+                    pageBuilder.setDouble(column, value);
                 }
             }
         });
