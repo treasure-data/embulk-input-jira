@@ -32,6 +32,7 @@ import static java.util.Base64.getEncoder;
 import static org.apache.http.HttpHeaders.ACCEPT;
 import static org.apache.http.HttpHeaders.AUTHORIZATION;
 import static org.apache.http.HttpHeaders.CONTENT_TYPE;
+import static org.embulk.input.jira.Constant.MIN_RESULTS;
 import static org.embulk.spi.util.RetryExecutor.retryExecutor;
 
 public class JiraClient
@@ -64,24 +65,23 @@ public class JiraClient
         JsonParser parser = new JsonParser();
         JsonObject result = parser.parse(response).getAsJsonObject();
         return StreamSupport.stream(result.get("issues").getAsJsonArray().spliterator(), false)
-                                                .map(
-                                                        jsonElement -> {
-                                                            JsonObject json = jsonElement.getAsJsonObject();
-                                                            JsonObject fields = json.get("fields").getAsJsonObject();
-                                                            Set<Entry<String, JsonElement>> entries = fields.entrySet();
-                                                            json.remove("fields");
-                                                            // Merged all properties in fields to the object
-                                                            for (Entry<String, JsonElement> entry : entries) {
-                                                                json.add(entry.getKey(), entry.getValue());
-                                                            }
-                                                            return new Issue(json);
-                                                        })
-                                                .collect(Collectors.toList());
+                            .map(jsonElement -> {
+                                JsonObject json = jsonElement.getAsJsonObject();
+                                JsonObject fields = json.get("fields").getAsJsonObject();
+                                Set<Entry<String, JsonElement>> entries = fields.entrySet();
+                                json.remove("fields");
+                                // Merged all properties in fields to the object
+                                for (Entry<String, JsonElement> entry : entries) {
+                                    json.add(entry.getKey(), entry.getValue());
+                                }
+                                return new Issue(json);
+                            })
+                            .collect(Collectors.toList());
     }
 
     public int getTotalCount(final PluginTask task)
     {
-        String response = searchJiraAPI(task, 0, 1);
+        String response = searchJiraAPI(task, 0, MIN_RESULTS);
         JsonParser parser = new JsonParser();
         JsonObject result = parser.parse(response).getAsJsonObject();
         return result.get("total").getAsInt();
