@@ -1,5 +1,12 @@
 package org.embulk.input.jira;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
+import com.google.gson.JsonObject;
+
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigDiff;
@@ -7,8 +14,10 @@ import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
 import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
+import org.embulk.exec.GuessExecutor;
 import org.embulk.input.jira.client.JiraClient;
 import org.embulk.input.jira.util.JiraUtil;
+import org.embulk.spi.Buffer;
 import org.embulk.spi.Exec;
 import org.embulk.spi.InputPlugin;
 import org.embulk.spi.PageBuilder;
@@ -18,12 +27,19 @@ import org.embulk.spi.SchemaConfig;
 import org.slf4j.Logger;
 
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
+
+import static org.embulk.input.jira.Constant.GUESS_BUFFER_SIZE;
+import static org.embulk.input.jira.Constant.GUESS_RECORDS_COUNT;
+import static org.embulk.input.jira.Constant.MAX_RESULTS;
 
 public class JiraInputPlugin
         implements InputPlugin
 {
     private static final Logger LOGGER = Exec.getLogger(JiraInputPlugin.class);
-    private static final int MAX_RESULTS = 50;
 
     public interface PluginTask
             extends Task
@@ -132,6 +148,57 @@ public class JiraInputPlugin
     @Override
     public ConfigDiff guess(ConfigSource config)
     {
-        return Exec.newConfigDiff();
+        ConfigSource guessConfig = createGuessConfig();
+        GuessExecutor guessExecutor = Exec.getInjector().getInstance(GuessExecutor.class);
+        PluginTask task = config.loadConfig(PluginTask.class);
+        JiraClient jiraClient = getJiraClient();
+        List<Issue> issues = jiraClient.searchIssues(task, 0, GUESS_RECORDS_COUNT);
+        issues.stream().forEach(issue -> issue.toRecord());
+        Set<String> uniqAtrribtes = getUniqueAttributes(issues);
+        JsonArray samples = createSamples(issues, uniqAtrribtes);
+        Buffer sample = Buffer.copyOf(samples.toString().getBytes());
+        JsonNode columns = guessExecutor.guessParserConfig(sample, Exec.newConfigSource(), guessConfig).getObjectNode().get("parser").get("columns");
+        ConfigDiff configDiff = Exec.newConfigDiff();
+        configDiff.set("columns", columns);
+        return configDiff;
+    }
+
+    private ConfigSource createGuessConfig()
+    {
+        ConfigSource configSource = Exec.newConfigSource();
+        configSource.set("guess_plugins", new ObjectMapper().createArrayNode().add("jsonpath"));
+        configSource.set("guess_sample_buffer_bytes", GUESS_BUFFER_SIZE);
+        return configSource;
+    }
+
+    private SortedSet<String> getUniqueAttributes(List<Issue> issues)
+    {
+        SortedSet<String> uniqAttributes = new TreeSet<>();
+        issues.stream()
+        .forEach(issue -> {
+            for (Entry<String, JsonElement> entry : issue.getFlatten().entrySet()) {
+                uniqAttributes.add(entry.getKey());
+            }
+        });
+        return uniqAttributes;
+    }
+
+    private JsonArray createSamples(List<Issue> issues, Set<String> uniqAtrribtes)
+    {
+        JsonArray samples = new JsonArray();
+        issues.stream()
+        .forEach(issue -> {
+            JsonObject original = issue.getFlatten();
+            JsonObject unified = new JsonObject();
+            for (String key : uniqAtrribtes) {
+                JsonElement value = original.get(key);
+                if (value == null) {
+                    value = JsonNull.INSTANCE;
+                }
+                unified.add(key, value);
+            }
+            samples.add(unified);
+        });
+        return samples;
     }
 }
