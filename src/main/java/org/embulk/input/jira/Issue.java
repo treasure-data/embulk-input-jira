@@ -19,12 +19,7 @@ import java.util.stream.StreamSupport;
 public class Issue
 {
     private JsonObject flatten;
-    private JsonObject flatternType;
     private JsonObject json;
-
-    public static final String JSON_PRIMITIVE = "primitive";
-    public static final String JSON_OBJECT = "json";
-    public static final String JSON_NULL = "null";
 
     public Issue(JsonObject original)
     {
@@ -85,18 +80,12 @@ public class Issue
     public void toRecord()
     {
         flatten = new JsonObject();
-        flatternType = new JsonObject();
         manipulatingFlattenJson(json, "");
     }
 
     public JsonObject getFlatten()
     {
         return flatten;
-    }
-
-    public JsonObject getFlattenType()
-    {
-        return flatternType;
     }
 
     private void manipulatingFlattenJson(JsonElement in, String prefix)
@@ -156,16 +145,13 @@ public class Issue
                                         return element.toString();
                                     }
                 }).collect(Collectors.toList())))));
-                flatternType.add(prefix, new JsonPrimitive(JSON_PRIMITIVE));
             }
         }
         else if (in.isJsonPrimitive()) {
             flatten.add(prefix, in.getAsJsonPrimitive());
-            flatternType.add(prefix, new JsonPrimitive(JSON_PRIMITIVE));
         }
         else {
             flatten.add(prefix, JsonNull.INSTANCE);
-            flatternType.add(prefix, new JsonPrimitive(JSON_NULL));
         }
     }
 
@@ -182,17 +168,10 @@ public class Issue
         }
         if (heuristic.isEmpty()) {
             flatten.add(prefix, new JsonPrimitive(json.toString()));
-            flatternType.add(prefix, new JsonPrimitive(JSON_OBJECT));
         }
         else {
             for (String key : heuristic) {
                 JsonElement value = json.get(key);
-                if (value.isJsonPrimitive()) {
-                    flatternType.add(appendPrefix(prefix, key), new JsonPrimitive(JSON_PRIMITIVE));
-                }
-                else {
-                    flatternType.add(appendPrefix(prefix, key), new JsonPrimitive(JSON_OBJECT));
-                }
                 flatten.add(appendPrefix(prefix, key), value);
             }
         }
