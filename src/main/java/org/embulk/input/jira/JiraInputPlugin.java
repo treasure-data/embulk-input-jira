@@ -76,7 +76,6 @@ public class JiraInputPlugin
         public String getJQL();
 
         @Config("columns")
-        @ConfigDefault("[]")
         public SchemaConfig getColumns();
 
         // For future support of other authentication method
@@ -149,6 +148,8 @@ public class JiraInputPlugin
     @Override
     public ConfigDiff guess(ConfigSource config)
     {
+        // Added columns in case missing on config
+        config.set("columns", new ObjectMapper().createArrayNode());
         ConfigSource guessConfig = createGuessConfig();
         GuessExecutor guessExecutor = Exec.getInjector().getInstance(GuessExecutor.class);
         PluginTask task = config.loadConfig(PluginTask.class);
