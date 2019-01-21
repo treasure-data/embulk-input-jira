@@ -223,7 +223,7 @@ public final class JiraUtil
             public void timestampColumn(Column column)
             {
                 JsonElement data = issue.fetchValue(column.getName());
-                if (data.isJsonNull()) {
+                if (data.isJsonNull() || data.isJsonObject() || data.isJsonArray()) {
                     pageBuilder.setNull(column);
                 }
                 else {
