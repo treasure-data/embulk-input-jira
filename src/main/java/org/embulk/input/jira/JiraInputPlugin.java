@@ -35,6 +35,7 @@ import java.util.TreeSet;
 import static org.embulk.input.jira.Constant.GUESS_BUFFER_SIZE;
 import static org.embulk.input.jira.Constant.GUESS_RECORDS_COUNT;
 import static org.embulk.input.jira.Constant.MAX_RESULTS;
+import static org.embulk.input.jira.Constant.PREVIEW_RECORDS_COUNT;
 
 public class JiraInputPlugin
         implements InputPlugin
@@ -121,19 +122,28 @@ public class JiraInputPlugin
         JiraUtil.validateTaskConfig(task);
         JiraClient jiraClient = getJiraClient();
         jiraClient.checkUserCredentials(task);
-        int totalCount = jiraClient.getTotalCount(task);
-        int totalPage = JiraUtil.calculateTotalPage(totalCount, MAX_RESULTS);
-        LOGGER.info(String.format("Total pages (%d)", totalPage));
-        int currentPage = 0;
         try (final PageBuilder pageBuilder = new PageBuilder(Exec.getBufferAllocator(), schema, output)) {
-            while (currentPage < totalPage) {
-                LOGGER.info(String.format("Fetching page %d/%d", (currentPage + 1), totalPage));
-                List<Issue> issues = jiraClient.searchIssues(task, (currentPage * MAX_RESULTS), MAX_RESULTS);
+            if (Exec.isPreview()) {
+                List<Issue> issues = jiraClient.searchIssues(task, 0, PREVIEW_RECORDS_COUNT);
                 for (Issue issue : issues) {
                     issue.toRecord();
                     JiraUtil.addRecord(issue, schema, task, pageBuilder);
                 }
-                currentPage++;
+            }
+            else {
+                int currentPage = 0;
+                int totalCount = jiraClient.getTotalCount(task);
+                int totalPage = JiraUtil.calculateTotalPage(totalCount, MAX_RESULTS);
+                LOGGER.info(String.format("Total pages (%d)", totalPage));
+                while (currentPage < totalPage) {
+                    LOGGER.info(String.format("Fetching page %d/%d", (currentPage + 1), totalPage));
+                    List<Issue> issues = jiraClient.searchIssues(task, (currentPage * MAX_RESULTS), MAX_RESULTS);
+                    for (Issue issue : issues) {
+                        issue.toRecord();
+                        JiraUtil.addRecord(issue, schema, task, pageBuilder);
+                    }
+                    currentPage++;
+                }
             }
             pageBuilder.finish();
         }
