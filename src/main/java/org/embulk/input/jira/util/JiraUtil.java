@@ -21,6 +21,8 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static org.embulk.input.jira.Constant.DEFAULT_TIMESTAMP_PATTERN;
@@ -199,6 +201,18 @@ public final class JiraUtil
                 }
                 else if (data.isJsonPrimitive()) {
                     pageBuilder.setString(column, data.getAsString());
+                }
+                else if (data.isJsonArray()) {
+                    pageBuilder.setString(column, String.join(",", StreamSupport.stream(data.getAsJsonArray().spliterator(), false)
+                            .map(obj -> {
+                                if (obj.isJsonPrimitive()) {
+                                    return obj.getAsString();
+                                }
+                                else {
+                                    return obj.toString();
+                                }
+                            })
+                            .collect(Collectors.toList())));
                 }
                 else {
                     pageBuilder.setString(column, data.toString());

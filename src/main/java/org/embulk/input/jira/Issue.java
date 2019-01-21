@@ -37,25 +37,8 @@ public class Issue
         if (json == null || json.isJsonNull()) {
             return JsonNull.INSTANCE;
         }
-        else if (json.isJsonArray() && json.getAsJsonArray().size() == 0) {
+        else if (keys.isEmpty() || (json.isJsonArray() && json.getAsJsonArray().size() == 0)) {
             return json;
-        }
-        if (keys.isEmpty()) {
-            if (json.isJsonArray()) {
-                return new JsonPrimitive(String.join(",", StreamSupport.stream(json.getAsJsonArray().spliterator(), false)
-                        .map(obj -> {
-                            if (obj.isJsonPrimitive()) {
-                                return obj.getAsString();
-                            }
-                            else {
-                                return obj.toString();
-                            }
-                        })
-                        .collect(Collectors.toList())));
-            }
-            else {
-                return json;
-            }
         }
         String key = keys.get(0);
         keys.remove(0);
