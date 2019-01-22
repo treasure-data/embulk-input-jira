@@ -200,10 +200,10 @@ public class JiraInputPlugin
         JsonArray samples = new JsonArray();
         issues.stream()
         .forEach(issue -> {
-            JsonObject original = issue.getFlatten();
+            JsonObject flatten = issue.getFlatten();
             JsonObject unified = new JsonObject();
             for (String key : uniqAtrribtes) {
-                JsonElement value = original.get(key);
+                JsonElement value = flatten.get(key);
                 if (value == null) {
                     value = JsonNull.INSTANCE;
                 }

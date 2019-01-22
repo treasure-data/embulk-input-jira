@@ -112,7 +112,7 @@ public class Issue
             else {
                 flatten.add(prefix,
                         new JsonPrimitive(
-                                String.format("\"%s\"", String.join(",",
+                                String.format("%s", String.join(",",
                                 StreamSupport.stream(arrayObj.spliterator(), false)
                                 .map(element -> {
                                     if (element.isJsonNull()) {
