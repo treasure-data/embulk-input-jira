@@ -4,7 +4,7 @@ public final class Constant
 {
     public static final int MAX_RESULTS = 50;
     public static final int MIN_RESULTS = 1;
-    public static final int GUESS_RECORDS_COUNT = 10;
+    public static final int GUESS_RECORDS_COUNT = 50;
     public static final int PREVIEW_RECORDS_COUNT = 10;
     public static final int GUESS_BUFFER_SIZE = 5 * 1024 * 1024;
 
