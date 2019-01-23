@@ -111,23 +111,7 @@ public class Issue
             }
             else {
                 flatten.add(prefix,
-                        new JsonPrimitive(
-                                String.format("%s", String.join(",",
-                                StreamSupport.stream(arrayObj.spliterator(), false)
-                                .map(element -> {
-                                    if (element.isJsonNull()) {
-                                        return "null";
-                                    }
-                                    else if (element.isJsonPrimitive()) {
-                                        return element.getAsJsonPrimitive().getAsString();
-                                    }
-                                    else if (element.isJsonObject()) {
-                                        return element.getAsJsonObject().toString();
-                                    }
-                                    else {
-                                        return element.toString();
-                                    }
-                }).collect(Collectors.toList())))));
+                        new JsonPrimitive("String value"));
             }
         }
         else if (in.isJsonPrimitive()) {
