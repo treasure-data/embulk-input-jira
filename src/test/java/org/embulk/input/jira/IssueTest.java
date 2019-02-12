@@ -10,7 +10,7 @@ import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 
-public class TestIssue
+public class IssueTest
 {
     private static JsonObject flattenData;
     private static JsonObject flattenExpected;
