@@ -25,5 +25,85 @@
                 "3rdLevelNull": null
             }
         }
+    },
+    "threeLevelsWithoutKeys": {
+        "1stLevel": {
+            "2ndLevel": {
+                "3rdLevelPrimitive": 1,
+                "3rdLevelString": "string",
+                "3rdLevelArray": [],
+                "3rdLevelObject": {
+                    "notKey": "notKey"
+                },
+                "3rdLevelNull": null
+            }
+        }
+    },
+    "threeLevelsWithKeys": {
+        "1stLevel": {
+            "2ndLevel": {
+                "3rdLevelPrimitive": 1,
+                "3rdLevelString": "string",
+                "3rdLevelArray": [],
+                "3rdLevelObject": {
+                    "id": "id",
+                    "name": "name",
+                    "key": "key",
+                    "notKey": "notKey"
+                },
+                "3rdLevelNull": null
+            }
+        }
+    },
+    "threeLevelsWithNullKeys": {
+        "1stLevel": {
+            "2ndLevel": {
+                "3rdLevelPrimitive": 1,
+                "3rdLevelString": "string",
+                "3rdLevelArray": [],
+                "3rdLevelObject": {
+                    "id": "id",
+                    "name": "name",
+                    "key": null
+                },
+                "3rdLevelNull": null
+            }
+        }
+    },
+    "arrayWithAllJsonObjectWithSameKeys": {
+        "array": [
+            {
+                "primitive": 1,
+                "string": "string",
+                "array": [],
+                "object": {},
+                "null": null
+            },
+            {
+                "primitive": 2,
+                "string": "string2",
+                "array": [],
+                "object": {},
+                "null": null
+            }
+        ]
+    },
+    "arrayWithAllJsonObjectWithoutSameKeys": {
+        "array": [
+            {
+                "primitive": 1,
+                "string": "string",
+                "array": [],
+                "object": {},
+                "null": null
+            },
+            {
+                "primitive1": 2,
+                "string1": "string2",
+                "array1": [],
+                "object1": {},
+                "null1": null
+            }
+        ]
     }
 }

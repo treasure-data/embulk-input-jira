@@ -49,4 +49,54 @@ public class TestIssue
         JsonObject expected = flattenExpected.get(testName).getAsJsonObject();
         assertEquals(expected, issue.getFlatten());
     }
+
+    @Test
+    public void test_toRecord_threeLevelsWithoutKeys()
+    {
+        String testName = "threeLevelsWithoutKeys";
+        Issue issue = new Issue(flattenData.get(testName).getAsJsonObject());
+        issue.toRecord();
+        JsonObject expected = flattenExpected.get(testName).getAsJsonObject();
+        assertEquals(expected, issue.getFlatten());
+    }
+
+    @Test
+    public void test_toRecord_threeLevelsWithKeys()
+    {
+        String testName = "threeLevelsWithKeys";
+        Issue issue = new Issue(flattenData.get(testName).getAsJsonObject());
+        issue.toRecord();
+        JsonObject expected = flattenExpected.get(testName).getAsJsonObject();
+        assertEquals(expected, issue.getFlatten());
+    }
+
+    @Test
+    public void test_toRecord_threeLevelsWithNullKeys()
+    {
+        String testName = "threeLevelsWithNullKeys";
+        Issue issue = new Issue(flattenData.get(testName).getAsJsonObject());
+        issue.toRecord();
+        JsonObject expected = flattenExpected.get(testName).getAsJsonObject();
+        assertEquals(expected, issue.getFlatten());
+    }
+
+    @Test
+    public void test_toRecord_arrayWithAllJsonObjectWithSameKeys()
+    {
+        String testName = "arrayWithAllJsonObjectWithSameKeys";
+        Issue issue = new Issue(flattenData.get(testName).getAsJsonObject());
+        issue.toRecord();
+        JsonObject expected = flattenExpected.get(testName).getAsJsonObject();
+        assertEquals(expected, issue.getFlatten());
+    }
+
+    @Test
+    public void test_toRecord_arrayWithAllJsonObjectWithoutSameKeys()
+    {
+        String testName = "arrayWithAllJsonObjectWithoutSameKeys";
+        Issue issue = new Issue(flattenData.get(testName).getAsJsonObject());
+        issue.toRecord();
+        JsonObject expected = flattenExpected.get(testName).getAsJsonObject();
+        assertEquals(expected, issue.getFlatten());
+    }
 }

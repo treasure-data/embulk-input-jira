@@ -104,9 +104,7 @@ public class Issue
                 }
                 JsonObject newObj = new JsonObject();
                 for (String key : occurents.keySet()) {
-                    if (newObj.get(key) == null) {
-                        newObj.add(key, new JsonArray());
-                    }
+                    newObj.add(key, new JsonArray());
                     StreamSupport.stream(arrayObj.spliterator(), false).forEach(x -> {
                         newObj.get(key).getAsJsonArray().add(x.getAsJsonObject().get(key));
                     });
