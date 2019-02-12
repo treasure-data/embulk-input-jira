@@ -79,10 +79,15 @@ public class Issue
                 addHeuristicValue(obj, prefix);
                 return;
             }
-            for (Entry<String, JsonElement> entry : obj.entrySet()) {
-                String key = entry.getKey();
-                JsonElement value = entry.getValue();
-                manipulatingFlattenJson(value, appendPrefix(prefix, key));
+            if (obj.entrySet().isEmpty()) {
+                flatten.add(prefix, obj);
+            }
+            else {
+                for (Entry<String, JsonElement> entry : obj.entrySet()) {
+                    String key = entry.getKey();
+                    JsonElement value = entry.getValue();
+                    manipulatingFlattenJson(value, appendPrefix(prefix, key));
+                }
             }
         }
         else if (in.isJsonArray()) {
