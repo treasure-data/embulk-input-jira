@@ -25,13 +25,13 @@ public class Issue
         this.json = original;
     }
 
-    public JsonElement fetchValue(String path)
+    public JsonElement getValue(String path)
     {
         List<String> keys = new ArrayList<>(Arrays.asList(path.split("\\.")));
-        return fetch(json, keys);
+        return get(json, keys);
     }
 
-    private JsonElement fetch(JsonElement json, List<String> keys)
+    private JsonElement get(JsonElement json, List<String> keys)
     {
         if (json == null || json.isJsonNull()) {
             return JsonNull.INSTANCE;
@@ -52,10 +52,10 @@ public class Issue
                                 arrays.add(obj);
                             }
                         });
-            return fetch(arrays, keys);
+            return get(arrays, keys);
         }
         else {
-            return fetch(json.getAsJsonObject().get(key), keys);
+            return get(json.getAsJsonObject().get(key), keys);
         }
     }
 

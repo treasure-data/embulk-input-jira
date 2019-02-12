@@ -183,7 +183,7 @@ public final class JiraUtil
             @Override
             public void jsonColumn(Column column)
             {
-                JsonElement data = issue.fetchValue(column.getName());
+                JsonElement data = issue.getValue(column.getName());
                 if (data.isJsonNull() || data.isJsonPrimitive()) {
                     pageBuilder.setNull(column);
                 }
@@ -195,7 +195,7 @@ public final class JiraUtil
             @Override
             public void stringColumn(Column column)
             {
-                JsonElement data = issue.fetchValue(column.getName());
+                JsonElement data = issue.getValue(column.getName());
                 if (data.isJsonNull()) {
                     pageBuilder.setNull(column);
                 }
@@ -222,7 +222,7 @@ public final class JiraUtil
             @Override
             public void timestampColumn(Column column)
             {
-                JsonElement data = issue.fetchValue(column.getName());
+                JsonElement data = issue.getValue(column.getName());
                 if (data.isJsonNull() || data.isJsonObject() || data.isJsonArray()) {
                     pageBuilder.setNull(column);
                 }
@@ -234,7 +234,7 @@ public final class JiraUtil
             @Override
             public void booleanColumn(Column column)
             {
-                Boolean value = getBooleanValue(issue.fetchValue(column.getName()));
+                Boolean value = getBooleanValue(issue.getValue(column.getName()));
                 if (value == null) {
                     pageBuilder.setNull(column);
                 }
@@ -246,7 +246,7 @@ public final class JiraUtil
             @Override
             public void longColumn(Column column)
             {
-                Long value = getLongValue(issue.fetchValue(column.getName()));
+                Long value = getLongValue(issue.getValue(column.getName()));
                 if (value == null) {
                     pageBuilder.setNull(column);
                 }
@@ -258,7 +258,7 @@ public final class JiraUtil
             @Override
             public void doubleColumn(Column column)
             {
-                Double value = getDoubleValue(issue.fetchValue(column.getName()));
+                Double value = getDoubleValue(issue.getValue(column.getName()));
                 if (value == null) {
                     pageBuilder.setNull(column);
                 }
