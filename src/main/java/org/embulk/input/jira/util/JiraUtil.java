@@ -227,7 +227,13 @@ public final class JiraUtil
                     pageBuilder.setNull(column);
                 }
                 else {
-                    pageBuilder.setTimestamp(column, getTimestampValue(task, column, data.getAsString()));
+                    Timestamp value = getTimestampValue(task, column, data.getAsString());
+                    if (value == null) {
+                        pageBuilder.setNull(column);
+                    }
+                    else {
+                        pageBuilder.setTimestamp(column, value);
+                    }
                 }
             }
 
