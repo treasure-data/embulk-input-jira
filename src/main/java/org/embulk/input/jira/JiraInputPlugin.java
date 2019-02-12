@@ -45,11 +45,9 @@ public class JiraInputPlugin
     public interface PluginTask
             extends Task
     {
-        // configuration option 1 (required integer)
         @Config("username")
         public String getUsername();
 
-        // configuration option 2 (optional string, null is not allowed)
         @Config("password")
         public String getPassword();
 
@@ -92,7 +90,7 @@ public class JiraInputPlugin
         PluginTask task = config.loadConfig(PluginTask.class);
 
         Schema schema = task.getColumns().toSchema();
-        int taskCount = 1;  // number of run() method calls
+        int taskCount = 1;
 
         return resume(task.dump(), schema, taskCount, control);
     }
