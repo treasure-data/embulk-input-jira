@@ -1,0 +1,23 @@
+{
+    "simple": {
+        "primitive": 1,
+        "string": "string",
+        "array": "String value",
+        "object": {},
+        "null": null
+    },
+    "twoLevels": {
+        "1stLevel.2ndLevelPrimitive": 1,
+        "1stLevel.2ndLevelString": "string",
+        "1stLevel.2ndLevelArray": "String value",
+        "1stLevel.2ndLevelObject": {},
+        "1stLevel.2ndLevelNull": null
+    },
+    "threeLevels": {
+        "1stLevel.2ndLevel.3rdLevelPrimitive": 1,
+        "1stLevel.2ndLevel.3rdLevelString": "string",
+        "1stLevel.2ndLevel.3rdLevelArray": "String value",
+        "1stLevel.2ndLevel.3rdLevelObject": "{}",
+        "1stLevel.2ndLevel.3rdLevelNull": null
+    }
+}
