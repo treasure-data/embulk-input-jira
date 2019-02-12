@@ -70,13 +70,33 @@
             }
         }
     },
-    "arrayWithAllJsonObjectWithSameKeys": {
+    "arrayWithAllJsonObjectWithSameKeysAndEmptyObject": {
         "array": [
             {
                 "primitive": 1,
                 "string": "string",
                 "array": [],
                 "object": {},
+                "null": null
+            },
+            {
+                "primitive": 2,
+                "string": "string2",
+                "array": [],
+                "object": {},
+                "null": null
+            }
+        ]
+    },
+    "arrayWithAllJsonObjectWithSameKeysAndNotEmptyObject": {
+        "array": [
+            {
+                "primitive": 1,
+                "string": "string",
+                "array": [],
+                "object": {
+                    "primitive": 1
+                },
                 "null": null
             },
             {

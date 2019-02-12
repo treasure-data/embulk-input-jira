@@ -81,9 +81,19 @@ public class TestIssue
     }
 
     @Test
-    public void test_toRecord_arrayWithAllJsonObjectWithSameKeys()
+    public void test_toRecord_arrayWithAllJsonObjectWithSameKeysAndEmptyObject()
     {
-        String testName = "arrayWithAllJsonObjectWithSameKeys";
+        String testName = "arrayWithAllJsonObjectWithSameKeysAndEmptyObject";
+        Issue issue = new Issue(flattenData.get(testName).getAsJsonObject());
+        issue.toRecord();
+        JsonObject expected = flattenExpected.get(testName).getAsJsonObject();
+        assertEquals(expected, issue.getFlatten());
+    }
+
+    @Test
+    public void test_toRecord_arrayWithAllJsonObjectWithSameKeysAndNotEmptyObject()
+    {
+        String testName = "arrayWithAllJsonObjectWithSameKeysAndNotEmptyObject";
         Issue issue = new Issue(flattenData.get(testName).getAsJsonObject());
         issue.toRecord();
         JsonObject expected = flattenExpected.get(testName).getAsJsonObject();

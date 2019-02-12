@@ -44,11 +44,18 @@
         "1stLevel.2ndLevel.3rdLevelObject.name": "name",
         "1stLevel.2ndLevel.3rdLevelNull": null
     },
-    "arrayWithAllJsonObjectWithSameKeys": {
+    "arrayWithAllJsonObjectWithSameKeysAndEmptyObject": {
         "array.primitive": "String value",
         "array.string": "String value",
         "array.array": "String value",
         "array.object": {},
+        "array.null": "String value"
+    },
+    "arrayWithAllJsonObjectWithSameKeysAndNotEmptyObject": {
+        "array.primitive": "String value",
+        "array.string": "String value",
+        "array.array": "String value",
+        "array.object.primitive": "String value",
         "array.null": "String value"
     },
     "arrayWithAllJsonObjectWithoutSameKeys": {
