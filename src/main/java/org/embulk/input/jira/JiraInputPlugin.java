@@ -63,7 +63,6 @@ public class JiraInputPlugin
         @ConfigDefault("120000")
         int getMaximumRetryIntervalMillis();
 
-        // timeout settings
         @Config("timeout_millis")
         @ConfigDefault("300000")
         int getTimeoutMillis();
@@ -78,7 +77,7 @@ public class JiraInputPlugin
         @Config("columns")
         public SchemaConfig getColumns();
 
-        // For future support of other authentication method
+        // For future support of other authentication methods
         @Config("auth_method")
         @ConfigDefault("\"basic\"")
         public AuthenticateMethod getAuthMethod();
