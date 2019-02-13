@@ -1,5 +1,6 @@
 package org.embulk.input.jira.client;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -152,7 +153,7 @@ public class JiraClient
     {
         try {
             HttpClient client = createHttpClient();
-            HttpGet request = createGetRequest(client, task, url);
+            HttpGet request = createGetRequest(task, url);
             HttpResponse response = client.execute(request);
             // Check for HTTP response code : 200 : SUCCESS
             int statusCode = response.getStatusLine().getStatusCode();
@@ -167,7 +168,8 @@ public class JiraClient
         }
     }
 
-    private HttpClient createHttpClient()
+    @VisibleForTesting
+    public HttpClient createHttpClient()
     {
         RequestConfig config = RequestConfig.custom()
                 .setConnectTimeout(CONNECTION_TIME_OUT)
@@ -177,7 +179,7 @@ public class JiraClient
         return client;
     }
 
-    private HttpGet createGetRequest(HttpClient client, PluginTask task, String url)
+    private HttpGet createGetRequest(PluginTask task, String url)
     {
         HttpGet request = new HttpGet(url);
         switch (task.getAuthMethod()) {
