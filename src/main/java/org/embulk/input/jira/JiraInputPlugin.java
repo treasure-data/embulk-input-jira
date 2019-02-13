@@ -161,6 +161,7 @@ public class JiraInputPlugin
         ConfigSource guessConfig = createGuessConfig();
         GuessExecutor guessExecutor = Exec.getInjector().getInstance(GuessExecutor.class);
         PluginTask task = config.loadConfig(PluginTask.class);
+        JiraUtil.validateTaskConfig(task);
         JiraClient jiraClient = getJiraClient();
         List<Issue> issues = jiraClient.searchIssues(task, 0, GUESS_RECORDS_COUNT);
         issues.stream().forEach(issue -> issue.toRecord());
