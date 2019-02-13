@@ -3,6 +3,7 @@ username: example@example.com
 password: XXXXXXXXXXXXXXXXX
 uri: "https://example.com/"
 jql: project = example
+retry_limit: 3
 columns:
   - {name: boolean, type: boolean}
   - {name: long, type: long}

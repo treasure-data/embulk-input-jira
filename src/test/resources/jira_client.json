@@ -1,0 +1,36 @@
+{
+    "credentialSuccess": {
+        "statusCode": 200,
+        "body": {}
+    },
+    "credentialFail400": {
+        "statusCode": 400,
+        "body": "Bad request"
+    },
+    "credentialFail401": {
+        "statusCode": 401,
+        "body": "Unauthorized"
+    },
+    "credentialFail429": {
+        "statusCode": 429,
+        "body": "Too many request"
+    },
+    "credentialFail500": {
+        "statusCode": 500,
+        "body": "Internal server error"
+    },
+    "totalCountSuccess": {
+        "statusCode": 200,
+        "body": {
+            "total": 10
+        }
+    },
+    "totalCountFailAllTime": {
+        "statusCode": 401,
+        "body": "Unauthorized"
+    },
+    "totalCountFail400": {
+        "statusCode": 400,
+        "body": "Unauthorized"
+    }
+}

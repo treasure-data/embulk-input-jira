@@ -55,7 +55,7 @@ public class JiraClient
                 throw new ConfigException("Could not authorize with your credential.");
             }
             else {
-                throw new ConfigException("Could not authorize with your credential due to problem when contacting JIRA API");
+                throw new ConfigException("Could not authorize with your credential due to problem when contacting JIRA API.");
             }
         }
     }
