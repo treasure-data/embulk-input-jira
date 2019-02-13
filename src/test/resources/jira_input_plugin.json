@@ -39,7 +39,7 @@
             ]
         }
     },
-    "guessResult": {
+    "guessDataResult": {
         "statusCode": 200,
         "body": {
             "startAt": 0,
@@ -55,6 +55,37 @@
                         "date": "2019-01-01T00:00:00.000Z",
                         "json": {}
                     }
+                }
+            ]
+        }
+    },
+    "guessResult": {
+        "parser": {
+            "columns": [
+                {
+                    "name": "boolean",
+                    "type": "boolean"
+                },
+                {
+                    "name": "long",
+                    "type": "long"
+                },
+                {
+                    "name": "double",
+                    "type": "double"
+                },
+                {
+                    "name": "string",
+                    "type": "string"
+                },
+                {
+                    "name": "date",
+                    "type": "timestamp",
+                    "format": "%Y-%m-%dT%H:%M:%S.%L%z"
+                },
+                {
+                    "name": "long",
+                    "type": "json"
                 }
             ]
         }

@@ -159,6 +159,7 @@ public class JiraInputPlugin
         PluginTask task = config.loadConfig(PluginTask.class);
         JiraUtil.validateTaskConfig(task);
         JiraClient jiraClient = getJiraClient();
+        jiraClient.checkUserCredentials(task);
         List<Issue> issues = jiraClient.searchIssues(task, 0, GUESS_RECORDS_COUNT);
         issues.stream().forEach(issue -> issue.toRecord());
         Set<String> uniqAtrribtes = getUniqueAttributes(issues);

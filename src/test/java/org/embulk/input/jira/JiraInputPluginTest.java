@@ -1,6 +1,10 @@
 package org.embulk.input.jira;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
@@ -8,7 +12,9 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.StringEntity;
 import org.embulk.EmbulkTestRuntime;
+import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
+import org.embulk.config.DataSourceImpl;
 import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
 import org.embulk.exec.GuessExecutor;
@@ -27,6 +33,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -66,6 +73,7 @@ public class JiraInputPluginTest
         when(client.execute(Mockito.any(HttpUriRequest.class))).thenReturn(response);
         when(response.getStatusLine()).thenReturn(statusLine);
         doReturn(pageBuilder).when(plugin).getPageBuilder(Mockito.any(), Mockito.any());
+        doReturn(guessExecutor).when(plugin).getGuessExecutor();
     }
 
     @Test
@@ -144,10 +152,26 @@ public class JiraInputPluginTest
     }
 
     @Test
-    public void test_guess()
+    public void test_guess() throws IOException
     {
-//        ConfigSource configSource = Exec.newConfigSource();
-//        plugin.guess(configSource);
+        ConfigSource configSource = TestHelpers.config();
+        JsonObject authorizeResponse = data.get("authenticateSuccess").getAsJsonObject();
+        JsonObject searchResponse = data.get("guessDataResult").getAsJsonObject();
+        ObjectNode guessResult = (ObjectNode) new ObjectMapper().readTree(data.get("guessResult").toString());
+
+        when(statusLine.getStatusCode())
+            .thenReturn(authorizeResponse.get("statusCode").getAsInt())
+            .thenReturn(searchResponse.get("statusCode").getAsInt());
+        when(response.getEntity())
+            .thenReturn(new StringEntity(searchResponse.get("body").toString()))
+            .thenReturn(new StringEntity(searchResponse.get("body").toString()));
+
+        when(guessExecutor.guessParserConfig(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(new DataSourceImpl(null, guessResult));
+
+        ConfigDiff result = plugin.guess(configSource);
+        JsonElement expected = data.get("guessResult").getAsJsonObject().get("parser");
+        JsonElement actual = new JsonParser().parse(result.toString());
+        assertEquals(expected, actual);
     }
 
     private class Control implements InputPlugin.Control
