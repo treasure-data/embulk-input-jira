@@ -2,6 +2,7 @@ package org.embulk.input.jira;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
@@ -120,8 +121,8 @@ public class JiraInputPlugin
         JiraUtil.validateTaskConfig(task);
         JiraClient jiraClient = getJiraClient();
         jiraClient.checkUserCredentials(task);
-        try (final PageBuilder pageBuilder = new PageBuilder(Exec.getBufferAllocator(), schema, output)) {
-            if (Exec.isPreview()) {
+        try (final PageBuilder pageBuilder = getPageBuilder(schema, output)) {
+            if (isPreview()) {
                 List<Issue> issues = jiraClient.searchIssues(task, 0, PREVIEW_RECORDS_COUNT);
                 for (Issue issue : issues) {
                     issue.toRecord();
@@ -148,18 +149,13 @@ public class JiraInputPlugin
         return Exec.newTaskReport();
     }
 
-    private JiraClient getJiraClient()
-    {
-        return new JiraClient();
-    }
-
     @Override
     public ConfigDiff guess(ConfigSource config)
     {
         // Reset columns in case already have or missing on configuration
         config.set("columns", new ObjectMapper().createArrayNode());
         ConfigSource guessConfig = createGuessConfig();
-        GuessExecutor guessExecutor = Exec.getInjector().getInstance(GuessExecutor.class);
+        GuessExecutor guessExecutor = getGuessExecutor();
         PluginTask task = config.loadConfig(PluginTask.class);
         JiraUtil.validateTaskConfig(task);
         JiraClient jiraClient = getJiraClient();
@@ -211,5 +207,29 @@ public class JiraInputPlugin
             samples.add(unified);
         });
         return samples;
+    }
+
+    @VisibleForTesting
+    public GuessExecutor getGuessExecutor()
+    {
+        return Exec.getInjector().getInstance(GuessExecutor.class);
+    }
+
+    @VisibleForTesting
+    public PageBuilder getPageBuilder(Schema schema, PageOutput output)
+    {
+        return new PageBuilder(Exec.getBufferAllocator(), schema, output);
+    }
+
+    @VisibleForTesting
+    public boolean isPreview()
+    {
+        return Exec.isPreview();
+    }
+
+    @VisibleForTesting
+    public JiraClient getJiraClient()
+    {
+        return new JiraClient();
     }
 }

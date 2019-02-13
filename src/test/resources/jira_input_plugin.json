@@ -1,0 +1,62 @@
+{
+    "authenticateSuccess": {
+        "statusCode": 200,
+        "body": {}
+    },
+    "authenticateFail": {
+        "statusCode": 401,
+        "body": {}
+    },
+    "emptyResult": {
+        "statusCode": 200,
+        "body": {
+            "startAt": 0,
+            "maxResults": 50,
+            "total": 0,
+            "issues": []
+        }
+    },
+    "oneRecordResult": {
+        "statusCode": 200,
+        "body": {
+            "startAt": 0,
+            "maxResults": 50,
+            "total": 1,
+            "issues": [
+                {
+                    "id": "id1",
+                    "key": "key1",
+                    "self": "self1",
+                    "fields": {
+                        "boolean": true,
+                        "long": 1,
+                        "double": 1,
+                        "string": "string1",
+                        "date": "2019-01-01T00:00:00.000Z",
+                        "json": {}
+                    }
+                }
+            ]
+        }
+    },
+    "guessResult": {
+        "statusCode": 200,
+        "body": {
+            "startAt": 0,
+            "maxResults": 50,
+            "total": 1,
+            "issues": [
+                {
+                    "fields": {
+                        "boolean": true,
+                        "long": 1,
+                        "double": 1,
+                        "string": "string1",
+                        "date": "2019-01-01T00:00:00.000Z",
+                        "json": {}
+                    }
+                }
+            ]
+        }
+    }
+}
