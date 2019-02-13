@@ -90,6 +90,8 @@ public class JiraInputPluginTest
             .thenReturn(new StringEntity(searchResponse.get("body").toString()));
 
         plugin.transaction(config, new Control());
+     // Check credential 1 + getTotal 1 + loadData 0
+        verify(jiraClient, times(2)).createHttpClient();
         verify(pageBuilder, times(0)).addRecord();
         verify(pageBuilder, times(1)).finish();
     }
@@ -99,7 +101,6 @@ public class JiraInputPluginTest
     {
         JsonObject authorizeResponse = data.get("authenticateSuccess").getAsJsonObject();
         JsonObject searchResponse = data.get("oneRecordResult").getAsJsonObject();
-        System.out.println(searchResponse);
 
         when(statusLine.getStatusCode())
             .thenReturn(authorizeResponse.get("statusCode").getAsInt())
@@ -109,7 +110,29 @@ public class JiraInputPluginTest
             .thenReturn(new StringEntity(searchResponse.get("body").toString()));
 
         plugin.transaction(config, new Control());
+        // Check credential 1 + getTotal 1 + loadData 1
+        verify(jiraClient, times(3)).createHttpClient();
         verify(pageBuilder, times(1)).addRecord();
+        verify(pageBuilder, times(1)).finish();
+    }
+
+    @Test
+    public void test_run_with2PagesResult() throws IOException
+    {
+        JsonObject authorizeResponse = data.get("authenticateSuccess").getAsJsonObject();
+        JsonObject searchResponse = data.get("2PagesResult").getAsJsonObject();
+
+        when(statusLine.getStatusCode())
+            .thenReturn(authorizeResponse.get("statusCode").getAsInt())
+            .thenReturn(searchResponse.get("statusCode").getAsInt());
+        when(response.getEntity())
+            .thenReturn(new StringEntity(authorizeResponse.get("body").toString()))
+            .thenReturn(new StringEntity(searchResponse.get("body").toString()));
+
+        plugin.transaction(config, new Control());
+        // Check credential 1 + getTotal 1 + loadData 2
+        verify(jiraClient, times(4)).createHttpClient();
+        verify(pageBuilder, times(2)).addRecord();
         verify(pageBuilder, times(1)).finish();
     }
 
@@ -124,10 +147,11 @@ public class JiraInputPluginTest
             .thenReturn(authorizeResponse.get("statusCode").getAsInt())
             .thenReturn(searchResponse.get("statusCode").getAsInt());
         when(response.getEntity())
-            .thenReturn(new StringEntity(authorizeResponse.get("body").toString()))
             .thenReturn(new StringEntity(searchResponse.get("body").toString()));
 
         plugin.transaction(config, new Control());
+        // Check credential 1 + loadData 1
+        verify(jiraClient, times(2)).createHttpClient();
         verify(pageBuilder, times(0)).addRecord();
         verify(pageBuilder, times(1)).finish();
     }
@@ -147,6 +171,8 @@ public class JiraInputPluginTest
             .thenReturn(new StringEntity(searchResponse.get("body").toString()));
 
         plugin.transaction(config, new Control());
+        // Check credential 1 + loadData 1
+        verify(jiraClient, times(2)).createHttpClient();
         verify(pageBuilder, times(1)).addRecord();
         verify(pageBuilder, times(1)).finish();
     }
