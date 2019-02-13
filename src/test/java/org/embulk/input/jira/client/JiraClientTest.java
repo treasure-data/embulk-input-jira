@@ -105,7 +105,7 @@ public class JiraClientTest
         when(statusLine.getStatusCode()).thenReturn(statusCode);
         when(response.getEntity()).thenReturn(new StringEntity(body));
 
-        assertThrows("Could not authorize with your credential due to problem when contacting JIRA API.", ConfigException.class, () -> jiraClient.checkUserCredentials(task));
+        assertThrows("Could not authorize with your credential due to problems when contacting JIRA API.", ConfigException.class, () -> jiraClient.checkUserCredentials(task));
     }
 
     @Test
@@ -119,7 +119,7 @@ public class JiraClientTest
         when(statusLine.getStatusCode()).thenReturn(statusCode);
         when(response.getEntity()).thenReturn(new StringEntity(body));
 
-        assertThrows("Could not authorize with your credential due to problem when contacting JIRA API.", ConfigException.class, () -> jiraClient.checkUserCredentials(task));
+        assertThrows("Could not authorize with your credential due to problems when contacting JIRA API.", ConfigException.class, () -> jiraClient.checkUserCredentials(task));
     }
 
     @Test

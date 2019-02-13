@@ -55,7 +55,7 @@ public class JiraClient
                 throw new ConfigException("Could not authorize with your credential.");
             }
             else {
-                throw new ConfigException("Could not authorize with your credential due to problem when contacting JIRA API.");
+                throw new ConfigException("Could not authorize with your credential due to problems when contacting JIRA API.");
             }
         }
     }
@@ -107,10 +107,7 @@ public class JiraClient
                 {
                     if (exception instanceof JiraException) {
                         int statusCode = ((JiraException) exception).getStatusCode();
-                        if (statusCode / 100 == 4 && statusCode != HttpStatus.SC_UNAUTHORIZED && statusCode != 429) {
-                            return false;
-                        }
-                        return true;
+                        return statusCode / 100 != 4 || statusCode == HttpStatus.SC_UNAUTHORIZED || statusCode == 429;
                     }
                     return false;
                 }
@@ -140,7 +137,7 @@ public class JiraClient
                 @Override
                 public void onGiveup(Exception firstException, Exception lastException) throws RetryGiveupException
                 {
-                    LOGGER.warn("Retry Limits Completed");
+                    LOGGER.warn("Retry Limit Exceeded");
                 }
             });
         }

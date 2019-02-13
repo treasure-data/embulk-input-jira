@@ -43,15 +43,14 @@ public class Issue
         keys.remove(0);
         if (json.isJsonArray()) {
             JsonArray arrays = new JsonArray();
-            StreamSupport.stream(json.getAsJsonArray().spliterator(), false)
-                        .forEach(obj -> {
-                            if (obj.isJsonObject()) {
-                                arrays.add(obj.getAsJsonObject().get(key));
-                            }
-                            else {
-                                arrays.add(obj);
-                            }
-                        });
+            for (JsonElement elem : json.getAsJsonArray()) {
+                if (elem.isJsonObject()) {
+                    arrays.add(elem.getAsJsonObject().get(key));
+                }
+                else {
+                    arrays.add(elem);
+                }
+            }
             return get(arrays, keys);
         }
         else {
@@ -92,7 +91,7 @@ public class Issue
         }
         else if (in.isJsonArray()) {
             JsonArray arrayObj = in.getAsJsonArray();
-            boolean isAllJsonObject = arrayObj.size() > 0 ? StreamSupport.stream(arrayObj.spliterator(), false).allMatch(x -> x.isJsonObject()) : false;
+            boolean isAllJsonObject = arrayObj.size() > 0 && StreamSupport.stream(arrayObj.spliterator(), false).allMatch(JsonElement::isJsonObject);
             if (isAllJsonObject) {
                 Map<String, Integer> occurents = new HashMap<>();
                 for (JsonElement element : arrayObj) {
@@ -105,9 +104,9 @@ public class Issue
                 JsonObject newObj = new JsonObject();
                 for (String key : occurents.keySet()) {
                     newObj.add(key, new JsonArray());
-                    StreamSupport.stream(arrayObj.spliterator(), false).forEach(x -> {
-                        newObj.get(key).getAsJsonArray().add(x.getAsJsonObject().get(key));
-                    });
+                    for (JsonElement elem : arrayObj) {
+                        newObj.get(key).getAsJsonArray().add(elem.getAsJsonObject().get(key));
+                    }
                 }
                 manipulatingFlattenJson(newObj, prefix);
             }
@@ -148,11 +147,6 @@ public class Issue
 
     private String appendPrefix(String prefix, String key)
     {
-        if (prefix.isEmpty()) {
-            return key;
-        }
-        else {
-            return prefix.concat(".".concat(key));
-        }
+        return prefix.isEmpty() ? key : prefix + "." + key;
     }
 }

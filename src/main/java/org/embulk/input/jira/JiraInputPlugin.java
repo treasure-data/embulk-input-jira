@@ -160,9 +160,9 @@ public class JiraInputPlugin
         JiraClient jiraClient = getJiraClient();
         jiraClient.checkUserCredentials(task);
         List<Issue> issues = jiraClient.searchIssues(task, 0, GUESS_RECORDS_COUNT);
-        issues.stream().forEach(issue -> issue.toRecord());
-        Set<String> uniqAtrribtes = getUniqueAttributes(issues);
-        JsonArray samples = createSamples(issues, uniqAtrribtes);
+        issues.forEach(Issue::toRecord);
+        Set<String> uniqueAtrribtes = getUniqueAttributes(issues);
+        JsonArray samples = createSamples(issues, uniqueAtrribtes);
         Buffer sample = Buffer.copyOf(samples.toString().getBytes());
         JsonNode columns = guessExecutor.guessParserConfig(sample, Exec.newConfigSource(), guessConfig).getObjectNode().get("parser").get("columns");
         ConfigDiff configDiff = Exec.newConfigDiff();
@@ -180,24 +180,22 @@ public class JiraInputPlugin
 
     private SortedSet<String> getUniqueAttributes(List<Issue> issues)
     {
-        SortedSet<String> uniqAttributes = new TreeSet<>();
-        issues.stream()
-        .forEach(issue -> {
+        SortedSet<String> uniqueAttributes = new TreeSet<>();
+        for (Issue issue : issues) {
             for (Entry<String, JsonElement> entry : issue.getFlatten().entrySet()) {
-                uniqAttributes.add(entry.getKey());
+                uniqueAttributes.add(entry.getKey());
             }
-        });
-        return uniqAttributes;
+        }
+        return uniqueAttributes;
     }
 
-    private JsonArray createSamples(List<Issue> issues, Set<String> uniqAtrribtes)
+    private JsonArray createSamples(List<Issue> issues, Set<String> uniqueAtrribtes)
     {
         JsonArray samples = new JsonArray();
-        issues.stream()
-        .forEach(issue -> {
+        for (Issue issue : issues) {
             JsonObject flatten = issue.getFlatten();
             JsonObject unified = new JsonObject();
-            for (String key : uniqAtrribtes) {
+            for (String key : uniqueAtrribtes) {
                 JsonElement value = flatten.get(key);
                 if (value == null) {
                     value = JsonNull.INSTANCE;
@@ -205,7 +203,7 @@ public class JiraInputPlugin
                 unified.add(key, value);
             }
             samples.add(unified);
-        });
+        }
         return samples;
     }
 
