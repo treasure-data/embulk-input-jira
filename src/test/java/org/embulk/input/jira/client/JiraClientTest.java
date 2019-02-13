@@ -8,6 +8,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.entity.StringEntity;
 import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ConfigException;
+import org.embulk.input.jira.Issue;
 import org.embulk.input.jira.JiraInputPlugin.PluginTask;
 import org.embulk.input.jira.TestHelpers;
 
@@ -17,6 +18,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import java.io.IOException;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
@@ -51,10 +53,10 @@ public class JiraClientTest
     }
 
     @Test
-    public void test_checkUserCredentials_credentialSuccess() throws IOException
+    public void test_checkUserCredentials_success() throws IOException
     {
-        String testName =  "credentialSuccess";
-        JsonObject messageResponse = data.get(testName).getAsJsonObject();
+        String dataName =  "credentialSuccess";
+        JsonObject messageResponse = data.get(dataName).getAsJsonObject();
         int statusCode = messageResponse.get("statusCode").getAsInt();
         String body = messageResponse.get("body").toString();
 
@@ -65,10 +67,10 @@ public class JiraClientTest
     }
 
     @Test
-    public void test_checkUserCredentials_credentialFail400() throws IOException
+    public void test_checkUserCredentials_failOn400() throws IOException
     {
-        String testName =  "credentialFail400";
-        JsonObject messageResponse = data.get(testName).getAsJsonObject();
+        String dataName =  "credentialFail400";
+        JsonObject messageResponse = data.get(dataName).getAsJsonObject();
         int statusCode = messageResponse.get("statusCode").getAsInt();
         String body = messageResponse.get("body").toString();
 
@@ -79,10 +81,10 @@ public class JiraClientTest
     }
 
     @Test
-    public void test_checkUserCredentials_credentialFail401() throws IOException
+    public void test_checkUserCredentials_failOn401() throws IOException
     {
-        String testName =  "credentialFail401";
-        JsonObject messageResponse = data.get(testName).getAsJsonObject();
+        String dataName =  "credentialFail401";
+        JsonObject messageResponse = data.get(dataName).getAsJsonObject();
         int statusCode = messageResponse.get("statusCode").getAsInt();
         String body = messageResponse.get("body").toString();
 
@@ -93,10 +95,10 @@ public class JiraClientTest
     }
 
     @Test
-    public void test_checkUserCredentials_credentialFail429() throws IOException
+    public void test_checkUserCredentials_failOn429() throws IOException
     {
-        String testName =  "credentialFail429";
-        JsonObject messageResponse = data.get(testName).getAsJsonObject();
+        String dataName =  "credentialFail429";
+        JsonObject messageResponse = data.get(dataName).getAsJsonObject();
         int statusCode = messageResponse.get("statusCode").getAsInt();
         String body = messageResponse.get("body").toString();
 
@@ -107,10 +109,10 @@ public class JiraClientTest
     }
 
     @Test
-    public void test_checkUserCredentials_credentialFail500() throws IOException
+    public void test_checkUserCredentials_failOn500() throws IOException
     {
-        String testName =  "credentialFail500";
-        JsonObject messageResponse = data.get(testName).getAsJsonObject();
+        String dataName =  "credentialFail500";
+        JsonObject messageResponse = data.get(dataName).getAsJsonObject();
         int statusCode = messageResponse.get("statusCode").getAsInt();
         String body = messageResponse.get("body").toString();
 
@@ -121,10 +123,10 @@ public class JiraClientTest
     }
 
     @Test
-    public void test_getTotalCount_totalCountSuccess() throws IOException
+    public void test_getTotalCount_success() throws IOException
     {
-        String testName =  "totalCountSuccess";
-        JsonObject messageResponse = data.get(testName).getAsJsonObject();
+        String dataName =  "totalCountSuccess";
+        JsonObject messageResponse = data.get(dataName).getAsJsonObject();
         int statusCode = messageResponse.get("statusCode").getAsInt();
         String body = messageResponse.get("body").toString();
 
@@ -136,10 +138,10 @@ public class JiraClientTest
     }
 
     @Test
-    public void test_getTotalCount_totalCountFailAllTime() throws IOException
+    public void test_getTotalCount_failOnRetry() throws IOException
     {
-        String testName =  "totalCountFailAllTime";
-        JsonObject messageResponse = data.get(testName).getAsJsonObject();
+        String dataName =  "totalCountFailAllTime";
+        JsonObject messageResponse = data.get(dataName).getAsJsonObject();
         int statusCode = messageResponse.get("statusCode").getAsInt();
         String body = messageResponse.get("body").toString();
 
@@ -155,10 +157,10 @@ public class JiraClientTest
     }
 
     @Test
-    public void test_getTotalCount_totalCountFail400() throws IOException
+    public void test_getTotalCount_doNotRetryOn400Status() throws IOException
     {
-        String testName =  "totalCountFail400";
-        JsonObject messageResponse = data.get(testName).getAsJsonObject();
+        String dataName =  "totalCountFail400";
+        JsonObject messageResponse = data.get(dataName).getAsJsonObject();
         int statusCode = messageResponse.get("statusCode").getAsInt();
         String body = messageResponse.get("body").toString();
 
@@ -174,7 +176,7 @@ public class JiraClientTest
     }
 
     @Test
-    public void test_getTotalCount_totalCountWithIOException() throws IOException
+    public void test_getTotalCount_retryOnIOException() throws IOException
     {
         when(client.execute(Mockito.any())).thenThrow(new IOException("test exeception"));
 
@@ -185,5 +187,21 @@ public class JiraClientTest
         verify(jiraClient, times(expectedInvocation)).createHttpClient();
         // getStatusCode is not triggered
         verify(statusLine, times(0)).getStatusCode();
+    }
+
+    @Test
+    public void test_searchIssues() throws IOException
+    {
+        String dataName =  "searchIssuesSuccess";
+        JsonObject messageResponse = data.get(dataName).getAsJsonObject();
+
+        int statusCode = messageResponse.get("statusCode").getAsInt();
+        String body = messageResponse.get("body").toString();
+
+        when(statusLine.getStatusCode()).thenReturn(statusCode);
+        when(response.getEntity()).thenReturn(new StringEntity(body));
+
+        List<Issue> issues = jiraClient.searchIssues(task, 0, 50);
+        assertEquals(issues.size(), 2);
     }
 }

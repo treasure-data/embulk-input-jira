@@ -32,5 +32,41 @@
     "totalCountFail400": {
         "statusCode": 400,
         "body": "Unauthorized"
+    },
+    "searchIssuesSuccess": {
+        "statusCode": 200,
+        "body": {
+            "startAt": 0,
+            "maxResults": 50,
+            "total": 2,
+            "issues": [
+                {
+                    "id": "id1",
+                    "key": "key1",
+                    "self": "self1",
+                    "fields": {
+                        "boolean": true,
+                        "long": 1,
+                        "double": 1,
+                        "string": "string1",
+                        "date": "2019-01-01T00:00:00.000Z",
+                        "json": {}
+                    }
+                },
+                {
+                    "id": "id2",
+                    "key": "key2",
+                    "self": "self2",
+                    "fields": {
+                        "boolean": true,
+                        "long": 2,
+                        "double": 2,
+                        "string": "string2",
+                        "date": "2019-02-01T00:00:00.000Z",
+                        "json": {}
+                    }
+                }
+            ]
+        }
     }
 }
