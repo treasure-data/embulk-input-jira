@@ -161,8 +161,8 @@ public class JiraInputPlugin
         jiraClient.checkUserCredentials(task);
         List<Issue> issues = jiraClient.searchIssues(task, 0, GUESS_RECORDS_COUNT);
         issues.forEach(Issue::toRecord);
-        Set<String> uniqueAtrribtes = getUniqueAttributes(issues);
-        JsonArray samples = createSamples(issues, uniqueAtrribtes);
+        Set<String> uniqueAttributes = getUniqueAttributes(issues);
+        JsonArray samples = createSamples(issues, uniqueAttributes);
         Buffer sample = Buffer.copyOf(samples.toString().getBytes());
         JsonNode columns = guessExecutor.guessParserConfig(sample, Exec.newConfigSource(), guessConfig).getObjectNode().get("parser").get("columns");
         ConfigDiff configDiff = Exec.newConfigDiff();
@@ -189,13 +189,13 @@ public class JiraInputPlugin
         return uniqueAttributes;
     }
 
-    private JsonArray createSamples(List<Issue> issues, Set<String> uniqueAtrribtes)
+    private JsonArray createSamples(List<Issue> issues, Set<String> uniqueAttributes)
     {
         JsonArray samples = new JsonArray();
         for (Issue issue : issues) {
             JsonObject flatten = issue.getFlatten();
             JsonObject unified = new JsonObject();
-            for (String key : uniqueAtrribtes) {
+            for (String key : uniqueAttributes) {
                 JsonElement value = flatten.get(key);
                 if (value == null) {
                     value = JsonNull.INSTANCE;
