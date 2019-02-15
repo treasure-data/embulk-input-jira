@@ -164,7 +164,7 @@ public class JiraInputPlugin
         Set<String> uniqueAttributes = getUniqueAttributes(issues);
         JsonArray samples = createSamples(issues, uniqueAttributes);
         Buffer sample = Buffer.copyOf(samples.toString().getBytes());
-        JsonNode columns = guessExecutor.guessParserConfig(sample, Exec.newConfigSource(), guessConfig).getObjectNode().get("parser").get("columns");
+        JsonNode columns = guessExecutor.guessParserConfig(sample, Exec.newConfigSource(), guessConfig).getObjectNode().get("columns");
         ConfigDiff configDiff = Exec.newConfigDiff();
         configDiff.set("columns", columns);
         return configDiff;
@@ -173,7 +173,7 @@ public class JiraInputPlugin
     private ConfigSource createGuessConfig()
     {
         ConfigSource configSource = Exec.newConfigSource();
-        configSource.set("guess_plugins", new ObjectMapper().createArrayNode().add("jsonpath"));
+        configSource.set("guess_plugins", new ObjectMapper().createArrayNode().add("jira"));
         configSource.set("guess_sample_buffer_bytes", GUESS_BUFFER_SIZE);
         return configSource;
     }

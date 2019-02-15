@@ -30,7 +30,7 @@
                     "fields": {
                         "boolean": true,
                         "long": 1,
-                        "double": 1,
+                        "double": 1.0,
                         "string": "string1",
                         "date": "2019-01-01T00:00:00.000Z",
                         "json": {}
@@ -50,7 +50,7 @@
                     "fields": {
                         "boolean": true,
                         "long": 1,
-                        "double": 1,
+                        "double": 1.0,
                         "string": "string1",
                         "date": "2019-01-01T00:00:00.000Z",
                         "json": {}
@@ -60,35 +60,33 @@
         }
     },
     "guessResult": {
-        "parser": {
-            "columns": [
-                {
-                    "name": "boolean",
-                    "type": "boolean"
-                },
-                {
-                    "name": "long",
-                    "type": "long"
-                },
-                {
-                    "name": "double",
-                    "type": "double"
-                },
-                {
-                    "name": "string",
-                    "type": "string"
-                },
-                {
-                    "name": "date",
-                    "type": "timestamp",
-                    "format": "%Y-%m-%dT%H:%M:%S.%L%z"
-                },
-                {
-                    "name": "long",
-                    "type": "json"
-                }
-            ]
-        }
+        "columns": [
+            {
+                "name": "boolean",
+                "type": "boolean"
+            },
+            {
+                "name": "date",
+                "type": "timestamp",
+                "format": "%Y-%m-%dT%H:%M:%S.%L%z"
+            },
+            {
+                "name": "double",
+                "type": "double"
+            },
+            {
+                "name": "json",
+                "type": "json"
+            },
+            {
+                "name": "long",
+                "type": "long"
+            },
+            {
+                "name": "string",
+                "type": "string"
+            }
+        ]
     },
     "2PagesResult": {
         "statusCode": 200,
