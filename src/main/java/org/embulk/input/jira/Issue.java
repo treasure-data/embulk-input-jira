@@ -58,14 +58,12 @@ public class Issue
         }
     }
 
-    public void toRecord()
+    public synchronized JsonObject getFlatten()
     {
-        flatten = new JsonObject();
-        manipulatingFlattenJson(json, "");
-    }
-
-    public JsonObject getFlatten()
-    {
+        if (flatten == null) {
+            flatten = new JsonObject();
+            manipulatingFlattenJson(json, "");
+        }
         return flatten;
     }
 

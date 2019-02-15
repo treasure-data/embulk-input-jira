@@ -124,10 +124,7 @@ public class JiraInputPlugin
         try (final PageBuilder pageBuilder = getPageBuilder(schema, output)) {
             if (isPreview()) {
                 List<Issue> issues = jiraClient.searchIssues(task, 0, PREVIEW_RECORDS_COUNT);
-                for (Issue issue : issues) {
-                    issue.toRecord();
-                    JiraUtil.addRecord(issue, schema, task, pageBuilder);
-                }
+                issues.forEach(issue -> JiraUtil.addRecord(issue, schema, task, pageBuilder));
             }
             else {
                 int currentPage = 0;
@@ -137,10 +134,7 @@ public class JiraInputPlugin
                 while (currentPage < totalPage) {
                     LOGGER.info(String.format("Fetching page %d/%d", (currentPage + 1), totalPage));
                     List<Issue> issues = jiraClient.searchIssues(task, (currentPage * MAX_RESULTS), MAX_RESULTS);
-                    for (Issue issue : issues) {
-                        issue.toRecord();
-                        JiraUtil.addRecord(issue, schema, task, pageBuilder);
-                    }
+                    issues.forEach(issue -> JiraUtil.addRecord(issue, schema, task, pageBuilder));
                     currentPage++;
                 }
             }
@@ -159,7 +153,6 @@ public class JiraInputPlugin
         JiraClient jiraClient = getJiraClient();
         jiraClient.checkUserCredentials(task);
         List<Issue> issues = jiraClient.searchIssues(task, 0, GUESS_RECORDS_COUNT);
-        issues.forEach(Issue::toRecord);
         Buffer sample = Buffer.copyOf(createSamples(issues, getUniqueAttributes(issues)).toString().getBytes());
         JsonNode columns = Exec.getInjector().getInstance(GuessExecutor.class)
                                 .guessParserConfig(sample, Exec.newConfigSource(), createGuessConfig())
