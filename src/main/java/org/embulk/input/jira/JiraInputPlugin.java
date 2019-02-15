@@ -3,6 +3,7 @@ package org.embulk.input.jira;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
@@ -153,29 +154,24 @@ public class JiraInputPlugin
     {
         // Reset columns in case already have or missing on configuration
         config.set("columns", new ObjectMapper().createArrayNode());
-        ConfigSource guessConfig = createGuessConfig();
-        GuessExecutor guessExecutor = getGuessExecutor();
         PluginTask task = config.loadConfig(PluginTask.class);
         JiraUtil.validateTaskConfig(task);
         JiraClient jiraClient = getJiraClient();
         jiraClient.checkUserCredentials(task);
         List<Issue> issues = jiraClient.searchIssues(task, 0, GUESS_RECORDS_COUNT);
         issues.forEach(Issue::toRecord);
-        Set<String> uniqueAttributes = getUniqueAttributes(issues);
-        JsonArray samples = createSamples(issues, uniqueAttributes);
-        Buffer sample = Buffer.copyOf(samples.toString().getBytes());
-        JsonNode columns = guessExecutor.guessParserConfig(sample, Exec.newConfigSource(), guessConfig).getObjectNode().get("columns");
-        ConfigDiff configDiff = Exec.newConfigDiff();
-        configDiff.set("columns", columns);
-        return configDiff;
+        Buffer sample = Buffer.copyOf(createSamples(issues, getUniqueAttributes(issues)).toString().getBytes());
+        JsonNode columns = Exec.getInjector().getInstance(GuessExecutor.class)
+                                .guessParserConfig(sample, Exec.newConfigSource(), createGuessConfig())
+                                .getObjectNode().get("columns");
+        return Exec.newConfigDiff().set("columns", columns);
     }
 
     private ConfigSource createGuessConfig()
     {
-        ConfigSource configSource = Exec.newConfigSource();
-        configSource.set("guess_plugins", new ObjectMapper().createArrayNode().add("jira"));
-        configSource.set("guess_sample_buffer_bytes", GUESS_BUFFER_SIZE);
-        return configSource;
+        return Exec.newConfigSource()
+                    .set("guess_plugins", ImmutableList.of("jira"))
+                    .set("guess_sample_buffer_bytes", GUESS_BUFFER_SIZE);
     }
 
     private SortedSet<String> getUniqueAttributes(List<Issue> issues)

@@ -172,8 +172,7 @@ public class JiraClient
                 .setConnectTimeout(CONNECTION_TIME_OUT)
                 .setConnectionRequestTimeout(CONNECTION_TIME_OUT)
                 .build();
-        HttpClient client = HttpClientBuilder.create().setDefaultRequestConfig(config).build();
-        return client;
+        return HttpClientBuilder.create().setDefaultRequestConfig(config).build();
     }
 
     private HttpGet createGetRequest(PluginTask task, String url)

@@ -18,7 +18,6 @@ import javax.ws.rs.core.UriBuilder;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.net.URI;
 import java.net.URL;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -38,27 +37,25 @@ public final class JiraUtil
 
     public static String buildPermissionUrl(String url)
     {
-        UriBuilder builder = UriBuilder.fromUri(url);
-        URI uri = builder.path("rest")
-                        .path("api")
-                        .path("latest")
-                        .path("myself").build();
-        return uri.toString();
+        return UriBuilder.fromUri(url)
+                .path("rest")
+                .path("api")
+                .path("latest")
+                .path("myself").build().toString();
     }
 
     public static String buildSearchUrl(PluginTask task, int startAt, int maxResults)
     {
-        UriBuilder builder = UriBuilder.fromUri(task.getUri());
-        URI uri = builder.path("rest")
-                        .path("api")
-                        .path("latest")
-                        .path("search")
-                        .queryParam("jql", task.getJQL())
-                        .queryParam("startAt", startAt)
-                        .queryParam("maxResults", maxResults)
-                        .queryParam("fields", "*all")
-                        .build();
-        return uri.toString();
+        return UriBuilder.fromUri(task.getUri()).
+                path("rest")
+                .path("api")
+                .path("latest")
+                .path("search")
+                .queryParam("jql", task.getJQL())
+                .queryParam("startAt", startAt)
+                .queryParam("maxResults", maxResults)
+                .queryParam("fields", "*all")
+                .build().toString();
     }
 
     public static void validateTaskConfig(final PluginTask task)
