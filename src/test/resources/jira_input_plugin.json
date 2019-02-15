@@ -66,25 +66,25 @@
                 "type": "boolean"
             },
             {
-                "name": "long",
-                "type": "long"
+                "name": "date",
+                "type": "timestamp",
+                "format": "%Y-%m-%dT%H:%M:%S.%L%z"
             },
             {
                 "name": "double",
                 "type": "double"
             },
             {
-                "name": "string",
-                "type": "string"
-            },
-            {
-                "name": "date",
-                "type": "timestamp",
-                "format": "%Y-%m-%dT%H:%M:%S.%L%z"
+                "name": "json",
+                "type": "json"
             },
             {
                 "name": "long",
-                "type": "json"
+                "type": "long"
+            },
+            {
+                "name": "string",
+                "type": "string"
             }
         ]
     },
