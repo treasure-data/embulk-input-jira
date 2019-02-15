@@ -30,7 +30,7 @@
                     "fields": {
                         "boolean": true,
                         "long": 1,
-                        "double": 1,
+                        "double": 1.0,
                         "string": "string1",
                         "date": "2019-01-01T00:00:00.000Z",
                         "json": {}
@@ -50,7 +50,7 @@
                     "fields": {
                         "boolean": true,
                         "long": 1,
-                        "double": 1,
+                        "double": 1.0,
                         "string": "string1",
                         "date": "2019-01-01T00:00:00.000Z",
                         "json": {}
