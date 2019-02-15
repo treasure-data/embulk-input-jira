@@ -158,7 +158,7 @@ public class JiraClient
     {
         try {
             HttpClient client = createHttpClient();
-            HttpRequestBase request = createGetRequest(task, url);
+            HttpRequestBase request;
             if (body == null) {
                 request = createGetRequest(task, url);
             }
