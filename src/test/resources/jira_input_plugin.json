@@ -60,35 +60,33 @@
         }
     },
     "guessResult": {
-        "parser": {
-            "columns": [
-                {
-                    "name": "boolean",
-                    "type": "boolean"
-                },
-                {
-                    "name": "long",
-                    "type": "long"
-                },
-                {
-                    "name": "double",
-                    "type": "double"
-                },
-                {
-                    "name": "string",
-                    "type": "string"
-                },
-                {
-                    "name": "date",
-                    "type": "timestamp",
-                    "format": "%Y-%m-%dT%H:%M:%S.%L%z"
-                },
-                {
-                    "name": "long",
-                    "type": "json"
-                }
-            ]
-        }
+        "columns": [
+            {
+                "name": "boolean",
+                "type": "boolean"
+            },
+            {
+                "name": "long",
+                "type": "long"
+            },
+            {
+                "name": "double",
+                "type": "double"
+            },
+            {
+                "name": "string",
+                "type": "string"
+            },
+            {
+                "name": "date",
+                "type": "timestamp",
+                "format": "%Y-%m-%dT%H:%M:%S.%L%z"
+            },
+            {
+                "name": "long",
+                "type": "json"
+            }
+        ]
     },
     "2PagesResult": {
         "statusCode": 200,

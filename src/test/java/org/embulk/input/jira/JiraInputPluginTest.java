@@ -195,7 +195,7 @@ public class JiraInputPluginTest
         when(guessExecutor.guessParserConfig(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(new DataSourceImpl(null, guessResult));
 
         ConfigDiff result = plugin.guess(configSource);
-        JsonElement expected = data.get("guessResult").getAsJsonObject().get("parser");
+        JsonElement expected = data.get("guessResult");
         JsonElement actual = new JsonParser().parse(result.toString());
         assertEquals(expected, actual);
     }
