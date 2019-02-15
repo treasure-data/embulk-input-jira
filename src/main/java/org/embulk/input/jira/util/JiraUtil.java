@@ -200,7 +200,7 @@ public final class JiraUtil
                     pageBuilder.setString(column, data.getAsString());
                 }
                 else if (data.isJsonArray()) {
-                    pageBuilder.setString(column, String.join(",", StreamSupport.stream(data.getAsJsonArray().spliterator(), false)
+                    pageBuilder.setString(column, StreamSupport.stream(data.getAsJsonArray().spliterator(), false)
                             .map(obj -> {
                                 if (obj.isJsonPrimitive()) {
                                     return obj.getAsString();
@@ -209,7 +209,7 @@ public final class JiraUtil
                                     return obj.toString();
                                 }
                             })
-                            .collect(Collectors.toList())));
+                            .collect(Collectors.joining(",")));
                 }
                 else {
                     pageBuilder.setString(column, data.toString());

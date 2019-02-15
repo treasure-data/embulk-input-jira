@@ -107,6 +107,9 @@ public class JiraClient
                 {
                     if (exception instanceof JiraException) {
                         int statusCode = ((JiraException) exception).getStatusCode();
+                        // When overloading JIRA APIs (i.e 100 requests per second) the API will return 401 although the credential is correct. So add retry for this
+                        // 429 is stand for "Too many requests"
+                        // Other 4xx considered errors
                         return statusCode / 100 != 4 || statusCode == HttpStatus.SC_UNAUTHORIZED || statusCode == 429;
                     }
                     return false;
