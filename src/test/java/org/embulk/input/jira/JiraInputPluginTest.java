@@ -1,23 +1,17 @@
 package org.embulk.input.jira;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.StringEntity;
-import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
-import org.embulk.config.DataSourceImpl;
 import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
-import org.embulk.exec.GuessExecutor;
 import org.embulk.input.jira.JiraInputPlugin.PluginTask;
 import org.embulk.input.jira.client.JiraClient;
 import org.embulk.spi.InputPlugin;
@@ -42,7 +36,7 @@ import static org.mockito.Mockito.when;
 public class JiraInputPluginTest
 {
     @Rule
-    public EmbulkTestRuntime runtime = new EmbulkTestRuntime();
+    public JiraPluginTestRuntime runtime = new JiraPluginTestRuntime();
 
     private JiraInputPlugin plugin;
     private JiraClient jiraClient;
@@ -54,7 +48,7 @@ public class JiraInputPluginTest
 
     private MockPageOutput output = new MockPageOutput();
     private PageBuilder pageBuilder;
-    private GuessExecutor guessExecutor = Mockito.mock(GuessExecutor.class);
+
     @Before
     public void setUp() throws IOException
     {
@@ -68,12 +62,10 @@ public class JiraInputPluginTest
             //pageBuilder = new PageBuilder(Exec.getBufferAllocator(), config.loadConfig(PluginTask.class).getColumns().toSchema(), output);
         }
         when(plugin.getJiraClient()).thenReturn(jiraClient);
-//        when(plugin.getGuessExecutor()).thenReturn(guessExecutor);
         when(jiraClient.createHttpClient()).thenReturn(client);
         when(client.execute(Mockito.any(HttpUriRequest.class))).thenReturn(response);
         when(response.getStatusLine()).thenReturn(statusLine);
         doReturn(pageBuilder).when(plugin).getPageBuilder(Mockito.any(), Mockito.any());
-        doReturn(guessExecutor).when(plugin).getGuessExecutor();
     }
 
     @Test
@@ -183,7 +175,6 @@ public class JiraInputPluginTest
         ConfigSource configSource = TestHelpers.config();
         JsonObject authorizeResponse = data.get("authenticateSuccess").getAsJsonObject();
         JsonObject searchResponse = data.get("guessDataResult").getAsJsonObject();
-        ObjectNode guessResult = (ObjectNode) new ObjectMapper().readTree(data.get("guessResult").toString());
 
         when(statusLine.getStatusCode())
             .thenReturn(authorizeResponse.get("statusCode").getAsInt())
@@ -192,10 +183,8 @@ public class JiraInputPluginTest
             .thenReturn(new StringEntity(searchResponse.get("body").toString()))
             .thenReturn(new StringEntity(searchResponse.get("body").toString()));
 
-        when(guessExecutor.guessParserConfig(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(new DataSourceImpl(null, guessResult));
-
         ConfigDiff result = plugin.guess(configSource);
-        JsonElement expected = data.get("guessResult");
+        JsonElement expected = data.get("guessResult").getAsJsonObject();
         JsonElement actual = new JsonParser().parse(result.toString());
         assertEquals(expected, actual);
     }
