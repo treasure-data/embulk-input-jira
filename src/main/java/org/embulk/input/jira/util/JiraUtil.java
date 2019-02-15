@@ -44,17 +44,13 @@ public final class JiraUtil
                 .path("myself").build().toString();
     }
 
-    public static String buildSearchUrl(PluginTask task, int startAt, int maxResults)
+    public static String buildSearchUrl(String url)
     {
-        return UriBuilder.fromUri(task.getUri()).
+        return UriBuilder.fromUri(url).
                 path("rest")
                 .path("api")
                 .path("latest")
                 .path("search")
-                .queryParam("jql", task.getJQL())
-                .queryParam("startAt", startAt)
-                .queryParam("maxResults", maxResults)
-                .queryParam("fields", "*all")
                 .build().toString();
     }
 

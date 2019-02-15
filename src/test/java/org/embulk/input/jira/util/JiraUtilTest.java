@@ -105,10 +105,8 @@ public class JiraUtilTest
     public void test_buildSearchUrl() throws IOException
     {
         PluginTask task = TestHelpers.config().loadConfig(PluginTask.class);
-        int startAt = 0;
-        int maxResults = 50;
-        String expected = "https://example.com/rest/api/latest/search?jql=project+%3D+example&startAt=0&maxResults=50&fields=%2Aall";
-        String actual = JiraUtil.buildSearchUrl(task, startAt, maxResults);
+        String expected = "https://example.com/rest/api/latest/search";
+        String actual = JiraUtil.buildSearchUrl(task.getUri());
         assertEquals(expected, actual);
     }
 

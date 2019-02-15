@@ -1,15 +1,20 @@
 package org.embulk.input.jira.client;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.embulk.config.ConfigException;
@@ -47,7 +52,7 @@ public class JiraClient
     public void checkUserCredentials(final PluginTask task)
     {
         try {
-            authorizeAndRequestWithGet(task, JiraUtil.buildPermissionUrl(task.getUri()));
+            authorizeAndRequest(task, JiraUtil.buildPermissionUrl(task.getUri()), null);
         }
         catch (JiraException e) {
             LOGGER.error(String.format("JIRA return status (%s), reason (%s)", e.getStatusCode(), e.getMessage()));
@@ -99,7 +104,7 @@ public class JiraClient
                 @Override
                 public String call() throws Exception
                 {
-                    return authorizeAndRequestWithGet(task, JiraUtil.buildSearchUrl(task, startAt, maxResults));
+                    return authorizeAndRequest(task, JiraUtil.buildSearchUrl(task.getUri()), createSearchIssuesBody(task, startAt, maxResults));
                 }
 
                 @Override
@@ -149,11 +154,17 @@ public class JiraClient
         }
     }
 
-    private String authorizeAndRequestWithGet(final PluginTask task, String url) throws JiraException
+    private String authorizeAndRequest(final PluginTask task, String url, String body) throws JiraException
     {
         try {
             HttpClient client = createHttpClient();
-            HttpGet request = createGetRequest(task, url);
+            HttpRequestBase request = createGetRequest(task, url);
+            if (body == null) {
+                request = createGetRequest(task, url);
+            }
+            else {
+                request = createPostRequest(task, url, body);
+            }
             HttpResponse response = client.execute(request);
             // Check for HTTP response code : 200 : SUCCESS
             int statusCode = response.getStatusLine().getStatusCode();
@@ -178,7 +189,26 @@ public class JiraClient
         return HttpClientBuilder.create().setDefaultRequestConfig(config).build();
     }
 
-    private HttpGet createGetRequest(PluginTask task, String url)
+    private HttpRequestBase createPostRequest(PluginTask task, String url, String body) throws IOException
+    {
+        HttpPost request = new HttpPost(url);
+        switch (task.getAuthMethod()) {
+        default:
+            request.setHeader(
+                    AUTHORIZATION,
+                    String.format("Basic %s",
+                                getEncoder().encodeToString(String.format("%s:%s",
+                                task.getUsername(),
+                                task.getPassword()).getBytes())));
+            request.setHeader(ACCEPT, "application/json");
+            request.setHeader(CONTENT_TYPE, "application/json");
+            break;
+        }
+        request.setEntity(new StringEntity(body));
+        return request;
+    }
+
+    private HttpRequestBase createGetRequest(PluginTask task, String url)
     {
         HttpGet request = new HttpGet(url);
         switch (task.getAuthMethod()) {
@@ -194,5 +224,17 @@ public class JiraClient
             break;
         }
         return request;
+    }
+
+    private String createSearchIssuesBody(PluginTask task, int startAt, int maxResults)
+    {
+        JsonObject body = new JsonObject();
+        body.add("jql", new JsonPrimitive(task.getJQL()));
+        body.add("startAt", new JsonPrimitive(startAt));
+        body.add("maxResults", new JsonPrimitive(maxResults));
+        JsonArray fields = new JsonArray();
+        fields.add("*all");
+        body.add("fields", fields);
+        return body.toString();
     }
 }
