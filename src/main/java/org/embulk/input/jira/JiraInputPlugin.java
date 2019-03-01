@@ -155,7 +155,7 @@ public class JiraInputPlugin
         jiraClient.checkUserCredentials(task);
         List<Issue> issues = jiraClient.searchIssues(task, 0, GUESS_RECORDS_COUNT);
         if (issues.isEmpty()) {
-            throw new ConfigException("Could not guess schema due to empty data");
+            throw new ConfigException("Could not guess schema due to empty data set");
         }
         Buffer sample = Buffer.copyOf(createSamples(issues, getUniqueAttributes(issues)).toString().getBytes());
         JsonNode columns = Exec.getInjector().getInstance(GuessExecutor.class)
