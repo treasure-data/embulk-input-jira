@@ -46,8 +46,8 @@ public final class JiraUtil
 
     public static String buildSearchUrl(String url)
     {
-        return UriBuilder.fromUri(url).
-                path("rest")
+        return UriBuilder.fromUri(url)
+                .path("rest")
                 .path("api")
                 .path("latest")
                 .path("search")
