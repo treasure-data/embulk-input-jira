@@ -24,7 +24,9 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static org.embulk.input.jira.Constant.CREDENTIAL_URI_PATH;
 import static org.embulk.input.jira.Constant.DEFAULT_TIMESTAMP_PATTERN;
+import static org.embulk.input.jira.Constant.SEARCH_URI_PATH;
 
 public final class JiraUtil
 {
@@ -37,21 +39,12 @@ public final class JiraUtil
 
     public static String buildPermissionUrl(String url)
     {
-        return UriBuilder.fromUri(url)
-                .path("rest")
-                .path("api")
-                .path("latest")
-                .path("myself").build().toString();
+        return UriBuilder.fromUri(url).path(CREDENTIAL_URI_PATH).build().toString();
     }
 
     public static String buildSearchUrl(String url)
     {
-        return UriBuilder.fromUri(url)
-                .path("rest")
-                .path("api")
-                .path("latest")
-                .path("search")
-                .build().toString();
+        return UriBuilder.fromUri(url).path(SEARCH_URI_PATH).build().toString();
     }
 
     public static void validateTaskConfig(final PluginTask task)

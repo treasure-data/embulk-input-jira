@@ -10,5 +10,8 @@ public final class Constant
 
     public static final String DEFAULT_TIMESTAMP_PATTERN = "%Y-%m-%dT%H:%M:%S.%L%z";
 
+    public static final String CREDENTIAL_URI_PATH = "rest/api/latest/myself";
+    public static final String SEARCH_URI_PATH = "rest/api/latest/search";
+
     private Constant(){}
 }
