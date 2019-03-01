@@ -68,5 +68,14 @@
                 }
             ]
         }
+    },
+    "searchIssuesFailJql": {
+        "statusCode": 400,
+        "body": {
+            "errorMessages": [
+                "Error in the JQL Query: Expecting a field name at the end of the query."
+            ],
+            "errors": {}
+        }
     }
 }

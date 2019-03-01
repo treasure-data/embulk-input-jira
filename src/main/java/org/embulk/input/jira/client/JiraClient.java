@@ -68,8 +68,7 @@ public class JiraClient
     public List<Issue> searchIssues(final PluginTask task, int startAt, int maxResults)
     {
         String response = searchJiraAPI(task, startAt, maxResults);
-        JsonParser parser = new JsonParser();
-        JsonObject result = parser.parse(response).getAsJsonObject();
+        JsonObject result = new JsonParser().parse(response).getAsJsonObject();
         return StreamSupport.stream(result.get("issues").getAsJsonArray().spliterator(), false)
                             .map(jsonElement -> {
                                 JsonObject json = jsonElement.getAsJsonObject();
@@ -87,10 +86,7 @@ public class JiraClient
 
     public int getTotalCount(final PluginTask task)
     {
-        String response = searchJiraAPI(task, 0, MIN_RESULTS);
-        JsonParser parser = new JsonParser();
-        JsonObject result = parser.parse(response).getAsJsonObject();
-        return result.get("total").getAsInt();
+        return new JsonParser().parse(searchJiraAPI(task, 0, MIN_RESULTS)).getAsJsonObject().get("total").getAsInt();
     }
 
     private String searchJiraAPI(final PluginTask task, int startAt, int maxResults)
@@ -150,7 +146,10 @@ public class JiraClient
             });
         }
         catch (RetryGiveupException | InterruptedException e) {
-            throw new RuntimeException(e);
+            if (e instanceof RetryGiveupException && e.getCause() != null && e.getCause() instanceof JiraException) {
+                throw new ConfigException(e.getCause().getMessage());
+            }
+            throw new ConfigException(e);
         }
     }
 
@@ -169,14 +168,28 @@ public class JiraClient
             // Check for HTTP response code : 200 : SUCCESS
             int statusCode = response.getStatusLine().getStatusCode();
             if (statusCode != HttpStatus.SC_OK) {
-                throw new JiraException(statusCode,
-                        "JIRA API Request Failed: " + EntityUtils.toString(response.getEntity()));
+                throw new JiraException(statusCode, extractErrorMessages(EntityUtils.toString(response.getEntity())));
             }
             return EntityUtils.toString(response.getEntity());
         }
         catch (IOException e) {
             throw new JiraException(-1, e.getMessage());
         }
+    }
+
+    private String extractErrorMessages(String errorResponse)
+    {
+        String messages = "";
+        try {
+            JsonObject errorObject = new JsonParser().parse(errorResponse).getAsJsonObject();
+            for (JsonElement element : errorObject.get("errorMessages").getAsJsonArray()) {
+                messages += element.getAsString();
+            }
+        }
+        catch (Exception e) {
+            messages = errorResponse;
+        }
+        return messages;
     }
 
     @VisibleForTesting

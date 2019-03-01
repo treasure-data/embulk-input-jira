@@ -204,4 +204,19 @@ public class JiraClientTest
         List<Issue> issues = jiraClient.searchIssues(task, 0, 50);
         assertEquals(issues.size(), 2);
     }
+
+    @Test
+    public void test_searchIssues_failJql() throws IOException
+    {
+        String dataName =  "searchIssuesFailJql";
+        JsonObject messageResponse = data.get(dataName).getAsJsonObject();
+
+        int statusCode = messageResponse.get("statusCode").getAsInt();
+        String body = messageResponse.get("body").toString();
+
+        when(statusLine.getStatusCode()).thenReturn(statusCode);
+        when(response.getEntity()).thenReturn(new StringEntity(body));
+
+        assertThrows(ConfigException.class, () -> jiraClient.searchIssues(task, 0, 50));
+    }
 }

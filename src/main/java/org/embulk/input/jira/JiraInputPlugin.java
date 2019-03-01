@@ -12,6 +12,7 @@ import com.google.gson.JsonObject;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigDiff;
+import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
 import org.embulk.config.TaskReport;
@@ -153,6 +154,9 @@ public class JiraInputPlugin
         JiraClient jiraClient = getJiraClient();
         jiraClient.checkUserCredentials(task);
         List<Issue> issues = jiraClient.searchIssues(task, 0, GUESS_RECORDS_COUNT);
+        if (issues.isEmpty()) {
+            throw new ConfigException("Could not guess schema due to empty data");
+        }
         Buffer sample = Buffer.copyOf(createSamples(issues, getUniqueAttributes(issues)).toString().getBytes());
         JsonNode columns = Exec.getInjector().getInstance(GuessExecutor.class)
                                 .guessParserConfig(sample, Exec.newConfigSource(), createGuessConfig())
