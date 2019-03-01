@@ -1,4 +1,4 @@
-language: ruby
+language: java
 
 jdk: oraclejdk8
 
@@ -6,36 +6,6 @@ env:
   global:
     secure: "NCkU3f60cn5Gmzq+NwDmKdQSq+ApF/rPqSHPirk1+ZPW9n+H9912meUuJr9qyn03MPdc6wAQinsl3skdPNh1Qz02TI/WZGMiCQTLh3nKIMzaaxx6I+OZ1TV7A4MoJMQ7oYQdXdbvRYXpOVRnfVDxpUC+BDk2T8xmjfm9cht+PGTzM6RxpmSL842hiudkcyxHxgEf66EGpi6h2G2PqYNfQrksqiVMWlLiTO5a2ee+iw9qTMhgKrhEKLCb+dFB56gtKIOpd3MxieLwf3PDcsjM+TSaWo6Bp+mjdA3zGJNz5wbWRVSdrIvKvxmf3eRqAGssBhBDO/LUN3LnI+/T/7J9XZZd7WXNudo/t6HQXhJkUIvOucCxSg8/uRsxrMAmF2zkJOnYGSvN3HNqdzyz86TK4/Xckl+gX51b0uYncHfZYSojn4py1RWPYpX/L2RHbzMn1MJ7B3/VZ21vY97aHhDgNyyAMxPnTAuR1IZicEgA8y8AmZkkK9tWq5wvAOKI91V+W8iBEaO2dZIib+KdJSUUj/Q3TM3i4wX9O/AU7tknsnCApvxQeveELJ4SxfFd/Z2imqmQWM0wIgp1u7Vjguf8kSaxcuQHonZNdwvvYOkbYxHvUqltzlmE1qFC/kQe6o9fS3NuiugHCYVeFs+LXVVW+nl0pWztFYMicUmQq7T781w="
 
-before_install:
-  - |
-    ruby -v
-    # Currently, Travis can't treat jruby 9.0.5.0
-    rvm get head
-    rvm use jruby-9.0.5.0 --install
-    ruby -v
-    gem i bundler
-    bundle install
-
-rvm: jruby-9.0.5.0
-
-gemfile:
-  - gemfiles/embulk-0.8.0-latest
-  - gemfiles/embulk-0.8.7
-  - gemfiles/embulk-0.8.8
-  - gemfiles/embulk-latest
-
-matrix:
-  exclude:
-    - jdk: oraclejdk8 # Ignore all matrix at first, use `include` to allow build
-  include:
-    - {rvm: jruby-9.0.5.0, gemfile: gemfiles/embulk-0.8.0-latest}
-    - {rvm: jruby-9.0.5.0, gemfile: gemfiles/embulk-0.8.7}
-    - {rvm: jruby-9.0.5.0, gemfile: gemfiles/embulk-0.8.8}
-    - {rvm: jruby-9.0.5.0, gemfile: gemfiles/embulk-latest}
-    
-
-  allow_failures:
-    # Ignore failure for *-latest
-    - gemfile: embulk-0.8.0-latest
-    - gemfile: embulk-latest
-    
+script:
+  - ./gradlew gem
+  - ./gradlew checkstyle test jacocoTestReport

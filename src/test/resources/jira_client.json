@@ -1,0 +1,81 @@
+{
+    "credentialSuccess": {
+        "statusCode": 200,
+        "body": {}
+    },
+    "credentialFail400": {
+        "statusCode": 400,
+        "body": "Bad request"
+    },
+    "credentialFail401": {
+        "statusCode": 401,
+        "body": "Unauthorized"
+    },
+    "credentialFail429": {
+        "statusCode": 429,
+        "body": "Too many request"
+    },
+    "credentialFail500": {
+        "statusCode": 500,
+        "body": "Internal server error"
+    },
+    "totalCountSuccess": {
+        "statusCode": 200,
+        "body": {
+            "total": 10
+        }
+    },
+    "totalCountFailAllTime": {
+        "statusCode": 401,
+        "body": "Unauthorized"
+    },
+    "totalCountFail400": {
+        "statusCode": 400,
+        "body": "Unauthorized"
+    },
+    "searchIssuesSuccess": {
+        "statusCode": 200,
+        "body": {
+            "startAt": 0,
+            "maxResults": 50,
+            "total": 2,
+            "issues": [
+                {
+                    "id": "id1",
+                    "key": "key1",
+                    "self": "self1",
+                    "fields": {
+                        "boolean": true,
+                        "long": 1,
+                        "double": 1,
+                        "string": "string1",
+                        "date": "2019-01-01T00:00:00.000Z",
+                        "json": {}
+                    }
+                },
+                {
+                    "id": "id2",
+                    "key": "key2",
+                    "self": "self2",
+                    "fields": {
+                        "boolean": true,
+                        "long": 2,
+                        "double": 2,
+                        "string": "string2",
+                        "date": "2019-02-01T00:00:00.000Z",
+                        "json": {}
+                    }
+                }
+            ]
+        }
+    },
+    "searchIssuesFailJql": {
+        "statusCode": 400,
+        "body": {
+            "errorMessages": [
+                "Error in the JQL Query: Expecting a field name at the end of the query."
+            ],
+            "errors": {}
+        }
+    }
+}

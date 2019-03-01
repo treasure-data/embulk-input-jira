@@ -1,3 +1,7 @@
+## 0.2.5 - 2019-03-05
+
+* [enhancement] Change from ruby to java plugin [#53](https://github.com/treasure-data/embulk-input-jira/pull/53)
+
 ## 0.2.5 - 2018-11-27
 
 * [fixed] Fix infinitive 401 errors and dynamically adjust parallel threads [#52](https://github.com/treasure-data/embulk-input-jira/pull/52)

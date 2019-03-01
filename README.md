@@ -17,9 +17,10 @@ Required Embulk version >= 0.8.7
 * **Guess supported**: yes
 
 ## Configuration
+**Since JIRA is going to deprecate the basic authentication with passwords and cookie-based authentication to their APIs, we highly recommend you to use email and API key to authenticate to JIRA APIs. [Deprecated notice](https://developer.atlassian.com/cloud/jira/platform/deprecation-notice-basic-auth-and-cookie-based-auth/)**
 
-- **username** JIRA username (string, required)
-- **password** JIRA password (string, required)
+- **username** JIRA username or email (string, required)
+- **password** JIRA password or API keys (string, required)
 - **uri** JIRA API endpoint (string, required)
 - **jql** [JQL](https://confluence.atlassian.com/display/JIRA/Advanced+Searching) for extract target issues (string, required)
 - **columns** target issue attributes. You can generate this configuration by `guess` command (array, required)
@@ -46,5 +47,5 @@ in:
 ## Build
 
 ```
-$ bundle exec rake build
+$ ./gradlew gem       # -t to watch change of files and rebuild continuously
 ```

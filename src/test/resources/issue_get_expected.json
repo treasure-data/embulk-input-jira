@@ -1,0 +1,62 @@
+{
+    "primitive": "primitive",
+    "primitiveResult": 1,
+    "string": "string",
+    "stringResult": "string",
+    "emptyObject": "emptyObject",
+    "emptyObjectResult": {},
+    "object": "object",
+    "objectResult": {
+        "x": 1
+    },
+    "null": "null",
+    "nullResult": null,
+    "notExisted": "notExisted",
+    "notExistedResult": null,
+    "notExisted2Levels": "notExisted.notExisted",
+    "notExisted2LevelsResult": null,
+    "emptyArray": "emptyArray",
+    "emptyArrayResult": [],
+    "primitiveArray": "primitiveArray",
+    "primitiveArrayResult": [
+        1,
+        2,
+        3
+    ],
+    "nestedPrimitive": "nested.primitive",
+    "nestedPrimitiveResult": 1,
+    "nestedObject": "nested.object",
+    "nestedObjectResult": {},
+    "nestedArray": "nested.array",
+    "nestedArrayResult": [
+        1,
+        {},
+        3
+    ],
+    "3levelsArraysNull": "nested.array.null",
+    "3levelsArraysNullResult": [
+        1,
+        null,
+        3
+    ],
+    "allJsonObjectArrayPrimitive": "allJsonObjectArray.primitive",
+    "allJsonObjectArrayPrimitiveResult": [
+        1,
+        2
+    ],
+    "allJsonObjectArrayString": "allJsonObjectArray.string",
+    "allJsonObjectArrayStringResult": [
+        "string1",
+        "string2"
+    ],
+    "allJsonObjectArrayOnly1": "allJsonObjectArray.only1",
+    "allJsonObjectArrayOnly1Result": [
+        "only1",
+        null
+    ],
+    "allJsonObjectArrayOnly2": "allJsonObjectArray.only2",
+    "allJsonObjectArrayOnly2Result": [
+        null,
+        "only2"
+    ]
+}

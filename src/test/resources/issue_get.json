@@ -1,0 +1,36 @@
+{
+    "primitive": 1,
+    "string": "string",
+    "emptyObject": {},
+    "object": {
+        "x": 1
+    },
+    "null": null,
+    "emptyArray": [],
+    "primitiveArray": [
+        1,
+        2,
+        3
+    ],
+    "nested": {
+        "primitive": 1,
+        "object": {},
+        "array": [
+            1,
+            {},
+            3
+        ]
+    },
+    "allJsonObjectArray": [
+        {
+            "primitive": 1,
+            "string": "string1",
+            "only1": "only1"
+        },
+        {
+            "primitive": 2,
+            "string": "string2",
+            "only2": "only2"
+        }
+    ]
+}

@@ -1,0 +1,26 @@
+{
+    "allRight": {
+        "boolean": true,
+        "long": 1,
+        "double": 1,
+        "string": "string",
+        "date": "2019-01-01T00:00:00.000Z",
+        "json": {}
+    },
+    "allWrong": {
+        "boolean": {},
+        "long": {},
+        "double": {},
+        "string": {},
+        "date": "abcxyz",
+        "json": {}
+    },
+    "allMissing": {},
+    "arrayAsString": {
+        "string": [
+            1,
+            {},
+            []
+        ]
+    }
+}
