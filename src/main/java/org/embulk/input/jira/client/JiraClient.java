@@ -28,6 +28,7 @@ import org.embulk.spi.util.RetryExecutor.Retryable;
 import org.slf4j.Logger;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -179,17 +180,17 @@ public class JiraClient
 
     private String extractErrorMessages(String errorResponse)
     {
-        String messages = "";
+        List<String> messages = new ArrayList<>();
         try {
             JsonObject errorObject = new JsonParser().parse(errorResponse).getAsJsonObject();
             for (JsonElement element : errorObject.get("errorMessages").getAsJsonArray()) {
-                messages += element.getAsString();
+                messages.add(element.getAsString());
             }
         }
         catch (Exception e) {
-            messages = errorResponse;
+            messages.add(errorResponse);
         }
-        return messages;
+        return String.join(" , ", messages);
     }
 
     @VisibleForTesting
