@@ -2,7 +2,7 @@
 
 * [enhancement] Support empty JQL [#55](https://github.com/treasure-data/embulk-input-jira/pull/55)
 
-## 0.2.6 - 2019-03-05
+## 0.2.6 - 2019-03-01
 
 * [enhancement] Change from ruby to java plugin [#53](https://github.com/treasure-data/embulk-input-jira/pull/53)
 
