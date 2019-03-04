@@ -76,10 +76,6 @@ public final class JiraUtil
                 connection.disconnect();
             }
         }
-        String jql = task.getJQL();
-        if (isNullOrEmpty(jql)) {
-            throw new ConfigException("JQL could not be empty");
-        }
         int retryInitialWaitSec = task.getInitialRetryIntervalMillis();
         if (retryInitialWaitSec < 1) {
             throw new ConfigException("Initial retry delay should be equal or greater than 1");

@@ -8,6 +8,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.entity.StringEntity;
 import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ConfigException;
+import org.embulk.config.ConfigSource;
 import org.embulk.input.jira.Issue;
 import org.embulk.input.jira.JiraInputPlugin.PluginTask;
 import org.embulk.input.jira.TestHelpers;
@@ -218,5 +219,29 @@ public class JiraClientTest
         when(response.getEntity()).thenReturn(new StringEntity(body));
 
         assertThrows(ConfigException.class, () -> jiraClient.searchIssues(task, 0, 50));
+    }
+
+    @Test
+    public void test_searchIssues_emptyJql() throws IOException
+    {
+        String dataName =  "searchIssuesSuccess";
+        JsonObject messageResponse = data.get(dataName).getAsJsonObject();
+
+        int statusCode = messageResponse.get("statusCode").getAsInt();
+        String body = messageResponse.get("body").toString();
+
+        when(statusLine.getStatusCode()).thenReturn(statusCode);
+        when(response.getEntity()).thenReturn(new StringEntity(body));
+        ConfigSource config = TestHelpers.config().remove("jql");
+        task = config.loadConfig(PluginTask.class);
+
+        List<Issue> issues = jiraClient.searchIssues(task, 0, 50);
+        assertEquals(issues.size(), 2);
+
+        config = TestHelpers.config().set("jql", "");
+        task = config.loadConfig(PluginTask.class);
+
+        issues = jiraClient.searchIssues(task, 0, 50);
+        assertEquals(issues.size(), 2);
     }
 }

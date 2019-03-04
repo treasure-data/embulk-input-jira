@@ -3,6 +3,7 @@ package org.embulk.input.jira;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -74,7 +75,8 @@ public class JiraInputPlugin
         public int getRetryLimit();
 
         @Config("jql")
-        public String getJQL();
+        @ConfigDefault("null")
+        public Optional<String> getJQL();
 
         @Config("columns")
         public SchemaConfig getColumns();
