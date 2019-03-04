@@ -245,12 +245,7 @@ public class JiraClient
     {
         JsonObject body = new JsonObject();
         Optional<String> jql = task.getJQL();
-        if (jql.isPresent()) {
-            body.add("jql", new JsonPrimitive(jql.get()));
-        }
-        else {
-            body.add("jql", new JsonPrimitive(""));
-        }
+        body.add("jql", new JsonPrimitive(jql.or("")));
         body.add("startAt", new JsonPrimitive(startAt));
         body.add("maxResults", new JsonPrimitive(maxResults));
         JsonArray fields = new JsonArray();
