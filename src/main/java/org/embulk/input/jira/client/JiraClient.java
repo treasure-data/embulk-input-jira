@@ -1,6 +1,7 @@
 package org.embulk.input.jira.client;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -243,7 +244,8 @@ public class JiraClient
     private String createSearchIssuesBody(PluginTask task, int startAt, int maxResults)
     {
         JsonObject body = new JsonObject();
-        body.add("jql", new JsonPrimitive(task.getJQL()));
+        Optional<String> jql = task.getJQL();
+        body.add("jql", new JsonPrimitive(jql.or("")));
         body.add("startAt", new JsonPrimitive(startAt));
         body.add("maxResults", new JsonPrimitive(maxResults));
         JsonArray fields = new JsonArray();

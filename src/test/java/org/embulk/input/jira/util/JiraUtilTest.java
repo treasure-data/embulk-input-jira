@@ -196,9 +196,19 @@ public class JiraUtilTest
         catch (Exception e) {
             exception = e;
         }
-        assertNotNull(exception);
-        assertTrue(exception instanceof ConfigException);
-        assertEquals("JQL could not be empty", exception.getMessage());
+        assertNull(exception);
+
+        configSource = TestHelpers.config();
+        configSource.remove("jql");
+        task = configSource.loadConfig(PluginTask.class);
+        exception = null;
+        try {
+            JiraUtil.validateTaskConfig(task);
+        }
+        catch (Exception e) {
+            exception = e;
+        }
+        assertNull(exception);
 
         // initial_retry_interval_millis = 0
         configSource = TestHelpers.config();
