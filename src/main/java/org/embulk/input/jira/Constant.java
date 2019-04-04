@@ -7,6 +7,7 @@ public final class Constant
     public static final int GUESS_RECORDS_COUNT = 50;
     public static final int PREVIEW_RECORDS_COUNT = 10;
     public static final int GUESS_BUFFER_SIZE = 5 * 1024 * 1024;
+    public static final int HTTP_TIMEOUT = 300 * 1000;
 
     public static final String DEFAULT_TIMESTAMP_PATTERN = "%Y-%m-%dT%H:%M:%S.%L%z";
 
