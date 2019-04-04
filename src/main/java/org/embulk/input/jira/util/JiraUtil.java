@@ -2,6 +2,12 @@ package org.embulk.input.jira.util;
 
 import com.google.gson.JsonElement;
 
+import org.apache.http.client.config.CookieSpecs;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.embulk.config.ConfigException;
 import org.embulk.input.jira.Issue;
 import org.embulk.input.jira.JiraInputPlugin.PluginTask;
@@ -17,8 +23,6 @@ import org.embulk.spi.time.TimestampParser;
 import javax.ws.rs.core.UriBuilder;
 
 import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -26,6 +30,7 @@ import java.util.stream.StreamSupport;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static org.embulk.input.jira.Constant.CREDENTIAL_URI_PATH;
 import static org.embulk.input.jira.Constant.DEFAULT_TIMESTAMP_PATTERN;
+import static org.embulk.input.jira.Constant.HTTP_TIMEOUT;
 import static org.embulk.input.jira.Constant.SEARCH_URI_PATH;
 
 public final class JiraUtil
@@ -61,20 +66,21 @@ public final class JiraUtil
         if (isNullOrEmpty(uri)) {
             throw new ConfigException("JIRA API endpoint could not be empty");
         }
-        HttpURLConnection connection = null;
-        try {
-            URL u = new URL(uri);
-            connection = (HttpURLConnection) u.openConnection();
-            connection.setRequestMethod("GET");
-            connection.getResponseCode();
-        }
-        catch (IOException e) {
-            throw new ConfigException("JIRA API endpoint is incorrect or not available");
-        }
-        finally {
-            if (connection != null) {
-                connection.disconnect();
+        try (CloseableHttpClient client = HttpClientBuilder.create()
+                                            .setDefaultRequestConfig(RequestConfig.custom()
+                                                                                .setConnectTimeout(HTTP_TIMEOUT)
+                                                                                .setConnectionRequestTimeout(HTTP_TIMEOUT)
+                                                                                .setSocketTimeout(HTTP_TIMEOUT)
+                                                                                .setCookieSpec(CookieSpecs.STANDARD)
+                                                                                .build())
+                                            .build()) {
+            HttpGet request = new HttpGet(task.getUri());
+            try (CloseableHttpResponse response = client.execute(request)) {
+                response.getStatusLine().getStatusCode();
             }
+        }
+        catch (IOException | IllegalArgumentException e) {
+            throw new ConfigException("JIRA API endpoint is incorrect or not available");
         }
         int retryInitialWaitSec = task.getInitialRetryIntervalMillis();
         if (retryInitialWaitSec < 1) {
