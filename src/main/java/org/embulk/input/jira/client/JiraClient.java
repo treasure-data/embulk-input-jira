@@ -197,13 +197,14 @@ public class JiraClient
     @VisibleForTesting
     public CloseableHttpClient createHttpClient()
     {
-        RequestConfig config = RequestConfig.custom()
-                .setConnectTimeout(HTTP_TIMEOUT)
-                .setConnectionRequestTimeout(HTTP_TIMEOUT)
-                .setSocketTimeout(HTTP_TIMEOUT)
-                .setCookieSpec(CookieSpecs.STANDARD)
-                .build();
-        return HttpClientBuilder.create().setDefaultRequestConfig(config).build();
+        return HttpClientBuilder.create()
+                    .setDefaultRequestConfig(RequestConfig.custom()
+                                                        .setConnectTimeout(HTTP_TIMEOUT)
+                                                        .setConnectionRequestTimeout(HTTP_TIMEOUT)
+                                                        .setSocketTimeout(HTTP_TIMEOUT)
+                                                        .setCookieSpec(CookieSpecs.STANDARD)
+                                                        .build())
+                    .build();
     }
 
     private HttpRequestBase createPostRequest(PluginTask task, String url, String body) throws IOException
