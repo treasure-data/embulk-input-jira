@@ -3,11 +3,11 @@ package org.embulk.input.jira;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
-import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskReport;
@@ -42,8 +42,8 @@ public class JiraInputPluginTest
     private JiraClient jiraClient;
     private JsonObject data;
     private ConfigSource config;
-    private HttpClient client = Mockito.mock(HttpClient.class);
-    private HttpResponse response = Mockito.mock(HttpResponse.class);
+    private CloseableHttpClient client = Mockito.mock(CloseableHttpClient.class);
+    private CloseableHttpResponse response = Mockito.mock(CloseableHttpResponse.class);
     private StatusLine statusLine = Mockito.mock(StatusLine.class);
 
     private MockPageOutput output = new MockPageOutput();
