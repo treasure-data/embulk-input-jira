@@ -74,7 +74,7 @@ public final class JiraUtil
                                                                                 .setCookieSpec(CookieSpecs.STANDARD)
                                                                                 .build())
                                             .build()) {
-            HttpGet request = new HttpGet(task.getUri());
+            HttpGet request = new HttpGet(uri);
             try (CloseableHttpResponse response = client.execute(request)) {
                 response.getStatusLine().getStatusCode();
             }
