@@ -8,14 +8,15 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 
-import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
-import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.embulk.config.ConfigException;
@@ -40,14 +41,13 @@ import static java.util.Base64.getEncoder;
 import static org.apache.http.HttpHeaders.ACCEPT;
 import static org.apache.http.HttpHeaders.AUTHORIZATION;
 import static org.apache.http.HttpHeaders.CONTENT_TYPE;
+import static org.embulk.input.jira.Constant.HTTP_TIMEOUT;
 import static org.embulk.input.jira.Constant.MIN_RESULTS;
 import static org.embulk.spi.util.RetryExecutor.retryExecutor;
 
 public class JiraClient
 {
     public JiraClient() {}
-
-    private static final int CONNECTION_TIME_OUT = 300000;
 
     private static final Logger LOGGER = Exec.getLogger(JiraClient.class);
 
@@ -157,8 +157,7 @@ public class JiraClient
 
     private String authorizeAndRequest(final PluginTask task, String url, String body) throws JiraException
     {
-        try {
-            HttpClient client = createHttpClient();
+        try (CloseableHttpClient client = createHttpClient()) {
             HttpRequestBase request;
             if (body == null) {
                 request = createGetRequest(task, url);
@@ -166,13 +165,14 @@ public class JiraClient
             else {
                 request = createPostRequest(task, url, body);
             }
-            HttpResponse response = client.execute(request);
-            // Check for HTTP response code : 200 : SUCCESS
-            int statusCode = response.getStatusLine().getStatusCode();
-            if (statusCode != HttpStatus.SC_OK) {
-                throw new JiraException(statusCode, extractErrorMessages(EntityUtils.toString(response.getEntity())));
+            try (CloseableHttpResponse response = client.execute(request)) {
+             // Check for HTTP response code : 200 : SUCCESS
+                int statusCode = response.getStatusLine().getStatusCode();
+                if (statusCode != HttpStatus.SC_OK) {
+                    throw new JiraException(statusCode, extractErrorMessages(EntityUtils.toString(response.getEntity())));
+                }
+                return EntityUtils.toString(response.getEntity());
             }
-            return EntityUtils.toString(response.getEntity());
         }
         catch (IOException e) {
             throw new JiraException(-1, e.getMessage());
@@ -195,13 +195,16 @@ public class JiraClient
     }
 
     @VisibleForTesting
-    public HttpClient createHttpClient()
+    public CloseableHttpClient createHttpClient()
     {
-        RequestConfig config = RequestConfig.custom()
-                .setConnectTimeout(CONNECTION_TIME_OUT)
-                .setConnectionRequestTimeout(CONNECTION_TIME_OUT)
-                .build();
-        return HttpClientBuilder.create().setDefaultRequestConfig(config).build();
+        return HttpClientBuilder.create()
+                    .setDefaultRequestConfig(RequestConfig.custom()
+                                                        .setConnectTimeout(HTTP_TIMEOUT)
+                                                        .setConnectionRequestTimeout(HTTP_TIMEOUT)
+                                                        .setSocketTimeout(HTTP_TIMEOUT)
+                                                        .setCookieSpec(CookieSpecs.STANDARD)
+                                                        .build())
+                    .build();
     }
 
     private HttpRequestBase createPostRequest(PluginTask task, String url, String body) throws IOException

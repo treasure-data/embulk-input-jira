@@ -1,3 +1,7 @@
+## 0.2.8 - 2019-04-08
+
+* [fixed] Process is hang forever when validate task [#56](https://github.com/treasure-data/embulk-input-jira/pull/56)
+
 ## 0.2.7 - 2019-03-05
 
 * [enhancement] Support empty JQL [#55](https://github.com/treasure-data/embulk-input-jira/pull/55)

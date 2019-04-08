@@ -21,9 +21,7 @@ import org.msgpack.value.Value;
 import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -111,148 +109,148 @@ public class JiraUtilTest
     }
 
     @Test
-    public void test_validateTaskConfig() throws IOException
+    public void test_validateTaskConfig_allValid() throws IOException
     {
-        // Happy case
         ConfigSource configSource = TestHelpers.config();
         PluginTask task = configSource.loadConfig(PluginTask.class);
-        Exception exception = null;
-        try {
-            JiraUtil.validateTaskConfig(task);
-        }
-        catch (Exception e) {
-            exception = e;
-        }
-        assertNull(exception);
+        JiraUtil.validateTaskConfig(task);
+    }
 
-        // empty username
-        configSource = TestHelpers.config();
-        configSource.set("username", "");
-        task = configSource.loadConfig(PluginTask.class);
-        exception = null;
-        try {
+    @Test
+    public void test_validateTaskConfig_emptyUsername() throws IOException
+    {
+        ConfigException exception = assertThrows("Username or email could not be empty", ConfigException.class, () -> {
+            ConfigSource configSource = TestHelpers.config();
+            configSource.set("username", "");
+            PluginTask task = configSource.loadConfig(PluginTask.class);
             JiraUtil.validateTaskConfig(task);
-        }
-        catch (Exception e) {
-            exception = e;
-        }
-        assertNotNull(exception);
-        assertTrue(exception instanceof ConfigException);
+        });
         assertEquals("Username or email could not be empty", exception.getMessage());
+    }
 
-        // empty password
-        configSource = TestHelpers.config();
-        configSource.set("password", "");
-        task = configSource.loadConfig(PluginTask.class);
-        exception = null;
-        try {
+    @Test
+    public void test_validateTaskConfig_emptyPassword() throws IOException
+    {
+        ConfigException exception = assertThrows(ConfigException.class, () -> {
+            ConfigSource configSource = TestHelpers.config();
+            configSource.set("password", "");
+            PluginTask task = configSource.loadConfig(PluginTask.class);
             JiraUtil.validateTaskConfig(task);
-        }
-        catch (Exception e) {
-            exception = e;
-        }
-        assertNotNull(exception);
-        assertTrue(exception instanceof ConfigException);
+        });
         assertEquals("Password could not be empty", exception.getMessage());
+    }
 
-        // empty uri
-        configSource = TestHelpers.config();
-        configSource.set("uri", "");
-        task = configSource.loadConfig(PluginTask.class);
-        exception = null;
-        try {
+    @Test
+    public void test_validateTaskConfig_emptyUri() throws IOException
+    {
+        ConfigException exception = assertThrows(ConfigException.class, () -> {
+            ConfigSource configSource = TestHelpers.config();
+            configSource.set("uri", "");
+            PluginTask task = configSource.loadConfig(PluginTask.class);
             JiraUtil.validateTaskConfig(task);
-        }
-        catch (Exception e) {
-            exception = e;
-        }
-        assertNotNull(exception);
-        assertTrue(exception instanceof ConfigException);
+        });
         assertEquals("JIRA API endpoint could not be empty", exception.getMessage());
+    }
 
-        // invalid uri
-        configSource = TestHelpers.config();
-        configSource.set("uri", "https://not-existed-domain");
-        task = configSource.loadConfig(PluginTask.class);
-        exception = null;
-        try {
+    @Test
+    public void test_validateTaskConfig_nonExistedUri() throws IOException
+    {
+        ConfigException exception = assertThrows(ConfigException.class, () -> {
+            ConfigSource configSource = TestHelpers.config();
+            configSource.set("uri", "https://not-existed-domain");
+            PluginTask task = configSource.loadConfig(PluginTask.class);
             JiraUtil.validateTaskConfig(task);
-        }
-        catch (Exception e) {
-            exception = e;
-        }
-        assertNotNull(exception);
-        assertTrue(exception instanceof ConfigException);
+        });
         assertEquals("JIRA API endpoint is incorrect or not available", exception.getMessage());
+    }
 
-        // empty jql
-        configSource = TestHelpers.config();
+    @Test
+    public void test_validateTaskConfig_invalidUriProtocol() throws IOException
+    {
+        ConfigException exception = assertThrows(ConfigException.class, () -> {
+            ConfigSource configSource = TestHelpers.config();
+            configSource.set("uri", "ftp://example.com");
+            PluginTask task = configSource.loadConfig(PluginTask.class);
+            JiraUtil.validateTaskConfig(task);
+        });
+        assertEquals("JIRA API endpoint is incorrect or not available", exception.getMessage());
+    }
+
+    @Test
+    public void test_validateTaskConfig_containSpaceUri() throws IOException
+    {
+        ConfigException exception = assertThrows(ConfigException.class, () -> {
+            ConfigSource configSource = TestHelpers.config();
+            configSource.set("uri", "https://example .com");
+            PluginTask task = configSource.loadConfig(PluginTask.class);
+            JiraUtil.validateTaskConfig(task);
+        });
+        assertEquals("JIRA API endpoint is incorrect or not available", exception.getMessage());
+    }
+
+    @Test
+    public void test_validateTaskConfig_emptyJql() throws IOException
+    {
+        ConfigSource configSource = TestHelpers.config();
         configSource.set("jql", "");
-        task = configSource.loadConfig(PluginTask.class);
-        exception = null;
-        try {
-            JiraUtil.validateTaskConfig(task);
-        }
-        catch (Exception e) {
-            exception = e;
-        }
-        assertNull(exception);
+        PluginTask task = configSource.loadConfig(PluginTask.class);
+        JiraUtil.validateTaskConfig(task);
+    }
 
-        configSource = TestHelpers.config();
+    @Test
+    public void test_validateTaskConfig_missingJql() throws IOException
+    {
+        ConfigSource configSource = TestHelpers.config();
         configSource.remove("jql");
-        task = configSource.loadConfig(PluginTask.class);
-        exception = null;
-        try {
-            JiraUtil.validateTaskConfig(task);
-        }
-        catch (Exception e) {
-            exception = e;
-        }
-        assertNull(exception);
+        PluginTask task = configSource.loadConfig(PluginTask.class);
+        JiraUtil.validateTaskConfig(task);
+    }
 
-        // initial_retry_interval_millis = 0
-        configSource = TestHelpers.config();
-        configSource.set("initial_retry_interval_millis", 0);
-        task = configSource.loadConfig(PluginTask.class);
-        exception = null;
-        try {
+    @Test
+    public void test_validateTaskConfig_RetryIntervalIs0() throws IOException
+    {
+        ConfigException exception = assertThrows(ConfigException.class, () -> {
+            ConfigSource configSource = TestHelpers.config();
+            configSource.set("initial_retry_interval_millis", 0);
+            PluginTask task = configSource.loadConfig(PluginTask.class);
             JiraUtil.validateTaskConfig(task);
-        }
-        catch (Exception e) {
-            exception = e;
-        }
-        assertNotNull(exception);
-        assertTrue(exception instanceof ConfigException);
+        });
         assertEquals("Initial retry delay should be equal or greater than 1", exception.getMessage());
+    }
 
-        // retry_limit = -1
-        configSource = TestHelpers.config();
-        configSource.set("retry_limit", -1);
-        task = configSource.loadConfig(PluginTask.class);
-        exception = null;
-        try {
+    @Test
+    public void test_validateTaskConfig_RetryIntervalIsNegative() throws IOException
+    {
+        ConfigException exception = assertThrows(ConfigException.class, () -> {
+            ConfigSource configSource = TestHelpers.config();
+            configSource.set("initial_retry_interval_millis", -1);
+            PluginTask task = configSource.loadConfig(PluginTask.class);
             JiraUtil.validateTaskConfig(task);
-        }
-        catch (Exception e) {
-            exception = e;
-        }
-        assertNotNull(exception);
-        assertTrue(exception instanceof ConfigException);
+        });
+        assertEquals("Initial retry delay should be equal or greater than 1", exception.getMessage());
+    }
+
+    @Test
+    public void test_validateTaskConfig_RetryLimitGreaterThan10() throws IOException
+    {
+        ConfigException exception = assertThrows(ConfigException.class, () -> {
+            ConfigSource configSource = TestHelpers.config();
+            configSource.set("retry_limit", 11);
+            PluginTask task = configSource.loadConfig(PluginTask.class);
+            JiraUtil.validateTaskConfig(task);
+        });
         assertEquals("Retry limit should between 0 and 10", exception.getMessage());
+    }
 
-        // retry_limit = 100
-        configSource = TestHelpers.config();
-        configSource.set("retry_limit", 100);
-        task = configSource.loadConfig(PluginTask.class);
-        exception = null;
-        try {
+    @Test
+    public void test_validateTaskConfig_RetryLimitLessThan0() throws IOException
+    {
+        ConfigException exception = assertThrows(ConfigException.class, () -> {
+            ConfigSource configSource = TestHelpers.config();
+            configSource.set("retry_limit", -1);
+            PluginTask task = configSource.loadConfig(PluginTask.class);
             JiraUtil.validateTaskConfig(task);
-        }
-        catch (Exception e) {
-            exception = e;
-        }
-        assertNotNull(exception);
-        assertTrue(exception instanceof ConfigException);
+        });
         assertEquals("Retry limit should between 0 and 10", exception.getMessage());
     }
 

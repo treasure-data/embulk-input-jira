@@ -2,10 +2,10 @@ package org.embulk.input.jira.client;
 
 import com.google.gson.JsonObject;
 
-import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
-import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
@@ -34,8 +34,8 @@ public class JiraClientTest
     private JiraClient jiraClient;
     private PluginTask task;
 
-    private HttpClient client = Mockito.mock(HttpClient.class);
-    private HttpResponse response = Mockito.mock(HttpResponse.class);
+    private CloseableHttpClient client = Mockito.mock(CloseableHttpClient.class);
+    private CloseableHttpResponse response = Mockito.mock(CloseableHttpResponse.class);
     private StatusLine statusLine = Mockito.mock(StatusLine.class);
     private JsonObject data;
 
@@ -44,7 +44,7 @@ public class JiraClientTest
     {
         if (jiraClient == null) {
             jiraClient = Mockito.spy(new JiraClient());
-            response = Mockito.mock(HttpResponse.class);
+            response = Mockito.mock(CloseableHttpResponse.class);
             task = TestHelpers.config().loadConfig(PluginTask.class);
             data = TestHelpers.getJsonFromFile("jira_client.json");
         }
