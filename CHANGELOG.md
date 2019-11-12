@@ -1,3 +1,7 @@
+## 0.2.9 - 2019-11-17
+
+* [enhancement] Remove usage of `ConfigSource#getObjectNode` [#57](https://github.com/treasure-data/embulk-input-jira/pull/57)
+
 ## 0.2.8 - 2019-04-08
 
 * [fixed] Process is hang forever when validate task [#56](https://github.com/treasure-data/embulk-input-jira/pull/56)
