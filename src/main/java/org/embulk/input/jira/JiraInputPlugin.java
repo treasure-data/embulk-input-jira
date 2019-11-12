@@ -162,7 +162,7 @@ public class JiraInputPlugin
         Buffer sample = Buffer.copyOf(createSamples(issues, getUniqueAttributes(issues)).toString().getBytes());
         JsonNode columns = Exec.getInjector().getInstance(GuessExecutor.class)
                                 .guessParserConfig(sample, Exec.newConfigSource(), createGuessConfig())
-                                .getObjectNode().get("columns");
+                                .get(JsonNode.class, "columns");
         return Exec.newConfigDiff().set("columns", columns);
     }
 
