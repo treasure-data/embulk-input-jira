@@ -19,7 +19,6 @@ import org.embulk.exec.SystemConfigModule;
 import org.embulk.jruby.JRubyScriptingModule;
 import org.embulk.plugin.BuiltinPluginSourceModule;
 import org.embulk.plugin.PluginClassLoaderFactory;
-import org.embulk.plugin.PluginClassLoaderModule;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.Exec;
 import org.embulk.spi.ExecAction;
@@ -37,7 +36,7 @@ public class JiraPluginTestRuntime extends GuiceBinder
 {
     private static ConfigSource getSystemConfig()
     {
-        ObjectNode configNode = JsonNodeFactory.instance.objectNode();
+        final ObjectNode configNode = JsonNodeFactory.instance.objectNode();
         configNode.set("jruby_load_path", JsonNodeFactory.instance.arrayNode().add("lib"));
 
         return new DataSourceImpl(new ModelManager(null, new ObjectMapper()), configNode);
@@ -46,27 +45,26 @@ public class JiraPluginTestRuntime extends GuiceBinder
     public static class TestRuntimeModule implements Module
     {
         @Override
-        public void configure(Binder binder)
+        public void configure(final Binder binder)
         {
-            ConfigSource systemConfig = getSystemConfig();
+            final ConfigSource systemConfig = getSystemConfig();
             new SystemConfigModule(systemConfig).configure(binder);
-            new ExecModule().configure(binder);
+            new ExecModule(systemConfig).configure(binder);
             new ExtensionServiceLoaderModule(systemConfig).configure(binder);
             new BuiltinPluginSourceModule().configure(binder);
             new JRubyScriptingModule(systemConfig).configure(binder);
-            new PluginClassLoaderModule(systemConfig).configure(binder);
             new TestUtilityModule().configure(binder);
             new TestPluginSourceModule().configure(binder);
         }
     }
 
-    private ExecSession exec;
+    private final ExecSession exec;
 
     public JiraPluginTestRuntime()
     {
         super(new TestRuntimeModule());
-        Injector injector = getInjector();
-        ConfigSource execConfig = new DataSourceImpl(injector.getInstance(ModelManager.class));
+        final Injector injector = getInjector();
+        final ConfigSource execConfig = new DataSourceImpl(injector.getInstance(ModelManager.class));
         this.exec = ExecSession.builder(injector).fromExecConfig(execConfig).build();
     }
 
@@ -96,10 +94,11 @@ public class JiraPluginTestRuntime extends GuiceBinder
     }
 
     @Override
-    public Statement apply(Statement base, Description description)
+    public Statement apply(final Statement base, final Description description)
     {
         final Statement superStatement = JiraPluginTestRuntime.super.apply(base, description);
         return new Statement() {
+            @Override
             public void evaluate() throws Throwable
             {
                 try {
@@ -107,13 +106,13 @@ public class JiraPluginTestRuntime extends GuiceBinder
                         try {
                             superStatement.evaluate();
                         }
-                        catch (Throwable ex) {
+                        catch (final Throwable ex) {
                             throw new RuntimeExecutionException(ex);
                         }
                         return null;
                     });
                 }
-                catch (RuntimeException ex) {
+                catch (final RuntimeException ex) {
                     throw ex.getCause();
                 }
                 finally {
@@ -125,7 +124,7 @@ public class JiraPluginTestRuntime extends GuiceBinder
 
     private static class RuntimeExecutionException extends RuntimeException
     {
-        public RuntimeExecutionException(Throwable cause)
+        public RuntimeExecutionException(final Throwable cause)
         {
             super(cause);
         }
