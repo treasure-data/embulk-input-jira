@@ -101,12 +101,12 @@ public final class JiraUtil
     {
         final List<ColumnConfig> columnConfigs = task.getColumns().getColumns();
         String pattern = DEFAULT_TIMESTAMP_PATTERN;
-        for (final ColumnConfig config : columnConfigs) {
-            final ConfigSource columnConfig = config.getConfigSource();
-            if (config.getName().equals(column.getName())
-                    && columnConfig != null
-                    && columnConfig.has("format")) {
-                pattern = columnConfig.get(String.class, "format");
+        for (final ColumnConfig columnConfig : columnConfigs) {
+            final ConfigSource columnConfigSource = columnConfig.getConfigSource();
+            if (columnConfig.getName().equals(column.getName())
+                    && columnConfigSource != null
+                    && columnConfigSource.has("format")) {
+                pattern = columnConfigSource.get(String.class, "format");
                 break;
             }
         }
