@@ -9,6 +9,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.embulk.config.ConfigException;
+import org.embulk.config.ConfigSource;
 import org.embulk.input.jira.Issue;
 import org.embulk.input.jira.JiraInputPlugin.PluginTask;
 import org.embulk.spi.Column;
@@ -37,32 +38,32 @@ public final class JiraUtil
 {
     private JiraUtil() {}
 
-    public static int calculateTotalPage(int totalCount, int resultPerPage)
+    public static int calculateTotalPage(final int totalCount, final int resultPerPage)
     {
         return (int) Math.ceil((double) totalCount / resultPerPage);
     }
 
-    public static String buildPermissionUrl(String url)
+    public static String buildPermissionUrl(final String url)
     {
         return UriBuilder.fromUri(url).path(CREDENTIAL_URI_PATH).build().toString();
     }
 
-    public static String buildSearchUrl(String url)
+    public static String buildSearchUrl(final String url)
     {
         return UriBuilder.fromUri(url).path(SEARCH_URI_PATH).build().toString();
     }
 
     public static void validateTaskConfig(final PluginTask task)
     {
-        String username = task.getUsername();
+        final String username = task.getUsername();
         if (isNullOrEmpty(username)) {
             throw new ConfigException("Username or email could not be empty");
         }
-        String password = task.getPassword();
+        final String password = task.getPassword();
         if (isNullOrEmpty(password)) {
             throw new ConfigException("Password could not be empty");
         }
-        String uri = task.getUri();
+        final String uri = task.getUri();
         if (isNullOrEmpty(uri)) {
             throw new ConfigException("JIRA API endpoint could not be empty");
         }
@@ -74,7 +75,7 @@ public final class JiraUtil
                                                                                 .setCookieSpec(CookieSpecs.STANDARD)
                                                                                 .build())
                                             .build()) {
-            HttpGet request = new HttpGet(uri);
+            final HttpGet request = new HttpGet(uri);
             try (CloseableHttpResponse response = client.execute(request)) {
                 response.getStatusLine().getStatusCode();
             }
@@ -82,11 +83,11 @@ public final class JiraUtil
         catch (IOException | IllegalArgumentException e) {
             throw new ConfigException("JIRA API endpoint is incorrect or not available");
         }
-        int retryInitialWaitSec = task.getInitialRetryIntervalMillis();
+        final int retryInitialWaitSec = task.getInitialRetryIntervalMillis();
         if (retryInitialWaitSec < 1) {
             throw new ConfigException("Initial retry delay should be equal or greater than 1");
         }
-        int retryLimit = task.getRetryLimit();
+        final int retryLimit = task.getRetryLimit();
         if (retryLimit < 0 || retryLimit > 10) {
             throw new ConfigException("Retry limit should between 0 and 10");
         }
@@ -96,26 +97,25 @@ public final class JiraUtil
      * For getting the timestamp value of the node
      * Sometime if the parser could not parse the value then return null
      * */
-    private static Timestamp getTimestampValue(PluginTask task, Column column, String value)
+    private static Timestamp getTimestampValue(final PluginTask task, final Column column, final String value)
     {
-        List<ColumnConfig> columnConfigs = task.getColumns().getColumns();
+        final List<ColumnConfig> columnConfigs = task.getColumns().getColumns();
         String pattern = DEFAULT_TIMESTAMP_PATTERN;
-        for (ColumnConfig config : columnConfigs) {
-            if (config.getName().equals(column.getName())
-                    && config.getConfigSource() != null
-                    && config.getConfigSource().getObjectNode() != null
-                    && config.getConfigSource().getObjectNode().get("format") != null
-                    && config.getConfigSource().getObjectNode().get("format").isTextual()) {
-                pattern = config.getConfigSource().getObjectNode().get("format").asText();
+        for (final ColumnConfig columnConfig : columnConfigs) {
+            final ConfigSource columnConfigSource = columnConfig.getConfigSource();
+            if (columnConfig.getName().equals(column.getName())
+                    && columnConfigSource != null
+                    && columnConfigSource.has("format")) {
+                pattern = columnConfigSource.get(String.class, "format");
                 break;
             }
         }
-        TimestampParser parser = TimestampParser.of(pattern, "UTC");
+        final TimestampParser parser = TimestampParser.of(pattern, "UTC");
         Timestamp result = null;
         try {
             result = parser.parse(value);
         }
-        catch (Exception e) {
+        catch (final Exception e) {
         }
         return result;
     }
@@ -124,13 +124,13 @@ public final class JiraUtil
      * For getting the Long value of the node
      * Sometime if error occurs (i.e a JSON value but user modified it as long) then return null
      * */
-    private static Long getLongValue(JsonElement value)
+    private static Long getLongValue(final JsonElement value)
     {
         Long result = null;
         try {
             result = value.getAsLong();
         }
-        catch (Exception e) {
+        catch (final Exception e) {
         }
         return result;
     }
@@ -139,13 +139,13 @@ public final class JiraUtil
      * For getting the Double value of the node
      * Sometime if error occurs (i.e a JSON value but user modified it as double) then return null
      * */
-    private static Double getDoubleValue(JsonElement value)
+    private static Double getDoubleValue(final JsonElement value)
     {
         Double result = null;
         try {
             result = value.getAsDouble();
         }
-        catch (Exception e) {
+        catch (final Exception e) {
         }
         return result;
     }
@@ -154,24 +154,24 @@ public final class JiraUtil
      * For getting the Boolean value of the node
      * Sometime if error occurs (i.e a JSON value but user modified it as boolean) then return null
      * */
-    private static Boolean getBooleanValue(JsonElement value)
+    private static Boolean getBooleanValue(final JsonElement value)
     {
         Boolean result = null;
         try {
             result = value.getAsBoolean();
         }
-        catch (Exception e) {
+        catch (final Exception e) {
         }
         return result;
     }
 
-    public static void addRecord(Issue issue, Schema schema, PluginTask task, PageBuilder pageBuilder)
+    public static void addRecord(final Issue issue, final Schema schema, final PluginTask task, final PageBuilder pageBuilder)
     {
         schema.visitColumns(new ColumnVisitor() {
             @Override
-            public void jsonColumn(Column column)
+            public void jsonColumn(final Column column)
             {
-                JsonElement data = issue.getValue(column.getName());
+                final JsonElement data = issue.getValue(column.getName());
                 if (data.isJsonNull() || data.isJsonPrimitive()) {
                     pageBuilder.setNull(column);
                 }
@@ -181,9 +181,9 @@ public final class JiraUtil
             }
 
             @Override
-            public void stringColumn(Column column)
+            public void stringColumn(final Column column)
             {
-                JsonElement data = issue.getValue(column.getName());
+                final JsonElement data = issue.getValue(column.getName());
                 if (data.isJsonNull()) {
                     pageBuilder.setNull(column);
                 }
@@ -208,14 +208,14 @@ public final class JiraUtil
             }
 
             @Override
-            public void timestampColumn(Column column)
+            public void timestampColumn(final Column column)
             {
-                JsonElement data = issue.getValue(column.getName());
+                final JsonElement data = issue.getValue(column.getName());
                 if (data.isJsonNull() || data.isJsonObject() || data.isJsonArray()) {
                     pageBuilder.setNull(column);
                 }
                 else {
-                    Timestamp value = getTimestampValue(task, column, data.getAsString());
+                    final Timestamp value = getTimestampValue(task, column, data.getAsString());
                     if (value == null) {
                         pageBuilder.setNull(column);
                     }
@@ -226,9 +226,9 @@ public final class JiraUtil
             }
 
             @Override
-            public void booleanColumn(Column column)
+            public void booleanColumn(final Column column)
             {
-                Boolean value = getBooleanValue(issue.getValue(column.getName()));
+                final Boolean value = getBooleanValue(issue.getValue(column.getName()));
                 if (value == null) {
                     pageBuilder.setNull(column);
                 }
@@ -238,9 +238,9 @@ public final class JiraUtil
             }
 
             @Override
-            public void longColumn(Column column)
+            public void longColumn(final Column column)
             {
-                Long value = getLongValue(issue.getValue(column.getName()));
+                final Long value = getLongValue(issue.getValue(column.getName()));
                 if (value == null) {
                     pageBuilder.setNull(column);
                 }
@@ -250,9 +250,9 @@ public final class JiraUtil
             }
 
             @Override
-            public void doubleColumn(Column column)
+            public void doubleColumn(final Column column)
             {
-                Double value = getDoubleValue(issue.getValue(column.getName()));
+                final Double value = getDoubleValue(issue.getValue(column.getName()));
                 if (value == null) {
                     pageBuilder.setNull(column);
                 }
