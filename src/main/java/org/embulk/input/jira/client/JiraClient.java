@@ -1,7 +1,6 @@
 package org.embulk.input.jira.client;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -24,15 +23,16 @@ import org.embulk.input.jira.Issue;
 import org.embulk.input.jira.JiraInputPlugin.PluginTask;
 import org.embulk.input.jira.util.JiraException;
 import org.embulk.input.jira.util.JiraUtil;
-import org.embulk.spi.Exec;
 import org.embulk.spi.util.RetryExecutor.RetryGiveupException;
 import org.embulk.spi.util.RetryExecutor.Retryable;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -49,14 +49,14 @@ public class JiraClient
 {
     public JiraClient() {}
 
-    private static final Logger LOGGER = Exec.getLogger(JiraClient.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(JiraClient.class);
 
     public void checkUserCredentials(final PluginTask task)
     {
         try {
             authorizeAndRequest(task, JiraUtil.buildPermissionUrl(task.getUri()), null);
         }
-        catch (JiraException e) {
+        catch (final JiraException e) {
             LOGGER.error(String.format("JIRA return status (%s), reason (%s)", e.getStatusCode(), e.getMessage()));
             if (e.getStatusCode() == HttpStatus.SC_UNAUTHORIZED) {
                 throw new ConfigException("Could not authorize with your credential.");
@@ -67,18 +67,18 @@ public class JiraClient
         }
     }
 
-    public List<Issue> searchIssues(final PluginTask task, int startAt, int maxResults)
+    public List<Issue> searchIssues(final PluginTask task, final int startAt, final int maxResults)
     {
-        String response = searchJiraAPI(task, startAt, maxResults);
-        JsonObject result = new JsonParser().parse(response).getAsJsonObject();
+        final String response = searchJiraAPI(task, startAt, maxResults);
+        final JsonObject result = new JsonParser().parse(response).getAsJsonObject();
         return StreamSupport.stream(result.get("issues").getAsJsonArray().spliterator(), false)
                             .map(jsonElement -> {
-                                JsonObject json = jsonElement.getAsJsonObject();
-                                JsonObject fields = json.get("fields").getAsJsonObject();
-                                Set<Entry<String, JsonElement>> entries = fields.entrySet();
+                                final JsonObject json = jsonElement.getAsJsonObject();
+                                final JsonObject fields = json.get("fields").getAsJsonObject();
+                                final Set<Entry<String, JsonElement>> entries = fields.entrySet();
                                 json.remove("fields");
                                 // Merged all properties in fields to the object
-                                for (Entry<String, JsonElement> entry : entries) {
+                                for (final Entry<String, JsonElement> entry : entries) {
                                     json.add(entry.getKey(), entry.getValue());
                                 }
                                 return new Issue(json);
@@ -91,7 +91,7 @@ public class JiraClient
         return new JsonParser().parse(searchJiraAPI(task, 0, MIN_RESULTS)).getAsJsonObject().get("total").getAsInt();
     }
 
-    private String searchJiraAPI(final PluginTask task, int startAt, int maxResults)
+    private String searchJiraAPI(final PluginTask task, final int startAt, final int maxResults)
     {
         try {
             return retryExecutor().withRetryLimit(task.getRetryLimit())
@@ -106,10 +106,10 @@ public class JiraClient
                 }
 
                 @Override
-                public boolean isRetryableException(Exception exception)
+                public boolean isRetryableException(final Exception exception)
                 {
                     if (exception instanceof JiraException) {
-                        int statusCode = ((JiraException) exception).getStatusCode();
+                        final int statusCode = ((JiraException) exception).getStatusCode();
                         // When overloading JIRA APIs (i.e 100 requests per second) the API will return 401 although the credential is correct. So add retry for this
                         // 429 is stand for "Too many requests"
                         // Other 4xx considered errors
@@ -119,11 +119,11 @@ public class JiraClient
                 }
 
                 @Override
-                public void onRetry(Exception exception, int retryCount, int retryLimit, int retryWait)
+                public void onRetry(final Exception exception, final int retryCount, final int retryLimit, final int retryWait)
                         throws RetryGiveupException
                 {
                     if (exception instanceof JiraException) {
-                        String message = String
+                        final String message = String
                                 .format("Retrying %d/%d after %d seconds. HTTP status code: %s",
                                         retryCount, retryLimit,
                                         retryWait / 1000,
@@ -131,7 +131,7 @@ public class JiraClient
                         LOGGER.warn(message);
                     }
                     else {
-                        String message = String
+                        final String message = String
                                 .format("Retrying %d/%d after %d seconds. Message: %s",
                                         retryCount, retryLimit,
                                         retryWait / 1000,
@@ -141,7 +141,7 @@ public class JiraClient
                 }
 
                 @Override
-                public void onGiveup(Exception firstException, Exception lastException) throws RetryGiveupException
+                public void onGiveup(final Exception firstException, final Exception lastException) throws RetryGiveupException
                 {
                     LOGGER.warn("Retry Limit Exceeded");
                 }
@@ -155,7 +155,7 @@ public class JiraClient
         }
     }
 
-    private String authorizeAndRequest(final PluginTask task, String url, String body) throws JiraException
+    private String authorizeAndRequest(final PluginTask task, final String url, final String body) throws JiraException
     {
         try (CloseableHttpClient client = createHttpClient()) {
             HttpRequestBase request;
@@ -167,28 +167,28 @@ public class JiraClient
             }
             try (CloseableHttpResponse response = client.execute(request)) {
              // Check for HTTP response code : 200 : SUCCESS
-                int statusCode = response.getStatusLine().getStatusCode();
+                final int statusCode = response.getStatusLine().getStatusCode();
                 if (statusCode != HttpStatus.SC_OK) {
                     throw new JiraException(statusCode, extractErrorMessages(EntityUtils.toString(response.getEntity())));
                 }
                 return EntityUtils.toString(response.getEntity());
             }
         }
-        catch (IOException e) {
+        catch (final IOException e) {
             throw new JiraException(-1, e.getMessage());
         }
     }
 
-    private String extractErrorMessages(String errorResponse)
+    private String extractErrorMessages(final String errorResponse)
     {
-        List<String> messages = new ArrayList<>();
+        final List<String> messages = new ArrayList<>();
         try {
-            JsonObject errorObject = new JsonParser().parse(errorResponse).getAsJsonObject();
-            for (JsonElement element : errorObject.get("errorMessages").getAsJsonArray()) {
+            final JsonObject errorObject = new JsonParser().parse(errorResponse).getAsJsonObject();
+            for (final JsonElement element : errorObject.get("errorMessages").getAsJsonArray()) {
                 messages.add(element.getAsString());
             }
         }
-        catch (Exception e) {
+        catch (final Exception e) {
             messages.add(errorResponse);
         }
         return String.join(" , ", messages);
@@ -207,9 +207,9 @@ public class JiraClient
                     .build();
     }
 
-    private HttpRequestBase createPostRequest(PluginTask task, String url, String body) throws IOException
+    private HttpRequestBase createPostRequest(final PluginTask task, final String url, final String body) throws IOException
     {
-        HttpPost request = new HttpPost(url);
+        final HttpPost request = new HttpPost(url);
         switch (task.getAuthMethod()) {
         default:
             request.setHeader(
@@ -226,9 +226,9 @@ public class JiraClient
         return request;
     }
 
-    private HttpRequestBase createGetRequest(PluginTask task, String url)
+    private HttpRequestBase createGetRequest(final PluginTask task, final String url)
     {
-        HttpGet request = new HttpGet(url);
+        final HttpGet request = new HttpGet(url);
         switch (task.getAuthMethod()) {
         default:
             request.setHeader(
@@ -244,14 +244,14 @@ public class JiraClient
         return request;
     }
 
-    private String createSearchIssuesBody(PluginTask task, int startAt, int maxResults)
+    private String createSearchIssuesBody(final PluginTask task, final int startAt, final int maxResults)
     {
-        JsonObject body = new JsonObject();
-        Optional<String> jql = task.getJQL();
-        body.add("jql", new JsonPrimitive(jql.or("")));
+        final JsonObject body = new JsonObject();
+        final Optional<String> jql = task.getJQL();
+        body.add("jql", new JsonPrimitive(jql.orElse("")));
         body.add("startAt", new JsonPrimitive(startAt));
         body.add("maxResults", new JsonPrimitive(maxResults));
-        JsonArray fields = new JsonArray();
+        final JsonArray fields = new JsonArray();
         fields.add("*all");
         body.add("fields", fields);
         return body.toString();

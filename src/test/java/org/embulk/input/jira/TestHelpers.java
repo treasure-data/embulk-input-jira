@@ -2,7 +2,7 @@ package org.embulk.input.jira;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
-import com.fasterxml.jackson.datatype.joda.JodaModule;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.io.Resources;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -20,22 +20,22 @@ public final class TestHelpers
 {
     private TestHelpers() {}
 
-    public static JsonObject getJsonFromFile(String fileName) throws IOException
+    public static JsonObject getJsonFromFile(final String fileName) throws IOException
      {
-        String path = Resources.getResource(fileName).getPath();
+        final String path = Resources.getResource(fileName).getPath();
         try (JsonReader reader = new JsonReader(new FileReader(path))) {
-            JsonParser parser = new JsonParser();
+            final JsonParser parser = new JsonParser();
             return parser.parse(reader).getAsJsonObject();
         }
     }
 
     public static ConfigSource config() throws IOException
     {
-        String path = Resources.getResource("config.yml").getPath();
-        ObjectMapper mapper = new ObjectMapper()
+        final String path = Resources.getResource("config.yml").getPath();
+        final ObjectMapper mapper = new ObjectMapper()
                 .registerModule(new GuavaModule())
-                .registerModule(new JodaModule());
-        ConfigLoader configLoader = new ConfigLoader(new ModelManager(null, mapper));
+                .registerModule(new Jdk8Module());
+        final ConfigLoader configLoader = new ConfigLoader(new ModelManager(null, mapper));
         return configLoader.fromYamlFile(new File(path));
     }
 }

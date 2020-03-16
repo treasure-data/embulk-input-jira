@@ -3,7 +3,6 @@ package org.embulk.input.jira;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -29,9 +28,11 @@ import org.embulk.spi.PageOutput;
 import org.embulk.spi.Schema;
 import org.embulk.spi.SchemaConfig;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -44,7 +45,7 @@ import static org.embulk.input.jira.Constant.PREVIEW_RECORDS_COUNT;
 public class JiraInputPlugin
         implements InputPlugin
 {
-    private static final Logger LOGGER = Exec.getLogger(JiraInputPlugin.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(JiraInputPlugin.class);
 
     public interface PluginTask
             extends Task
@@ -88,55 +89,55 @@ public class JiraInputPlugin
     }
 
     @Override
-    public ConfigDiff transaction(ConfigSource config,
-            InputPlugin.Control control)
+    public ConfigDiff transaction(final ConfigSource config,
+            final InputPlugin.Control control)
     {
-        PluginTask task = config.loadConfig(PluginTask.class);
+        final PluginTask task = config.loadConfig(PluginTask.class);
 
-        Schema schema = task.getColumns().toSchema();
-        int taskCount = 1;
+        final Schema schema = task.getColumns().toSchema();
+        final int taskCount = 1;
 
         return resume(task.dump(), schema, taskCount, control);
     }
 
     @Override
-    public ConfigDiff resume(TaskSource taskSource,
-            Schema schema, int taskCount,
-            InputPlugin.Control control)
+    public ConfigDiff resume(final TaskSource taskSource,
+            final Schema schema, final int taskCount,
+            final InputPlugin.Control control)
     {
         control.run(taskSource, schema, taskCount);
         return Exec.newConfigDiff();
     }
 
     @Override
-    public void cleanup(TaskSource taskSource,
-            Schema schema, int taskCount,
-            List<TaskReport> successTaskReports)
+    public void cleanup(final TaskSource taskSource,
+            final Schema schema, final int taskCount,
+            final List<TaskReport> successTaskReports)
     {
     }
 
     @Override
-    public TaskReport run(TaskSource taskSource,
-            Schema schema, int taskIndex,
-            PageOutput output)
+    public TaskReport run(final TaskSource taskSource,
+            final Schema schema, final int taskIndex,
+            final PageOutput output)
     {
-        PluginTask task = taskSource.loadTask(PluginTask.class);
+        final PluginTask task = taskSource.loadTask(PluginTask.class);
         JiraUtil.validateTaskConfig(task);
-        JiraClient jiraClient = getJiraClient();
+        final JiraClient jiraClient = getJiraClient();
         jiraClient.checkUserCredentials(task);
         try (final PageBuilder pageBuilder = getPageBuilder(schema, output)) {
             if (isPreview()) {
-                List<Issue> issues = jiraClient.searchIssues(task, 0, PREVIEW_RECORDS_COUNT);
+                final List<Issue> issues = jiraClient.searchIssues(task, 0, PREVIEW_RECORDS_COUNT);
                 issues.forEach(issue -> JiraUtil.addRecord(issue, schema, task, pageBuilder));
             }
             else {
                 int currentPage = 0;
-                int totalCount = jiraClient.getTotalCount(task);
-                int totalPage = JiraUtil.calculateTotalPage(totalCount, MAX_RESULTS);
+                final int totalCount = jiraClient.getTotalCount(task);
+                final int totalPage = JiraUtil.calculateTotalPage(totalCount, MAX_RESULTS);
                 LOGGER.info(String.format("Total pages (%d)", totalPage));
                 while (currentPage < totalPage) {
                     LOGGER.info(String.format("Fetching page %d/%d", (currentPage + 1), totalPage));
-                    List<Issue> issues = jiraClient.searchIssues(task, (currentPage * MAX_RESULTS), MAX_RESULTS);
+                    final List<Issue> issues = jiraClient.searchIssues(task, (currentPage * MAX_RESULTS), MAX_RESULTS);
                     issues.forEach(issue -> JiraUtil.addRecord(issue, schema, task, pageBuilder));
                     currentPage++;
                 }
@@ -147,20 +148,20 @@ public class JiraInputPlugin
     }
 
     @Override
-    public ConfigDiff guess(ConfigSource config)
+    public ConfigDiff guess(final ConfigSource config)
     {
         // Reset columns in case already have or missing on configuration
         config.set("columns", new ObjectMapper().createArrayNode());
-        PluginTask task = config.loadConfig(PluginTask.class);
+        final PluginTask task = config.loadConfig(PluginTask.class);
         JiraUtil.validateTaskConfig(task);
-        JiraClient jiraClient = getJiraClient();
+        final JiraClient jiraClient = getJiraClient();
         jiraClient.checkUserCredentials(task);
-        List<Issue> issues = jiraClient.searchIssues(task, 0, GUESS_RECORDS_COUNT);
+        final List<Issue> issues = jiraClient.searchIssues(task, 0, GUESS_RECORDS_COUNT);
         if (issues.isEmpty()) {
             throw new ConfigException("Could not guess schema due to empty data set");
         }
-        Buffer sample = Buffer.copyOf(createSamples(issues, getUniqueAttributes(issues)).toString().getBytes());
-        JsonNode columns = Exec.getInjector().getInstance(GuessExecutor.class)
+        final Buffer sample = Buffer.copyOf(createSamples(issues, getUniqueAttributes(issues)).toString().getBytes());
+        final JsonNode columns = Exec.getInjector().getInstance(GuessExecutor.class)
                                 .guessParserConfig(sample, Exec.newConfigSource(), createGuessConfig())
                                 .get(JsonNode.class, "columns");
         return Exec.newConfigDiff().set("columns", columns);
@@ -173,24 +174,24 @@ public class JiraInputPlugin
                     .set("guess_sample_buffer_bytes", GUESS_BUFFER_SIZE);
     }
 
-    private SortedSet<String> getUniqueAttributes(List<Issue> issues)
+    private SortedSet<String> getUniqueAttributes(final List<Issue> issues)
     {
-        SortedSet<String> uniqueAttributes = new TreeSet<>();
-        for (Issue issue : issues) {
-            for (Entry<String, JsonElement> entry : issue.getFlatten().entrySet()) {
+        final SortedSet<String> uniqueAttributes = new TreeSet<>();
+        for (final Issue issue : issues) {
+            for (final Entry<String, JsonElement> entry : issue.getFlatten().entrySet()) {
                 uniqueAttributes.add(entry.getKey());
             }
         }
         return uniqueAttributes;
     }
 
-    private JsonArray createSamples(List<Issue> issues, Set<String> uniqueAttributes)
+    private JsonArray createSamples(final List<Issue> issues, final Set<String> uniqueAttributes)
     {
-        JsonArray samples = new JsonArray();
-        for (Issue issue : issues) {
-            JsonObject flatten = issue.getFlatten();
-            JsonObject unified = new JsonObject();
-            for (String key : uniqueAttributes) {
+        final JsonArray samples = new JsonArray();
+        for (final Issue issue : issues) {
+            final JsonObject flatten = issue.getFlatten();
+            final JsonObject unified = new JsonObject();
+            for (final String key : uniqueAttributes) {
                 JsonElement value = flatten.get(key);
                 if (value == null) {
                     value = JsonNull.INSTANCE;
@@ -209,7 +210,7 @@ public class JiraInputPlugin
     }
 
     @VisibleForTesting
-    public PageBuilder getPageBuilder(Schema schema, PageOutput output)
+    public PageBuilder getPageBuilder(final Schema schema, final PageOutput output)
     {
         return new PageBuilder(Exec.getBufferAllocator(), schema, output);
     }

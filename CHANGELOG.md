@@ -1,3 +1,7 @@
+## 0.2.1 - 2020-03-18
+
+* [enhancement] Use `java.util.Optional` instead of `com.google.common.base.Optional`, use `LoggerFactory.getLogger` instead of `Exec.getLogger` [#58](https://github.com/treasure-data/embulk-input-jira/pull/58)
+
 ## 0.2.9 - 2019-11-17
 
 * [enhancement] Remove usage of `ConfigSource#getObjectNode` [#57](https://github.com/treasure-data/embulk-input-jira/pull/57)
