@@ -1,4 +1,4 @@
-## 0.2.1 - 2020-03-18
+## 0.2.10 - 2020-03-18
 
 * [enhancement] Use `java.util.Optional` instead of `com.google.common.base.Optional`, use `LoggerFactory.getLogger` instead of `Exec.getLogger` [#58](https://github.com/treasure-data/embulk-input-jira/pull/58)
 
