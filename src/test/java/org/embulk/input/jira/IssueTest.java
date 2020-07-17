@@ -31,7 +31,7 @@ public class IssueTest
         String testName = "simple";
         Issue issue = new Issue(flattenData.get(testName).getAsJsonObject());
         JsonObject expected = flattenExpected.get(testName).getAsJsonObject();
-        assertEquals(expected, issue.getFlatten());
+        assertEquals(expected, issue.getFlatten(true));
     }
 
     @Test
@@ -40,7 +40,7 @@ public class IssueTest
         String testName = "twoLevels";
         Issue issue = new Issue(flattenData.get(testName).getAsJsonObject());
         JsonObject expected = flattenExpected.get(testName).getAsJsonObject();
-        assertEquals(expected, issue.getFlatten());
+        assertEquals(expected, issue.getFlatten(true));
     }
 
     @Test
@@ -49,7 +49,7 @@ public class IssueTest
         String testName = "threeLevels";
         Issue issue = new Issue(flattenData.get(testName).getAsJsonObject());
         JsonObject expected = flattenExpected.get(testName).getAsJsonObject();
-        assertEquals(expected, issue.getFlatten());
+        assertEquals(expected, issue.getFlatten(true));
     }
 
     @Test
@@ -58,7 +58,7 @@ public class IssueTest
         String testName = "threeLevelsWithoutKeys";
         Issue issue = new Issue(flattenData.get(testName).getAsJsonObject());
         JsonObject expected = flattenExpected.get(testName).getAsJsonObject();
-        assertEquals(expected, issue.getFlatten());
+        assertEquals(expected, issue.getFlatten(true));
     }
 
     @Test
@@ -67,7 +67,7 @@ public class IssueTest
         String testName = "threeLevelsWithKeys";
         Issue issue = new Issue(flattenData.get(testName).getAsJsonObject());
         JsonObject expected = flattenExpected.get(testName).getAsJsonObject();
-        assertEquals(expected, issue.getFlatten());
+        assertEquals(expected, issue.getFlatten(true));
     }
 
     @Test
@@ -76,7 +76,7 @@ public class IssueTest
         String testName = "threeLevelsWithNullKeys";
         Issue issue = new Issue(flattenData.get(testName).getAsJsonObject());
         JsonObject expected = flattenExpected.get(testName).getAsJsonObject();
-        assertEquals(expected, issue.getFlatten());
+        assertEquals(expected, issue.getFlatten(true));
     }
 
     @Test
@@ -85,7 +85,7 @@ public class IssueTest
         String testName = "arrayWithAllJsonObjectWithSameKeysAndEmptyObject";
         Issue issue = new Issue(flattenData.get(testName).getAsJsonObject());
         JsonObject expected = flattenExpected.get(testName).getAsJsonObject();
-        assertEquals(expected, issue.getFlatten());
+        assertEquals(expected, issue.getFlatten(true));
     }
 
     @Test
@@ -94,7 +94,7 @@ public class IssueTest
         String testName = "arrayWithAllJsonObjectWithSameKeysAndNotEmptyObject";
         Issue issue = new Issue(flattenData.get(testName).getAsJsonObject());
         JsonObject expected = flattenExpected.get(testName).getAsJsonObject();
-        assertEquals(expected, issue.getFlatten());
+        assertEquals(expected, issue.getFlatten(true));
     }
 
     @Test
@@ -103,7 +103,7 @@ public class IssueTest
         String testName = "arrayWithAllJsonObjectWithoutSameKeys";
         Issue issue = new Issue(flattenData.get(testName).getAsJsonObject());
         JsonObject expected = flattenExpected.get(testName).getAsJsonObject();
-        assertEquals(expected, issue.getFlatten());
+        assertEquals(expected, issue.getFlatten(true));
     }
 
     @Test

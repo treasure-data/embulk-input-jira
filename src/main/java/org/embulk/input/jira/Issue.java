@@ -58,16 +58,16 @@ public class Issue
         }
     }
 
-    public synchronized JsonObject getFlatten()
+    public synchronized JsonObject getFlatten(Boolean expandJsonOnGuess)
     {
         if (flatten == null) {
             flatten = new JsonObject();
-            manipulatingFlattenJson(json, "");
+            manipulatingFlattenJson(json, "", expandJsonOnGuess);
         }
         return flatten;
     }
 
-    private void manipulatingFlattenJson(JsonElement in, String prefix)
+    private void manipulatingFlattenJson(JsonElement in, String prefix, boolean expandJsonOnGuess)
     {
         if (in.isJsonObject()) {
             JsonObject obj = in.getAsJsonObject();
@@ -83,7 +83,12 @@ public class Issue
                 for (Entry<String, JsonElement> entry : obj.entrySet()) {
                     String key = entry.getKey();
                     JsonElement value = entry.getValue();
-                    manipulatingFlattenJson(value, appendPrefix(prefix, key));
+                    if (expandJsonOnGuess) {
+                        manipulatingFlattenJson(value, appendPrefix(prefix, key), expandJsonOnGuess);
+                    }
+                    else {
+                        flatten.add(key, value);
+                    }
                 }
             }
         }
@@ -106,7 +111,7 @@ public class Issue
                         newObj.get(key).getAsJsonArray().add(elem.getAsJsonObject().get(key));
                     }
                 }
-                manipulatingFlattenJson(newObj, prefix);
+                manipulatingFlattenJson(newObj, prefix, expandJsonOnGuess);
             }
             else {
                 flatten.add(prefix,

@@ -86,6 +86,10 @@ public class JiraInputPlugin
         @Config("auth_method")
         @ConfigDefault("\"basic\"")
         public AuthenticateMethod getAuthMethod();
+
+        @Config("expand_json_on_guess")
+        @ConfigDefault("true")
+        public boolean getExpandJsonOnGuess();
     }
 
     @Override
@@ -160,7 +164,7 @@ public class JiraInputPlugin
         if (issues.isEmpty()) {
             throw new ConfigException("Could not guess schema due to empty data set");
         }
-        final Buffer sample = Buffer.copyOf(createSamples(issues, getUniqueAttributes(issues)).toString().getBytes());
+        final Buffer sample = Buffer.copyOf(createSamples(issues, getUniqueAttributes(issues, task.getExpandJsonOnGuess()), task.getExpandJsonOnGuess()).toString().getBytes());
         final JsonNode columns = Exec.getInjector().getInstance(GuessExecutor.class)
                                 .guessParserConfig(sample, Exec.newConfigSource(), createGuessConfig())
                                 .get(JsonNode.class, "columns");
@@ -174,22 +178,22 @@ public class JiraInputPlugin
                     .set("guess_sample_buffer_bytes", GUESS_BUFFER_SIZE);
     }
 
-    private SortedSet<String> getUniqueAttributes(final List<Issue> issues)
+    private SortedSet<String> getUniqueAttributes(final List<Issue> issues, final boolean expandJsonOnGuess)
     {
         final SortedSet<String> uniqueAttributes = new TreeSet<>();
         for (final Issue issue : issues) {
-            for (final Entry<String, JsonElement> entry : issue.getFlatten().entrySet()) {
+            for (final Entry<String, JsonElement> entry : issue.getFlatten(expandJsonOnGuess).entrySet()) {
                 uniqueAttributes.add(entry.getKey());
             }
         }
         return uniqueAttributes;
     }
 
-    private JsonArray createSamples(final List<Issue> issues, final Set<String> uniqueAttributes)
+    private JsonArray createSamples(final List<Issue> issues, final Set<String> uniqueAttributes, final boolean expandJsonOnGuess)
     {
         final JsonArray samples = new JsonArray();
         for (final Issue issue : issues) {
-            final JsonObject flatten = issue.getFlatten();
+            final JsonObject flatten = issue.getFlatten(expandJsonOnGuess);
             final JsonObject unified = new JsonObject();
             for (final String key : uniqueAttributes) {
                 JsonElement value = flatten.get(key);
