@@ -58,20 +58,21 @@ public class Issue
         }
     }
 
-    public synchronized JsonObject getFlatten()
+    public synchronized JsonObject getFlatten(Boolean expandJson)
     {
         if (flatten == null) {
             flatten = new JsonObject();
-            manipulatingFlattenJson(json, "");
+            manipulatingFlattenJson(json, "", expandJson);
         }
         return flatten;
     }
 
-    private void manipulatingFlattenJson(JsonElement in, String prefix)
+    private void manipulatingFlattenJson(JsonElement in, String prefix, boolean expandJson)
     {
         if (in.isJsonObject()) {
             JsonObject obj = in.getAsJsonObject();
-            // NOTE: If you want to flatten JSON completely, please remove this if and addHeuristicValue
+            // NOTE: If you want to flatten JSON completely, please remove this if and
+            // addHeuristicValue
             if (StringUtils.countMatches(prefix, ".") > 1) {
                 addHeuristicValue(obj, prefix);
                 return;
@@ -83,13 +84,19 @@ public class Issue
                 for (Entry<String, JsonElement> entry : obj.entrySet()) {
                     String key = entry.getKey();
                     JsonElement value = entry.getValue();
-                    manipulatingFlattenJson(value, appendPrefix(prefix, key));
+                    if (expandJson) {
+                        manipulatingFlattenJson(value, appendPrefix(prefix, key), expandJson);
+                    }
+                    else {
+                        flatten.add(key, value);
+                    }
                 }
             }
         }
         else if (in.isJsonArray()) {
             JsonArray arrayObj = in.getAsJsonArray();
-            boolean isAllJsonObject = arrayObj.size() > 0 && StreamSupport.stream(arrayObj.spliterator(), false).allMatch(JsonElement::isJsonObject);
+            boolean isAllJsonObject = arrayObj.size() > 0
+                    && StreamSupport.stream(arrayObj.spliterator(), false).allMatch(JsonElement::isJsonObject);
             if (isAllJsonObject) {
                 Map<String, Integer> occurents = new HashMap<>();
                 for (JsonElement element : arrayObj) {
@@ -106,11 +113,10 @@ public class Issue
                         newObj.get(key).getAsJsonArray().add(elem.getAsJsonObject().get(key));
                     }
                 }
-                manipulatingFlattenJson(newObj, prefix);
+                manipulatingFlattenJson(newObj, prefix, expandJson);
             }
             else {
-                flatten.add(prefix,
-                        new JsonPrimitive("String value"));
+                flatten.add(prefix, new JsonPrimitive("String value"));
             }
         }
         else if (in.isJsonPrimitive()) {

@@ -26,6 +26,7 @@ Required Embulk version >= 0.9.20
 - **columns** target issue attributes. You can generate this configuration by `guess` command (array, required)
 - **retry_initial_wait_sec**: Wait seconds for exponential backoff initial value (integer, default: 1)
 - **retry_limit**: Try to retry this times (integer, default: 5)
+- **expand_json** The boolean value is to enable/disable json expanding. (boolean, default: true)
 
 ## Example
 

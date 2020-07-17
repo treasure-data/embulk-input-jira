@@ -42,13 +42,11 @@ import static org.embulk.input.jira.Constant.GUESS_RECORDS_COUNT;
 import static org.embulk.input.jira.Constant.MAX_RESULTS;
 import static org.embulk.input.jira.Constant.PREVIEW_RECORDS_COUNT;
 
-public class JiraInputPlugin
-        implements InputPlugin
+public class JiraInputPlugin implements InputPlugin
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(JiraInputPlugin.class);
 
-    public interface PluginTask
-            extends Task
+    public interface PluginTask extends Task
     {
         @Config("username")
         public String getUsername();
@@ -86,11 +84,14 @@ public class JiraInputPlugin
         @Config("auth_method")
         @ConfigDefault("\"basic\"")
         public AuthenticateMethod getAuthMethod();
+
+        @Config("expand_json")
+        @ConfigDefault("true")
+        public boolean getExpandJson();
     }
 
     @Override
-    public ConfigDiff transaction(final ConfigSource config,
-            final InputPlugin.Control control)
+    public ConfigDiff transaction(final ConfigSource config, final InputPlugin.Control control)
     {
         final PluginTask task = config.loadConfig(PluginTask.class);
 
@@ -101,25 +102,22 @@ public class JiraInputPlugin
     }
 
     @Override
-    public ConfigDiff resume(final TaskSource taskSource,
-            final Schema schema, final int taskCount,
-            final InputPlugin.Control control)
+    public ConfigDiff resume(final TaskSource taskSource, final Schema schema, final int taskCount,
+                             final InputPlugin.Control control)
     {
         control.run(taskSource, schema, taskCount);
         return Exec.newConfigDiff();
     }
 
     @Override
-    public void cleanup(final TaskSource taskSource,
-            final Schema schema, final int taskCount,
-            final List<TaskReport> successTaskReports)
+    public void cleanup(final TaskSource taskSource, final Schema schema, final int taskCount,
+                        final List<TaskReport> successTaskReports)
     {
     }
 
     @Override
-    public TaskReport run(final TaskSource taskSource,
-            final Schema schema, final int taskIndex,
-            final PageOutput output)
+    public TaskReport run(final TaskSource taskSource, final Schema schema, final int taskIndex,
+                          final PageOutput output)
     {
         final PluginTask task = taskSource.loadTask(PluginTask.class);
         JiraUtil.validateTaskConfig(task);
@@ -160,36 +158,37 @@ public class JiraInputPlugin
         if (issues.isEmpty()) {
             throw new ConfigException("Could not guess schema due to empty data set");
         }
-        final Buffer sample = Buffer.copyOf(createSamples(issues, getUniqueAttributes(issues)).toString().getBytes());
+        final Buffer sample = Buffer
+                .copyOf(createSamples(issues, getUniqueAttributes(issues, task.getExpandJson()), task.getExpandJson())
+                        .toString().getBytes());
         final JsonNode columns = Exec.getInjector().getInstance(GuessExecutor.class)
-                                .guessParserConfig(sample, Exec.newConfigSource(), createGuessConfig())
-                                .get(JsonNode.class, "columns");
+                .guessParserConfig(sample, Exec.newConfigSource(), createGuessConfig()).get(JsonNode.class, "columns");
         return Exec.newConfigDiff().set("columns", columns);
     }
 
     private ConfigSource createGuessConfig()
     {
-        return Exec.newConfigSource()
-                    .set("guess_plugins", ImmutableList.of("jira"))
-                    .set("guess_sample_buffer_bytes", GUESS_BUFFER_SIZE);
+        return Exec.newConfigSource().set("guess_plugins", ImmutableList.of("jira")).set("guess_sample_buffer_bytes",
+                GUESS_BUFFER_SIZE);
     }
 
-    private SortedSet<String> getUniqueAttributes(final List<Issue> issues)
+    private SortedSet<String> getUniqueAttributes(final List<Issue> issues, final boolean expandJson)
     {
         final SortedSet<String> uniqueAttributes = new TreeSet<>();
         for (final Issue issue : issues) {
-            for (final Entry<String, JsonElement> entry : issue.getFlatten().entrySet()) {
+            for (final Entry<String, JsonElement> entry : issue.getFlatten(expandJson).entrySet()) {
                 uniqueAttributes.add(entry.getKey());
             }
         }
         return uniqueAttributes;
     }
 
-    private JsonArray createSamples(final List<Issue> issues, final Set<String> uniqueAttributes)
+    private JsonArray createSamples(final List<Issue> issues, final Set<String> uniqueAttributes,
+                                    final boolean expandJson)
     {
         final JsonArray samples = new JsonArray();
         for (final Issue issue : issues) {
-            final JsonObject flatten = issue.getFlatten();
+            final JsonObject flatten = issue.getFlatten(expandJson);
             final JsonObject unified = new JsonObject();
             for (final String key : uniqueAttributes) {
                 JsonElement value = flatten.get(key);
