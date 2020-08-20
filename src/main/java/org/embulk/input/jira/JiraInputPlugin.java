@@ -39,7 +39,6 @@ import java.util.TreeSet;
 
 import static org.embulk.input.jira.Constant.GUESS_BUFFER_SIZE;
 import static org.embulk.input.jira.Constant.GUESS_RECORDS_COUNT;
-import static org.embulk.input.jira.Constant.MAX_RESULTS;
 import static org.embulk.input.jira.Constant.PREVIEW_RECORDS_COUNT;
 
 public class JiraInputPlugin
@@ -86,6 +85,10 @@ public class JiraInputPlugin
         @Config("auth_method")
         @ConfigDefault("\"basic\"")
         public AuthenticateMethod getAuthMethod();
+
+        @Config("max_results")
+        @ConfigDefault("50")
+        public int getMaxResults();
     }
 
     @Override
@@ -125,19 +128,20 @@ public class JiraInputPlugin
         JiraUtil.validateTaskConfig(task);
         final JiraClient jiraClient = getJiraClient();
         jiraClient.checkUserCredentials(task);
+        final int maxResults = task.getMaxResults();
         try (final PageBuilder pageBuilder = getPageBuilder(schema, output)) {
             if (isPreview()) {
-                final List<Issue> issues = jiraClient.searchIssues(task, 0, PREVIEW_RECORDS_COUNT);
+                final List<Issue> issues = jiraClient.searchIssues(task, 0, Math.min(maxResults, PREVIEW_RECORDS_COUNT));
                 issues.forEach(issue -> JiraUtil.addRecord(issue, schema, task, pageBuilder));
             }
             else {
                 int currentPage = 0;
                 final int totalCount = jiraClient.getTotalCount(task);
-                final int totalPage = JiraUtil.calculateTotalPage(totalCount, MAX_RESULTS);
+                final int totalPage = JiraUtil.calculateTotalPage(totalCount, maxResults);
                 LOGGER.info(String.format("Total pages (%d)", totalPage));
                 while (currentPage < totalPage) {
                     LOGGER.info(String.format("Fetching page %d/%d", (currentPage + 1), totalPage));
-                    final List<Issue> issues = jiraClient.searchIssues(task, (currentPage * MAX_RESULTS), MAX_RESULTS);
+                    final List<Issue> issues = jiraClient.searchIssues(task, (currentPage * maxResults), maxResults);
                     issues.forEach(issue -> JiraUtil.addRecord(issue, schema, task, pageBuilder));
                     currentPage++;
                 }
