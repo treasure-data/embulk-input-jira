@@ -254,6 +254,11 @@ public class JiraClient
         final JsonArray fields = new JsonArray();
         fields.add("*all");
         body.add("fields", fields);
+        final JsonArray expand = new JsonArray();
+        task.getExpand().forEach(e -> {
+            expand.add(e);
+        });
+        body.add("expand", expand);
         return body.toString();
     }
 }
