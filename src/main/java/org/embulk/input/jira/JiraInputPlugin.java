@@ -79,6 +79,10 @@ public class JiraInputPlugin
         @ConfigDefault("null")
         public Optional<String> getJQL();
 
+        @Config("expand")
+        @ConfigDefault("[]")
+        public List<String> getExpand();
+
         @Config("columns")
         public SchemaConfig getColumns();
 
