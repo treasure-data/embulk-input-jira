@@ -1,7 +1,6 @@
 package org.embulk.input.jira.util;
 
 import com.google.gson.JsonElement;
-
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -17,13 +16,13 @@ import org.embulk.spi.ColumnConfig;
 import org.embulk.spi.ColumnVisitor;
 import org.embulk.spi.PageBuilder;
 import org.embulk.spi.Schema;
-import org.embulk.spi.json.JsonParser;
-import org.embulk.spi.time.Timestamp;
-import org.embulk.spi.time.TimestampParser;
+import org.embulk.util.json.JsonParser;
+import org.embulk.util.timestamp.TimestampFormatter;
 
 import javax.ws.rs.core.UriBuilder;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -97,7 +96,7 @@ public final class JiraUtil
      * For getting the timestamp value of the node
      * Sometime if the parser could not parse the value then return null
      * */
-    private static Timestamp getTimestampValue(final PluginTask task, final Column column, final String value)
+    private static Instant getTimestampValue(final PluginTask task, final Column column, final String value)
     {
         final List<ColumnConfig> columnConfigs = task.getColumns().getColumns();
         String pattern = DEFAULT_TIMESTAMP_PATTERN;
@@ -110,10 +109,13 @@ public final class JiraUtil
                 break;
             }
         }
-        final TimestampParser parser = TimestampParser.of(pattern, "UTC");
-        Timestamp result = null;
+        final TimestampFormatter formatter = TimestampFormatter
+                .builder(pattern, true)
+                .setDefaultZoneFromString("UTC")
+                .build();
+        Instant result = null;
         try {
-            result = parser.parse(value);
+            result = formatter.parse(value);
         }
         catch (final Exception e) {
         }
@@ -215,7 +217,7 @@ public final class JiraUtil
                     pageBuilder.setNull(column);
                 }
                 else {
-                    final Timestamp value = getTimestampValue(task, column, data.getAsString());
+                    final Instant value = getTimestampValue(task, column, data.getAsString());
                     if (value == null) {
                         pageBuilder.setNull(column);
                     }

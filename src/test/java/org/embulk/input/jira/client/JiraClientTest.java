@@ -21,6 +21,7 @@ import org.mockito.Mockito;
 import java.io.IOException;
 import java.util.List;
 
+import static org.embulk.input.jira.JiraInputPlugin.CONFIG_MAPPER;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.times;
@@ -45,7 +46,7 @@ public class JiraClientTest
         if (jiraClient == null) {
             jiraClient = Mockito.spy(new JiraClient());
             response = Mockito.mock(CloseableHttpResponse.class);
-            task = TestHelpers.config().loadConfig(PluginTask.class);
+            task = CONFIG_MAPPER.map(TestHelpers.config(), PluginTask.class);
             data = TestHelpers.getJsonFromFile("jira_client.json");
         }
         when(jiraClient.createHttpClient()).thenReturn(client);
@@ -233,13 +234,13 @@ public class JiraClientTest
         when(statusLine.getStatusCode()).thenReturn(statusCode);
         when(response.getEntity()).thenReturn(new StringEntity(body));
         ConfigSource config = TestHelpers.config().remove("jql");
-        task = config.loadConfig(PluginTask.class);
+        task = CONFIG_MAPPER.map(config, PluginTask.class);
 
         List<Issue> issues = jiraClient.searchIssues(task, 0, 50);
         assertEquals(issues.size(), 2);
 
         config = TestHelpers.config().set("jql", "");
-        task = config.loadConfig(PluginTask.class);
+        task = CONFIG_MAPPER.map(config, PluginTask.class);
 
         issues = jiraClient.searchIssues(task, 0, 50);
         assertEquals(issues.size(), 2);

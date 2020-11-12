@@ -1,7 +1,6 @@
 package org.embulk.input.jira.util;
 
 import com.google.gson.JsonObject;
-
 import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
 import org.embulk.input.jira.Issue;
@@ -10,16 +9,17 @@ import org.embulk.input.jira.TestHelpers;
 import org.embulk.spi.Column;
 import org.embulk.spi.PageBuilder;
 import org.embulk.spi.Schema;
-import org.embulk.spi.json.JsonParser;
-import org.embulk.spi.time.Timestamp;
-import org.embulk.spi.time.TimestampParser;
+import org.embulk.util.json.JsonParser;
+import org.embulk.util.timestamp.TimestampFormatter;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.msgpack.value.Value;
 
 import java.io.IOException;
+import java.time.Instant;
 
+import static org.embulk.input.jira.JiraInputPlugin.CONFIG_MAPPER;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.times;
@@ -41,7 +41,7 @@ public class JiraUtilTest
     public static void setUp() throws IOException
     {
         data = TestHelpers.getJsonFromFile("jira_util.json");
-        pluginTask = TestHelpers.config().loadConfig(PluginTask.class);
+        pluginTask = CONFIG_MAPPER.map(TestHelpers.config(), PluginTask.class);
         schema = pluginTask.getColumns().toSchema();
         booleanColumn = schema.getColumn(0);
         longColumn = schema.getColumn(1);
@@ -50,6 +50,7 @@ public class JiraUtilTest
         dateColumn = schema.getColumn(4);
         jsonColumn = schema.getColumn(5);
     }
+
     @Test
     public void test_calculateTotalPage()
     {
@@ -102,7 +103,7 @@ public class JiraUtilTest
     @Test
     public void test_buildSearchUrl() throws IOException
     {
-        PluginTask task = TestHelpers.config().loadConfig(PluginTask.class);
+        PluginTask task = CONFIG_MAPPER.map(TestHelpers.config(), PluginTask.class);
         String expected = "https://example.com/rest/api/latest/search";
         String actual = JiraUtil.buildSearchUrl(task.getUri());
         assertEquals(expected, actual);
@@ -112,7 +113,7 @@ public class JiraUtilTest
     public void test_validateTaskConfig_allValid() throws IOException
     {
         ConfigSource configSource = TestHelpers.config();
-        PluginTask task = configSource.loadConfig(PluginTask.class);
+        PluginTask task = CONFIG_MAPPER.map(configSource, PluginTask.class);
         JiraUtil.validateTaskConfig(task);
     }
 
@@ -122,7 +123,7 @@ public class JiraUtilTest
         ConfigException exception = assertThrows("Username or email could not be empty", ConfigException.class, () -> {
             ConfigSource configSource = TestHelpers.config();
             configSource.set("username", "");
-            PluginTask task = configSource.loadConfig(PluginTask.class);
+            PluginTask task = CONFIG_MAPPER.map(configSource, PluginTask.class);
             JiraUtil.validateTaskConfig(task);
         });
         assertEquals("Username or email could not be empty", exception.getMessage());
@@ -134,7 +135,7 @@ public class JiraUtilTest
         ConfigException exception = assertThrows(ConfigException.class, () -> {
             ConfigSource configSource = TestHelpers.config();
             configSource.set("password", "");
-            PluginTask task = configSource.loadConfig(PluginTask.class);
+            PluginTask task = CONFIG_MAPPER.map(configSource, PluginTask.class);
             JiraUtil.validateTaskConfig(task);
         });
         assertEquals("Password could not be empty", exception.getMessage());
@@ -146,7 +147,7 @@ public class JiraUtilTest
         ConfigException exception = assertThrows(ConfigException.class, () -> {
             ConfigSource configSource = TestHelpers.config();
             configSource.set("uri", "");
-            PluginTask task = configSource.loadConfig(PluginTask.class);
+            PluginTask task = CONFIG_MAPPER.map(configSource, PluginTask.class);
             JiraUtil.validateTaskConfig(task);
         });
         assertEquals("JIRA API endpoint could not be empty", exception.getMessage());
@@ -158,7 +159,7 @@ public class JiraUtilTest
         ConfigException exception = assertThrows(ConfigException.class, () -> {
             ConfigSource configSource = TestHelpers.config();
             configSource.set("uri", "https://not-existed-domain");
-            PluginTask task = configSource.loadConfig(PluginTask.class);
+            PluginTask task = CONFIG_MAPPER.map(configSource, PluginTask.class);
             JiraUtil.validateTaskConfig(task);
         });
         assertEquals("JIRA API endpoint is incorrect or not available", exception.getMessage());
@@ -170,7 +171,7 @@ public class JiraUtilTest
         ConfigException exception = assertThrows(ConfigException.class, () -> {
             ConfigSource configSource = TestHelpers.config();
             configSource.set("uri", "ftp://example.com");
-            PluginTask task = configSource.loadConfig(PluginTask.class);
+            PluginTask task = CONFIG_MAPPER.map(configSource, PluginTask.class);
             JiraUtil.validateTaskConfig(task);
         });
         assertEquals("JIRA API endpoint is incorrect or not available", exception.getMessage());
@@ -182,7 +183,7 @@ public class JiraUtilTest
         ConfigException exception = assertThrows(ConfigException.class, () -> {
             ConfigSource configSource = TestHelpers.config();
             configSource.set("uri", "https://example .com");
-            PluginTask task = configSource.loadConfig(PluginTask.class);
+            PluginTask task = CONFIG_MAPPER.map(configSource, PluginTask.class);
             JiraUtil.validateTaskConfig(task);
         });
         assertEquals("JIRA API endpoint is incorrect or not available", exception.getMessage());
@@ -193,7 +194,7 @@ public class JiraUtilTest
     {
         ConfigSource configSource = TestHelpers.config();
         configSource.set("jql", "");
-        PluginTask task = configSource.loadConfig(PluginTask.class);
+        PluginTask task = CONFIG_MAPPER.map(configSource, PluginTask.class);
         JiraUtil.validateTaskConfig(task);
     }
 
@@ -202,7 +203,7 @@ public class JiraUtilTest
     {
         ConfigSource configSource = TestHelpers.config();
         configSource.remove("jql");
-        PluginTask task = configSource.loadConfig(PluginTask.class);
+        PluginTask task = CONFIG_MAPPER.map(configSource, PluginTask.class);
         JiraUtil.validateTaskConfig(task);
     }
 
@@ -212,7 +213,7 @@ public class JiraUtilTest
         ConfigException exception = assertThrows(ConfigException.class, () -> {
             ConfigSource configSource = TestHelpers.config();
             configSource.set("initial_retry_interval_millis", 0);
-            PluginTask task = configSource.loadConfig(PluginTask.class);
+            PluginTask task = CONFIG_MAPPER.map(configSource, PluginTask.class);
             JiraUtil.validateTaskConfig(task);
         });
         assertEquals("Initial retry delay should be equal or greater than 1", exception.getMessage());
@@ -224,7 +225,7 @@ public class JiraUtilTest
         ConfigException exception = assertThrows(ConfigException.class, () -> {
             ConfigSource configSource = TestHelpers.config();
             configSource.set("initial_retry_interval_millis", -1);
-            PluginTask task = configSource.loadConfig(PluginTask.class);
+            PluginTask task = CONFIG_MAPPER.map(configSource, PluginTask.class);
             JiraUtil.validateTaskConfig(task);
         });
         assertEquals("Initial retry delay should be equal or greater than 1", exception.getMessage());
@@ -236,7 +237,7 @@ public class JiraUtilTest
         ConfigException exception = assertThrows(ConfigException.class, () -> {
             ConfigSource configSource = TestHelpers.config();
             configSource.set("retry_limit", 11);
-            PluginTask task = configSource.loadConfig(PluginTask.class);
+            PluginTask task = CONFIG_MAPPER.map(configSource, PluginTask.class);
             JiraUtil.validateTaskConfig(task);
         });
         assertEquals("Retry limit should between 0 and 10", exception.getMessage());
@@ -248,7 +249,7 @@ public class JiraUtilTest
         ConfigException exception = assertThrows(ConfigException.class, () -> {
             ConfigSource configSource = TestHelpers.config();
             configSource.set("retry_limit", -1);
-            PluginTask task = configSource.loadConfig(PluginTask.class);
+            PluginTask task = CONFIG_MAPPER.map(configSource, PluginTask.class);
             JiraUtil.validateTaskConfig(task);
         });
         assertEquals("Retry limit should between 0 and 10", exception.getMessage());
@@ -265,7 +266,10 @@ public class JiraUtilTest
         Long longValue = Long.valueOf(1);
         Double doubleValue = Double.valueOf(1);
         String stringValue = "string";
-        Timestamp dateValue = TimestampParser.of("%Y-%m-%dT%H:%M:%S.%L%z", "UTC").parse("2019-01-01T00:00:00.000Z");
+        Instant dateValue = TimestampFormatter
+                .builder("%Y-%m-%dT%H:%M:%S.%L%z", true)
+                .setDefaultZoneFromString("UTC")
+                .build().parse("2019-01-01T00:00:00.000Z");
         Value jsonValue = new JsonParser().parse("{}");
 
         JiraUtil.addRecord(issue, schema, pluginTask, mock);
