@@ -70,6 +70,14 @@ gem {
     summary = project.description
     homepage = 'https://github.com/treasure-data/embulk-input-jira'
     licenses = ['Apache-2.0']
+
+    generateRubyCode  = false
+    into("lib/embulk/input/") {
+        from "lib/embulk/input/jira.rb"
+    }
+    into("lib/embulk/guess/") {
+        from "lib/embulk/guess/jira.rb"
+    }
 }
 
 gemPush {
