@@ -1,3 +1,9 @@
+## 0.2.11 - 2020-11-12
+
+* [enhancement] Apply Embulk Gradle plugin.
+* [enhancement] Apply embulk-util-config for config loading.
+* [enhancement] Upgrade Embulk to v0.10.19, along with necessary refactors.
+
 ## 0.2.10 - 2020-03-18
 
 * [enhancement] Use `java.util.Optional` instead of `com.google.common.base.Optional`, use `LoggerFactory.getLogger` instead of `Exec.getLogger` [#58](https://github.com/treasure-data/embulk-input-jira/pull/58)
