@@ -8,25 +8,30 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
-
-import org.embulk.config.Config;
-import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
-import org.embulk.config.Task;
 import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
 import org.embulk.exec.GuessExecutor;
 import org.embulk.input.jira.client.JiraClient;
 import org.embulk.input.jira.util.JiraUtil;
 import org.embulk.spi.Buffer;
+import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.Exec;
+import org.embulk.spi.ExecInternal;
 import org.embulk.spi.InputPlugin;
 import org.embulk.spi.PageBuilder;
 import org.embulk.spi.PageOutput;
 import org.embulk.spi.Schema;
 import org.embulk.spi.SchemaConfig;
+import org.embulk.util.config.Config;
+import org.embulk.util.config.ConfigDefault;
+import org.embulk.util.config.ConfigMapper;
+import org.embulk.util.config.ConfigMapperFactory;
+import org.embulk.util.config.Task;
+import org.embulk.util.config.TaskMapper;
+import org.embulk.util.config.modules.TypeModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,6 +51,16 @@ public class JiraInputPlugin
         implements InputPlugin
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(JiraInputPlugin.class);
+    @VisibleForTesting
+    public static final ConfigMapperFactory CONFIG_MAPPER_FACTORY = ConfigMapperFactory
+            .builder()
+            .addDefaultModules()
+            // required for PluginTask > SchemaConfig > ColumnConfig > Type
+            .addModule(new TypeModule())
+            .build();
+    @VisibleForTesting
+    public static final ConfigMapper CONFIG_MAPPER = CONFIG_MAPPER_FACTORY.createConfigMapper();
+    private static final TaskMapper TASK_MAPPER = CONFIG_MAPPER_FACTORY.createTaskMapper();
 
     public interface PluginTask
             extends Task
@@ -92,12 +107,12 @@ public class JiraInputPlugin
     public ConfigDiff transaction(final ConfigSource config,
             final InputPlugin.Control control)
     {
-        final PluginTask task = config.loadConfig(PluginTask.class);
+        final PluginTask task = CONFIG_MAPPER.map(config, PluginTask.class);
 
         final Schema schema = task.getColumns().toSchema();
         final int taskCount = 1;
 
-        return resume(task.dump(), schema, taskCount, control);
+        return resume(task.toTaskSource(), schema, taskCount, control);
     }
 
     @Override
@@ -106,7 +121,7 @@ public class JiraInputPlugin
             final InputPlugin.Control control)
     {
         control.run(taskSource, schema, taskCount);
-        return Exec.newConfigDiff();
+        return CONFIG_MAPPER_FACTORY.newConfigDiff();
     }
 
     @Override
@@ -121,7 +136,7 @@ public class JiraInputPlugin
             final Schema schema, final int taskIndex,
             final PageOutput output)
     {
-        final PluginTask task = taskSource.loadTask(PluginTask.class);
+        final PluginTask task = TASK_MAPPER.map(taskSource, PluginTask.class);
         JiraUtil.validateTaskConfig(task);
         final JiraClient jiraClient = getJiraClient();
         jiraClient.checkUserCredentials(task);
@@ -144,7 +159,7 @@ public class JiraInputPlugin
             }
             pageBuilder.finish();
         }
-        return Exec.newTaskReport();
+        return CONFIG_MAPPER_FACTORY.newTaskReport();
     }
 
     @Override
@@ -152,7 +167,7 @@ public class JiraInputPlugin
     {
         // Reset columns in case already have or missing on configuration
         config.set("columns", new ObjectMapper().createArrayNode());
-        final PluginTask task = config.loadConfig(PluginTask.class);
+        final PluginTask task = CONFIG_MAPPER.map(config, PluginTask.class);
         JiraUtil.validateTaskConfig(task);
         final JiraClient jiraClient = getJiraClient();
         jiraClient.checkUserCredentials(task);
@@ -160,18 +175,22 @@ public class JiraInputPlugin
         if (issues.isEmpty()) {
             throw new ConfigException("Could not guess schema due to empty data set");
         }
+
+        // TODO: Eliminate the use of ExecInternal.getInjector that soon will be obsolete.
         final Buffer sample = Buffer.copyOf(createSamples(issues, getUniqueAttributes(issues)).toString().getBytes());
-        final JsonNode columns = Exec.getInjector().getInstance(GuessExecutor.class)
-                                .guessParserConfig(sample, Exec.newConfigSource(), createGuessConfig())
-                                .get(JsonNode.class, "columns");
-        return Exec.newConfigDiff().set("columns", columns);
+        final JsonNode columns = ExecInternal.getInjector().getInstance(GuessExecutor.class)
+                .guessParserConfig(sample, Exec.newConfigSource(), createGuessConfig())
+                .get(JsonNode.class, "columns");
+
+        return CONFIG_MAPPER_FACTORY.newConfigDiff().set("columns", columns);
     }
 
     private ConfigSource createGuessConfig()
     {
+        // TODO: there will be no need for this after "Eliminate the use of ExecInternal.getInjector that soon will be obsolete."
         return Exec.newConfigSource()
-                    .set("guess_plugins", ImmutableList.of("jira"))
-                    .set("guess_sample_buffer_bytes", GUESS_BUFFER_SIZE);
+                .set("guess_plugins", ImmutableList.of("jira"))
+                .set("guess_sample_buffer_bytes", GUESS_BUFFER_SIZE);
     }
 
     private SortedSet<String> getUniqueAttributes(final List<Issue> issues)
@@ -206,13 +225,20 @@ public class JiraInputPlugin
     @VisibleForTesting
     public GuessExecutor getGuessExecutor()
     {
-        return Exec.getInjector().getInstance(GuessExecutor.class);
+        return ExecInternal.getInjector().getInstance(GuessExecutor.class);
     }
 
+    @SuppressWarnings("deprecation")
     @VisibleForTesting
     public PageBuilder getPageBuilder(final Schema schema, final PageOutput output)
     {
-        return new PageBuilder(Exec.getBufferAllocator(), schema, output);
+        if (HAS_EXEC_GET_PAGE_BUILDER) {
+            return Exec.getPageBuilder(Exec.getBufferAllocator(), schema, output);
+        }
+        else {
+            // To be compatible to run on Embulk belows v0.10.17
+            return new PageBuilder(Exec.getBufferAllocator(), schema, output);
+        }
     }
 
     @VisibleForTesting
@@ -226,4 +252,16 @@ public class JiraInputPlugin
     {
         return new JiraClient();
     }
+
+    private static boolean hasExecGetPageBuilder()
+    {
+        try {
+            Exec.class.getMethod("getPageBuilder", BufferAllocator.class, Schema.class, PageOutput.class);
+        }
+        catch (final NoSuchMethodException ex) {
+            return false;
+        }
+        return true;
+    }
+    private static final boolean HAS_EXEC_GET_PAGE_BUILDER = hasExecGetPageBuilder();
 }

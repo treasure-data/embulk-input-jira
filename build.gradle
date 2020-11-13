@@ -18,18 +18,58 @@ description = "JIRA Embulk input plugin."
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
-def embulkVersion = '0.9.20'
+def embulkVersion = '0.10.19'
 
 dependencies {
+    compileOnly "org.embulk:embulk-api:$embulkVersion"
+    compileOnly "org.embulk:embulk-spi:$embulkVersion"
+
+    // Required through GuessExecutor usage.
     compileOnly "org.embulk:embulk-core:$embulkVersion"
 
+    compile('org.embulk:embulk-util-config:0.1.4') {
+        // Conflict with Embulk Core
+        exclude group: 'com.fasterxml.jackson.core', module: 'jackson-annotations'
+        exclude group: 'com.fasterxml.jackson.core', module: 'jackson-core'
+        exclude group: 'com.fasterxml.jackson.core', module: 'jackson-databind'
+        exclude group: 'com.fasterxml.jackson.datatype', module: 'jackson-datatype-jdk8'
+        exclude group: 'javax.validation', module: 'validation-api'
+    }
+    compile('org.embulk:embulk-util-retryhelper:0.8.1') {
+        exclude group: 'org.slf4j', module: 'slf4j-api'
+    }
+    compile 'org.embulk:embulk-util-timestamp:0.2.1'
+
+    compile('org.embulk:embulk-util-json:0.1.0') {
+        exclude group: 'com.fasterxml.jackson.core', module: 'jackson-core'
+        exclude group: 'org.msgpack', module: 'msgpack-core'
+    }
+
+    // Explicit dependencies for embulk-util-* that matches with Embulk 0.10.19
+    compile 'com.fasterxml.jackson.core:jackson-core:2.6.7'
+    compile 'com.fasterxml.jackson.core:jackson-annotations:2.6.7'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.6.7'
+    compile 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.6.7'
+    compile 'javax.validation:validation-api:1.1.0.Final'
+
     compile group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.6'
+
     compile group: 'org.glassfish.jersey.core', name: 'jersey-client', version: '2.27'
+    // Java EE dependencies (required on Java 9+) for jersey-client
+    compile "javax.xml.bind:jaxb-api:2.2.11"
+    compile "com.sun.xml.bind:jaxb-core:2.2.11"
+    compile "com.sun.xml.bind:jaxb-impl:2.2.11"
+    compile "javax.activation:activation:1.1.1"
+
     compile group: 'com.google.code.gson', name: 'gson', version: '2.8.5'
+    compile 'com.google.guava:guava:18.0'
+    compile 'org.apache.commons:commons-lang3:3.4'
+
     testCompile "junit:junit:4.+"
     testCompile "org.mockito:mockito-core:2.+"
-    testCompile "org.embulk:embulk-test:$embulkVersion"
+    testCompile "org.embulk:embulk-junit4:$embulkVersion"
     testCompile "org.embulk:embulk-core:$embulkVersion:tests"
+    testCompile "org.embulk:embulk-deps:$embulkVersion"
 }
 
 checkstyle {

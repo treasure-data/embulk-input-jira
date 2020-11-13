@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.embulk.input.jira.JiraInputPlugin.CONFIG_MAPPER;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
@@ -57,9 +58,8 @@ public class JiraInputPluginTest
             jiraClient = Mockito.spy(new JiraClient());
             data = TestHelpers.getJsonFromFile("jira_input_plugin.json");
             config = TestHelpers.config();
-            config.loadConfig(PluginTask.class);
+            CONFIG_MAPPER.map(config, PluginTask.class);
             pageBuilder = Mockito.mock(PageBuilder.class);
-            //pageBuilder = new PageBuilder(Exec.getBufferAllocator(), config.loadConfig(PluginTask.class).getColumns().toSchema(), output);
         }
         when(plugin.getJiraClient()).thenReturn(jiraClient);
         when(jiraClient.createHttpClient()).thenReturn(client);
@@ -75,14 +75,14 @@ public class JiraInputPluginTest
         JsonObject searchResponse = data.get("emptyResult").getAsJsonObject();
 
         when(statusLine.getStatusCode())
-            .thenReturn(authorizeResponse.get("statusCode").getAsInt())
-            .thenReturn(searchResponse.get("statusCode").getAsInt());
+                .thenReturn(authorizeResponse.get("statusCode").getAsInt())
+                .thenReturn(searchResponse.get("statusCode").getAsInt());
         when(response.getEntity())
-            .thenReturn(new StringEntity(authorizeResponse.get("body").toString()))
-            .thenReturn(new StringEntity(searchResponse.get("body").toString()));
+                .thenReturn(new StringEntity(authorizeResponse.get("body").toString()))
+                .thenReturn(new StringEntity(searchResponse.get("body").toString()));
 
         plugin.transaction(config, new Control());
-     // Check credential 1 + getTotal 1 + loadData 0
+        // Check credential 1 + getTotal 1 + loadData 0
         verify(jiraClient, times(2)).createHttpClient();
         verify(pageBuilder, times(0)).addRecord();
         verify(pageBuilder, times(1)).finish();
@@ -95,11 +95,11 @@ public class JiraInputPluginTest
         JsonObject searchResponse = data.get("oneRecordResult").getAsJsonObject();
 
         when(statusLine.getStatusCode())
-            .thenReturn(authorizeResponse.get("statusCode").getAsInt())
-            .thenReturn(searchResponse.get("statusCode").getAsInt());
+                .thenReturn(authorizeResponse.get("statusCode").getAsInt())
+                .thenReturn(searchResponse.get("statusCode").getAsInt());
         when(response.getEntity())
-            .thenReturn(new StringEntity(authorizeResponse.get("body").toString()))
-            .thenReturn(new StringEntity(searchResponse.get("body").toString()));
+                .thenReturn(new StringEntity(authorizeResponse.get("body").toString()))
+                .thenReturn(new StringEntity(searchResponse.get("body").toString()));
 
         plugin.transaction(config, new Control());
         // Check credential 1 + getTotal 1 + loadData 1
@@ -115,11 +115,11 @@ public class JiraInputPluginTest
         JsonObject searchResponse = data.get("2PagesResult").getAsJsonObject();
 
         when(statusLine.getStatusCode())
-            .thenReturn(authorizeResponse.get("statusCode").getAsInt())
-            .thenReturn(searchResponse.get("statusCode").getAsInt());
+                .thenReturn(authorizeResponse.get("statusCode").getAsInt())
+                .thenReturn(searchResponse.get("statusCode").getAsInt());
         when(response.getEntity())
-            .thenReturn(new StringEntity(authorizeResponse.get("body").toString()))
-            .thenReturn(new StringEntity(searchResponse.get("body").toString()));
+                .thenReturn(new StringEntity(authorizeResponse.get("body").toString()))
+                .thenReturn(new StringEntity(searchResponse.get("body").toString()));
 
         plugin.transaction(config, new Control());
         // Check credential 1 + getTotal 1 + loadData 2
@@ -136,10 +136,10 @@ public class JiraInputPluginTest
         JsonObject searchResponse = data.get("emptyResult").getAsJsonObject();
 
         when(statusLine.getStatusCode())
-            .thenReturn(authorizeResponse.get("statusCode").getAsInt())
-            .thenReturn(searchResponse.get("statusCode").getAsInt());
+                .thenReturn(authorizeResponse.get("statusCode").getAsInt())
+                .thenReturn(searchResponse.get("statusCode").getAsInt());
         when(response.getEntity())
-            .thenReturn(new StringEntity(searchResponse.get("body").toString()));
+                .thenReturn(new StringEntity(searchResponse.get("body").toString()));
 
         plugin.transaction(config, new Control());
         // Check credential 1 + loadData 1
@@ -156,11 +156,11 @@ public class JiraInputPluginTest
         JsonObject searchResponse = data.get("oneRecordResult").getAsJsonObject();
 
         when(statusLine.getStatusCode())
-            .thenReturn(authorizeResponse.get("statusCode").getAsInt())
-            .thenReturn(searchResponse.get("statusCode").getAsInt());
+                .thenReturn(authorizeResponse.get("statusCode").getAsInt())
+                .thenReturn(searchResponse.get("statusCode").getAsInt());
         when(response.getEntity())
-            .thenReturn(new StringEntity(authorizeResponse.get("body").toString()))
-            .thenReturn(new StringEntity(searchResponse.get("body").toString()));
+                .thenReturn(new StringEntity(authorizeResponse.get("body").toString()))
+                .thenReturn(new StringEntity(searchResponse.get("body").toString()));
 
         plugin.transaction(config, new Control());
         // Check credential 1 + loadData 1
@@ -172,16 +172,22 @@ public class JiraInputPluginTest
     @Test
     public void test_guess() throws IOException
     {
+        // ConfigSource configSource = TestHelpers.config(
+        //         new ConfigLoader(
+        //                 // TODO: What about TypeJacksonModule?
+        //                 new ModelManager(null, new ObjectMapper().registerModule(new Jdk8Module()))
+        //         ).newConfigSource());
         ConfigSource configSource = TestHelpers.config();
+
         JsonObject authorizeResponse = data.get("authenticateSuccess").getAsJsonObject();
         JsonObject searchResponse = data.get("guessDataResult").getAsJsonObject();
 
         when(statusLine.getStatusCode())
-            .thenReturn(authorizeResponse.get("statusCode").getAsInt())
-            .thenReturn(searchResponse.get("statusCode").getAsInt());
+                .thenReturn(authorizeResponse.get("statusCode").getAsInt())
+                .thenReturn(searchResponse.get("statusCode").getAsInt());
         when(response.getEntity())
-            .thenReturn(new StringEntity(searchResponse.get("body").toString()))
-            .thenReturn(new StringEntity(searchResponse.get("body").toString()));
+                .thenReturn(new StringEntity(searchResponse.get("body").toString()))
+                .thenReturn(new StringEntity(searchResponse.get("body").toString()));
 
         ConfigDiff result = plugin.guess(configSource);
         JsonElement expected = data.get("guessResult").getAsJsonObject();
