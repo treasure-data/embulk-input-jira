@@ -49,7 +49,6 @@ task checkstyle(type: Checkstyle) {
     source = sourceSets.main.allJava + sourceSets.test.allJava
 }
 
-
 embulkPlugin {
     mainClass = "org.embulk.input.jira.JiraInputPlugin"
     category = "input"
@@ -65,7 +64,6 @@ jacocoTestReport {
     }
 }
 
-
 gem {
     authors = ['uu59', 'yoshihara']
     email = ['k@uu59.org', 'h.yoshihara@everyleaf.com']
@@ -75,5 +73,5 @@ gem {
 }
 
 gemPush {
-    host = "https://treasuredata.jfrog.io/treasuredata/api/gems/rubygems-local"
+    host = "https://rubygems.org"
 }
