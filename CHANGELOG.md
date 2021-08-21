@@ -1,3 +1,8 @@
+## 0.2.12 - 2021-08-24
+* [enhancement] Mordernized with embulk v0.10.x styles
+* [enhancement] Use embulk-guess-util
+* [enhancement] Remove internal jruby guess plugin
+
 ## 0.2.11 - 2020-11-12
 
 * [enhancement] Apply Embulk Gradle plugin.
