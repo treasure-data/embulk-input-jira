@@ -5,9 +5,9 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import org.embulk.config.ConfigSource;
-import org.embulk.spi.ColumnConfig;
-import org.embulk.spi.SchemaConfig;
 import org.embulk.spi.type.Types;
+import org.embulk.util.config.units.ColumnConfig;
+import org.embulk.util.config.units.SchemaConfig;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -30,6 +30,7 @@ public final class TestHelpers
         }
     }
 
+    @SuppressWarnings("serial")
     public static ConfigSource config()
     {
         return CONFIG_MAPPER_FACTORY.newConfigSource()
