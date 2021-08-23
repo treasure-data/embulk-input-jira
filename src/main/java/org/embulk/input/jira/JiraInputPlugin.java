@@ -1,10 +1,7 @@
 package org.embulk.input.jira;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
@@ -13,28 +10,26 @@ import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
-import org.embulk.exec.GuessExecutor;
 import org.embulk.input.jira.client.JiraClient;
 import org.embulk.input.jira.util.JiraUtil;
-import org.embulk.spi.Buffer;
-import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.Exec;
-import org.embulk.spi.ExecInternal;
 import org.embulk.spi.InputPlugin;
 import org.embulk.spi.PageBuilder;
 import org.embulk.spi.PageOutput;
 import org.embulk.spi.Schema;
-import org.embulk.spi.SchemaConfig;
 import org.embulk.util.config.Config;
 import org.embulk.util.config.ConfigDefault;
 import org.embulk.util.config.ConfigMapper;
 import org.embulk.util.config.ConfigMapperFactory;
 import org.embulk.util.config.Task;
 import org.embulk.util.config.TaskMapper;
-import org.embulk.util.config.modules.TypeModule;
+import org.embulk.util.config.units.SchemaConfig;
+import org.embulk.util.guess.SchemaGuess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -42,7 +37,6 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import static org.embulk.input.jira.Constant.GUESS_BUFFER_SIZE;
 import static org.embulk.input.jira.Constant.GUESS_RECORDS_COUNT;
 import static org.embulk.input.jira.Constant.MAX_RESULTS;
 import static org.embulk.input.jira.Constant.PREVIEW_RECORDS_COUNT;
@@ -55,8 +49,6 @@ public class JiraInputPlugin
     public static final ConfigMapperFactory CONFIG_MAPPER_FACTORY = ConfigMapperFactory
             .builder()
             .addDefaultModules()
-            // required for PluginTask > SchemaConfig > ColumnConfig > Type
-            .addModule(new TypeModule())
             .build();
     @VisibleForTesting
     public static final ConfigMapper CONFIG_MAPPER = CONFIG_MAPPER_FACTORY.createConfigMapper();
@@ -125,13 +117,6 @@ public class JiraInputPlugin
     }
 
     @Override
-    public void cleanup(final TaskSource taskSource,
-            final Schema schema, final int taskCount,
-            final List<TaskReport> successTaskReports)
-    {
-    }
-
-    @Override
     public TaskReport run(final TaskSource taskSource,
             final Schema schema, final int taskIndex,
             final PageOutput output)
@@ -175,22 +160,9 @@ public class JiraInputPlugin
         if (issues.isEmpty()) {
             throw new ConfigException("Could not guess schema due to empty data set");
         }
-
-        // TODO: Eliminate the use of ExecInternal.getInjector that soon will be obsolete.
-        final Buffer sample = Buffer.copyOf(createSamples(issues, getUniqueAttributes(issues)).toString().getBytes());
-        final JsonNode columns = ExecInternal.getInjector().getInstance(GuessExecutor.class)
-                .guessParserConfig(sample, Exec.newConfigSource(), createGuessConfig())
-                .get(JsonNode.class, "columns");
-
+        final List<ConfigDiff> columns = SchemaGuess.of(CONFIG_MAPPER_FACTORY).fromLinkedHashMapRecords(createGuessSample(issues, getUniqueAttributes(issues)));
+        columns.forEach(conf -> conf.remove("index"));
         return CONFIG_MAPPER_FACTORY.newConfigDiff().set("columns", columns);
-    }
-
-    private ConfigSource createGuessConfig()
-    {
-        // TODO: there will be no need for this after "Eliminate the use of ExecInternal.getInjector that soon will be obsolete."
-        return Exec.newConfigSource()
-                .set("guess_plugins", ImmutableList.of("jira"))
-                .set("guess_sample_buffer_bytes", GUESS_BUFFER_SIZE);
     }
 
     private SortedSet<String> getUniqueAttributes(final List<Issue> issues)
@@ -204,9 +176,9 @@ public class JiraInputPlugin
         return uniqueAttributes;
     }
 
-    private JsonArray createSamples(final List<Issue> issues, final Set<String> uniqueAttributes)
+    private List<LinkedHashMap<String, Object>> createGuessSample(final List<Issue> issues, final Set<String> uniqueAttributes)
     {
-        final JsonArray samples = new JsonArray();
+        final List<LinkedHashMap<String, Object>> samples = new ArrayList<>();
         for (final Issue issue : issues) {
             final JsonObject flatten = issue.getFlatten();
             final JsonObject unified = new JsonObject();
@@ -217,28 +189,15 @@ public class JiraInputPlugin
                 }
                 unified.add(key, value);
             }
-            samples.add(unified);
+            samples.add(JiraUtil.toLinkedHashMap(unified));
         }
         return samples;
     }
 
     @VisibleForTesting
-    public GuessExecutor getGuessExecutor()
-    {
-        return ExecInternal.getInjector().getInstance(GuessExecutor.class);
-    }
-
-    @SuppressWarnings("deprecation")
-    @VisibleForTesting
     public PageBuilder getPageBuilder(final Schema schema, final PageOutput output)
     {
-        if (HAS_EXEC_GET_PAGE_BUILDER) {
-            return Exec.getPageBuilder(Exec.getBufferAllocator(), schema, output);
-        }
-        else {
-            // To be compatible to run on Embulk belows v0.10.17
-            return new PageBuilder(Exec.getBufferAllocator(), schema, output);
-        }
+        return Exec.getPageBuilder(Exec.getBufferAllocator(), schema, output);
     }
 
     @VisibleForTesting
@@ -252,16 +211,7 @@ public class JiraInputPlugin
     {
         return new JiraClient();
     }
-
-    private static boolean hasExecGetPageBuilder()
-    {
-        try {
-            Exec.class.getMethod("getPageBuilder", BufferAllocator.class, Schema.class, PageOutput.class);
-        }
-        catch (final NoSuchMethodException ex) {
-            return false;
-        }
-        return true;
-    }
-    private static final boolean HAS_EXEC_GET_PAGE_BUILDER = hasExecGetPageBuilder();
+    @Override
+    public void cleanup(final TaskSource taskSource, final Schema schema, final int taskCount, final List<TaskReport> successTaskReports)
+    {}
 }

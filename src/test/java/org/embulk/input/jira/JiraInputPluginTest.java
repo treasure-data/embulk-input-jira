@@ -8,6 +8,7 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskReport;
@@ -37,17 +38,17 @@ import static org.mockito.Mockito.when;
 public class JiraInputPluginTest
 {
     @Rule
-    public JiraPluginTestRuntime runtime = new JiraPluginTestRuntime();
+    public EmbulkTestRuntime runtime = new EmbulkTestRuntime();
 
     private JiraInputPlugin plugin;
     private JiraClient jiraClient;
     private JsonObject data;
     private ConfigSource config;
-    private CloseableHttpClient client = Mockito.mock(CloseableHttpClient.class);
-    private CloseableHttpResponse response = Mockito.mock(CloseableHttpResponse.class);
-    private StatusLine statusLine = Mockito.mock(StatusLine.class);
+    private final CloseableHttpClient client = Mockito.mock(CloseableHttpClient.class);
+    private final CloseableHttpResponse response = Mockito.mock(CloseableHttpResponse.class);
+    private final StatusLine statusLine = Mockito.mock(StatusLine.class);
 
-    private MockPageOutput output = new MockPageOutput();
+    private final MockPageOutput output = new MockPageOutput();
     private PageBuilder pageBuilder;
 
     @Before
@@ -71,8 +72,8 @@ public class JiraInputPluginTest
     @Test
     public void test_run_withEmptyResult() throws IOException
     {
-        JsonObject authorizeResponse = data.get("authenticateSuccess").getAsJsonObject();
-        JsonObject searchResponse = data.get("emptyResult").getAsJsonObject();
+        final JsonObject authorizeResponse = data.get("authenticateSuccess").getAsJsonObject();
+        final JsonObject searchResponse = data.get("emptyResult").getAsJsonObject();
 
         when(statusLine.getStatusCode())
                 .thenReturn(authorizeResponse.get("statusCode").getAsInt())
@@ -91,8 +92,8 @@ public class JiraInputPluginTest
     @Test
     public void test_run_with1RecordsResult() throws IOException
     {
-        JsonObject authorizeResponse = data.get("authenticateSuccess").getAsJsonObject();
-        JsonObject searchResponse = data.get("oneRecordResult").getAsJsonObject();
+        final JsonObject authorizeResponse = data.get("authenticateSuccess").getAsJsonObject();
+        final JsonObject searchResponse = data.get("oneRecordResult").getAsJsonObject();
 
         when(statusLine.getStatusCode())
                 .thenReturn(authorizeResponse.get("statusCode").getAsInt())
@@ -111,8 +112,8 @@ public class JiraInputPluginTest
     @Test
     public void test_run_with2PagesResult() throws IOException
     {
-        JsonObject authorizeResponse = data.get("authenticateSuccess").getAsJsonObject();
-        JsonObject searchResponse = data.get("2PagesResult").getAsJsonObject();
+        final JsonObject authorizeResponse = data.get("authenticateSuccess").getAsJsonObject();
+        final JsonObject searchResponse = data.get("2PagesResult").getAsJsonObject();
 
         when(statusLine.getStatusCode())
                 .thenReturn(authorizeResponse.get("statusCode").getAsInt())
@@ -132,8 +133,8 @@ public class JiraInputPluginTest
     public void test_preview_withEmptyResult() throws IOException
     {
         when(plugin.isPreview()).thenReturn(true);
-        JsonObject authorizeResponse = data.get("authenticateSuccess").getAsJsonObject();
-        JsonObject searchResponse = data.get("emptyResult").getAsJsonObject();
+        final JsonObject authorizeResponse = data.get("authenticateSuccess").getAsJsonObject();
+        final JsonObject searchResponse = data.get("emptyResult").getAsJsonObject();
 
         when(statusLine.getStatusCode())
                 .thenReturn(authorizeResponse.get("statusCode").getAsInt())
@@ -152,8 +153,8 @@ public class JiraInputPluginTest
     public void test_preview_with1RecordsResult() throws IOException
     {
         when(plugin.isPreview()).thenReturn(true);
-        JsonObject authorizeResponse = data.get("authenticateSuccess").getAsJsonObject();
-        JsonObject searchResponse = data.get("oneRecordResult").getAsJsonObject();
+        final JsonObject authorizeResponse = data.get("authenticateSuccess").getAsJsonObject();
+        final JsonObject searchResponse = data.get("oneRecordResult").getAsJsonObject();
 
         when(statusLine.getStatusCode())
                 .thenReturn(authorizeResponse.get("statusCode").getAsInt())
@@ -172,15 +173,10 @@ public class JiraInputPluginTest
     @Test
     public void test_guess() throws IOException
     {
-        // ConfigSource configSource = TestHelpers.config(
-        //         new ConfigLoader(
-        //                 // TODO: What about TypeJacksonModule?
-        //                 new ModelManager(null, new ObjectMapper().registerModule(new Jdk8Module()))
-        //         ).newConfigSource());
-        ConfigSource configSource = TestHelpers.config();
+        final ConfigSource configSource = TestHelpers.config();
 
-        JsonObject authorizeResponse = data.get("authenticateSuccess").getAsJsonObject();
-        JsonObject searchResponse = data.get("guessDataResult").getAsJsonObject();
+        final JsonObject authorizeResponse = data.get("authenticateSuccess").getAsJsonObject();
+        final JsonObject searchResponse = data.get("guessDataResult").getAsJsonObject();
 
         when(statusLine.getStatusCode())
                 .thenReturn(authorizeResponse.get("statusCode").getAsInt())
@@ -189,9 +185,9 @@ public class JiraInputPluginTest
                 .thenReturn(new StringEntity(searchResponse.get("body").toString()))
                 .thenReturn(new StringEntity(searchResponse.get("body").toString()));
 
-        ConfigDiff result = plugin.guess(configSource);
-        JsonElement expected = data.get("guessResult").getAsJsonObject();
-        JsonElement actual = new JsonParser().parse(result.toString());
+        final ConfigDiff result = plugin.guess(configSource);
+        final JsonElement expected = data.get("guessResult").getAsJsonObject();
+        final JsonElement actual = new JsonParser().parse(result.toString());
         assertEquals(expected, actual);
     }
 
@@ -200,7 +196,7 @@ public class JiraInputPluginTest
         @Override
         public List<TaskReport> run(final TaskSource taskSource, final Schema schema, final int taskCount)
         {
-            List<TaskReport> reports = new ArrayList<>();
+            final List<TaskReport> reports = new ArrayList<>();
             for (int i = 0; i < taskCount; i++) {
                 reports.add(plugin.run(taskSource, schema, i, output));
             }

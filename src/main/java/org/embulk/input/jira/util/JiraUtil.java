@@ -1,6 +1,8 @@
 package org.embulk.input.jira.util;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -12,10 +14,10 @@ import org.embulk.config.ConfigSource;
 import org.embulk.input.jira.Issue;
 import org.embulk.input.jira.JiraInputPlugin.PluginTask;
 import org.embulk.spi.Column;
-import org.embulk.spi.ColumnConfig;
 import org.embulk.spi.ColumnVisitor;
 import org.embulk.spi.PageBuilder;
 import org.embulk.spi.Schema;
+import org.embulk.util.config.units.ColumnConfig;
 import org.embulk.util.json.JsonParser;
 import org.embulk.util.timestamp.TimestampFormatter;
 
@@ -23,6 +25,7 @@ import javax.ws.rs.core.UriBuilder;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -264,5 +267,20 @@ public final class JiraUtil
             }
         });
         pageBuilder.addRecord();
+    }
+
+    public static LinkedHashMap<String, Object> toLinkedHashMap(final JsonObject flt)
+    {
+        final LinkedHashMap<String, Object> result = new LinkedHashMap<>();
+        for (final String key : flt.keySet()) {
+            final JsonElement elem = flt.get(key);
+            if (elem.isJsonPrimitive()) {
+                result.put(key, flt.get(key).getAsString());
+            }
+            else {
+                result.put(key, elem);
+            }
+        }
+        return result;
     }
 }
