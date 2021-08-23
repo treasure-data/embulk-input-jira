@@ -2,10 +2,11 @@ plugins {
     id "java"
     id "checkstyle"
     id "jacoco"
+    id "org.embulk.embulk-plugins" version "0.4.2"
     id "maven"
     id 'maven-publish'
-    id "org.embulk.embulk-plugins" version "0.4.2"
 }
+
 repositories {
     mavenCentral()
     jcenter()
@@ -113,14 +114,6 @@ gem {
     summary = project.description
     homepage = 'https://github.com/treasure-data/embulk-input-jira'
     licenses = ['Apache-2.0']
-
-    generateRubyCode  = false
-    into("lib/embulk/input/") {
-        from "lib/embulk/input/jira.rb"
-    }
-    into("lib/embulk/guess/") {
-        from "lib/embulk/guess/jira.rb"
-    }
 }
 
 gemPush {

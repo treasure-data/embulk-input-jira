@@ -23,7 +23,6 @@ import org.embulk.util.config.ConfigMapper;
 import org.embulk.util.config.ConfigMapperFactory;
 import org.embulk.util.config.Task;
 import org.embulk.util.config.TaskMapper;
-import org.embulk.util.config.modules.TypeModule;
 import org.embulk.util.config.units.SchemaConfig;
 import org.embulk.util.guess.SchemaGuess;
 import org.slf4j.Logger;
@@ -50,8 +49,6 @@ public class JiraInputPlugin
     public static final ConfigMapperFactory CONFIG_MAPPER_FACTORY = ConfigMapperFactory
             .builder()
             .addDefaultModules()
-            // required for PluginTask > SchemaConfig > ColumnConfig > Type
-            .addModule(new TypeModule())
             .build();
     @VisibleForTesting
     public static final ConfigMapper CONFIG_MAPPER = CONFIG_MAPPER_FACTORY.createConfigMapper();
