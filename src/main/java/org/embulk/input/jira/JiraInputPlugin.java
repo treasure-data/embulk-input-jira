@@ -23,6 +23,7 @@ import org.embulk.util.config.ConfigMapper;
 import org.embulk.util.config.ConfigMapperFactory;
 import org.embulk.util.config.Task;
 import org.embulk.util.config.TaskMapper;
+import org.embulk.util.config.units.ColumnConfig;
 import org.embulk.util.config.units.SchemaConfig;
 import org.embulk.util.guess.SchemaGuess;
 import org.slf4j.Logger;
@@ -86,6 +87,10 @@ public class JiraInputPlugin
         @ConfigDefault("null")
         public Optional<String> getJQL();
 
+        @Config("dynamic_schema")
+        @ConfigDefault("false")
+        public boolean getDynamicSchema();
+
         @Config("columns")
         public SchemaConfig getColumns();
 
@@ -100,8 +105,17 @@ public class JiraInputPlugin
             final InputPlugin.Control control)
     {
         final PluginTask task = CONFIG_MAPPER.map(config, PluginTask.class);
-
-        final Schema schema = task.getColumns().toSchema();
+        SchemaConfig schemaConfig = task.getColumns();
+        if (task.getDynamicSchema()) {
+            final JiraClient jiraClient = getJiraClient();
+            final List<ColumnConfig> columns = new ArrayList<>();
+            final List<ConfigDiff> guessedColumns = getGuessedColumns(jiraClient, task);
+            for (final ConfigDiff guessedColumn : guessedColumns) {
+                columns.add(new ColumnConfig(CONFIG_MAPPER_FACTORY.newConfigSource().merge(guessedColumn)));
+            }
+            schemaConfig = new SchemaConfig(columns);
+        }
+        final Schema schema = schemaConfig.toSchema();
         final int taskCount = 1;
 
         return resume(task.toTaskSource(), schema, taskCount, control);
@@ -156,13 +170,18 @@ public class JiraInputPlugin
         JiraUtil.validateTaskConfig(task);
         final JiraClient jiraClient = getJiraClient();
         jiraClient.checkUserCredentials(task);
+        return CONFIG_MAPPER_FACTORY.newConfigDiff().set("columns", getGuessedColumns(jiraClient, task));
+    }
+
+    private List<ConfigDiff> getGuessedColumns(final JiraClient jiraClient, final PluginTask task)
+    {
         final List<Issue> issues = jiraClient.searchIssues(task, 0, GUESS_RECORDS_COUNT);
         if (issues.isEmpty()) {
             throw new ConfigException("Could not guess schema due to empty data set");
         }
         final List<ConfigDiff> columns = SchemaGuess.of(CONFIG_MAPPER_FACTORY).fromLinkedHashMapRecords(createGuessSample(issues, getUniqueAttributes(issues)));
         columns.forEach(conf -> conf.remove("index"));
-        return CONFIG_MAPPER_FACTORY.newConfigDiff().set("columns", columns);
+        return columns;
     }
 
     private SortedSet<String> getUniqueAttributes(final List<Issue> issues)
