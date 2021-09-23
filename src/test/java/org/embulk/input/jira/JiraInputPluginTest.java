@@ -10,6 +10,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ConfigDiff;
+import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
@@ -86,6 +87,41 @@ public class JiraInputPluginTest
         // Check credential 1 + getTotal 1 + loadData 0
         verify(jiraClient, times(2)).createHttpClient();
         verify(pageBuilder, times(0)).addRecord();
+        verify(pageBuilder, times(1)).finish();
+    }
+
+    @Test(expected = ConfigException.class)
+    public void test_runDynamicSchema_withEmptyResult() throws IOException
+    {
+        final JsonObject searchResponse = data.get("emptyResult").getAsJsonObject();
+
+        when(statusLine.getStatusCode())
+                .thenReturn(searchResponse.get("statusCode").getAsInt());
+        when(response.getEntity())
+                .thenReturn(new StringEntity(searchResponse.get("body").toString()));
+
+        plugin.transaction(TestHelpers.dynamicSchemaConfig(), new Control());
+    }
+
+    @Test
+    public void test_runDynamicSchema_withResult() throws IOException
+    {
+        final JsonObject authorizeResponse = data.get("authenticateSuccess").getAsJsonObject();
+        final JsonObject searchResponse = data.get("oneRecordResult").getAsJsonObject();
+
+        when(statusLine.getStatusCode())
+                .thenReturn(searchResponse.get("statusCode").getAsInt())
+                .thenReturn(authorizeResponse.get("statusCode").getAsInt())
+                .thenReturn(searchResponse.get("statusCode").getAsInt());
+        when(response.getEntity())
+                .thenReturn(new StringEntity(searchResponse.get("body").toString()))
+                .thenReturn(new StringEntity(authorizeResponse.get("body").toString()))
+                .thenReturn(new StringEntity(searchResponse.get("body").toString()));
+
+        plugin.transaction(TestHelpers.dynamicSchemaConfig(), new Control());
+        // Check credential 1 + getTotal 1 + loadData 2
+        verify(jiraClient, times(4)).createHttpClient();
+        verify(pageBuilder, times(1)).addRecord();
         verify(pageBuilder, times(1)).finish();
     }
 
