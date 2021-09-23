@@ -23,6 +23,7 @@ Required Embulk version >= 0.10.19
 - **password** JIRA password or API keys (string, required)
 - **uri** JIRA API endpoint (string, required)
 - **jql** [JQL](https://confluence.atlassian.com/display/JIRA/Advanced+Searching) for extract target issues (string, required)
+- **dynamic_schema** Used it to refresh the schema each time ingestion (boolean, default: `false`)
 - **columns** target issue attributes. You can generate this configuration by `guess` command (array, required)
 - **retry_initial_wait_sec**: Wait seconds for exponential backoff initial value (integer, default: 1)
 - **retry_limit**: Try to retry this times (integer, default: 5)
@@ -48,4 +49,10 @@ in:
 
 ```
 $ ./gradlew gem       # -t to watch change of files and rebuild continuously
+```
+
+## Test
+
+```
+$ ./gradlew checkstyle test jacocoTestReport
 ```
