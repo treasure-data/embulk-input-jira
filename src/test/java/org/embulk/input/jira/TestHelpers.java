@@ -55,5 +55,10 @@ public final class TestHelpers
                 }));
     }
 
+    public static ConfigSource dynamicSchemaConfig()
+    {
+        return config().set("dynamic_schema", true);
+    }
+
     private static final ConfigSource EMPTY_CONFIG_SOURCE = CONFIG_MAPPER_FACTORY.newConfigSource();
 }

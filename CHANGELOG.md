@@ -1,3 +1,7 @@
+## 0.2.13 - 2021-09-30
+* [enhancement] Support dynamic schema
+* PR [#69](https://github.com/treasure-data/embulk-input-jira/pull/69)
+
 ## 0.2.12 - 2021-08-24
 * [enhancement] Mordernized with embulk v0.10.x styles
 * [enhancement] Use embulk-guess-util
