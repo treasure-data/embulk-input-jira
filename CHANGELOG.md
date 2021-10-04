@@ -1,3 +1,7 @@
+## 0.2.14 - 2021-10-12
+* [enhancement] Graceful exit in case no data of dynamic schema
+* PR [#70](https://github.com/treasure-data/embulk-input-jira/pull/70)
+
 ## 0.2.13 - 2021-09-30
 * [enhancement] Support dynamic schema
 * PR [#69](https://github.com/treasure-data/embulk-input-jira/pull/69)
