@@ -10,7 +10,6 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ConfigDiff;
-import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
@@ -90,7 +89,6 @@ public class JiraInputPluginTest
         verify(pageBuilder, times(1)).finish();
     }
 
-    @Test(expected = ConfigException.class)
     public void test_runDynamicSchema_withEmptyResult() throws IOException
     {
         final JsonObject searchResponse = data.get("emptyResult").getAsJsonObject();
@@ -99,8 +97,8 @@ public class JiraInputPluginTest
                 .thenReturn(searchResponse.get("statusCode").getAsInt());
         when(response.getEntity())
                 .thenReturn(new StringEntity(searchResponse.get("body").toString()));
-
         plugin.transaction(TestHelpers.dynamicSchemaConfig(), new Control());
+        verify(pageBuilder, times(0)).addRecord();
     }
 
     @Test
