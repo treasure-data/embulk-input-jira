@@ -109,9 +109,16 @@ public class JiraInputPlugin
         if (task.getDynamicSchema()) {
             final JiraClient jiraClient = getJiraClient();
             final List<ColumnConfig> columns = new ArrayList<>();
-            final List<ConfigDiff> guessedColumns = getGuessedColumns(jiraClient, task);
-            for (final ConfigDiff guessedColumn : guessedColumns) {
-                columns.add(new ColumnConfig(CONFIG_MAPPER_FACTORY.newConfigSource().merge(guessedColumn)));
+            try {
+                final List<ConfigDiff> guessedColumns = getGuessedColumns(jiraClient, task);
+                for (final ConfigDiff guessedColumn : guessedColumns) {
+                    columns.add(new ColumnConfig(CONFIG_MAPPER_FACTORY.newConfigSource().merge(guessedColumn)));
+                }
+            }
+            catch (final ConfigException e) {
+                if (!e.getMessage().equals("Could not guess schema due to empty data set")) {
+                    throw e;
+                }
             }
             schemaConfig = new SchemaConfig(columns);
         }
