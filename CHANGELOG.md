@@ -1,3 +1,7 @@
+## 0.2.15 - 2022-05-23
+* [enhancement] Catchup with embulk v0.10.32
+* PR [#71](https://github.com/treasure-data/embulk-input-jira/pull/71)
+
 ## 0.2.14 - 2021-10-12
 * [enhancement] Graceful exit in case no data of dynamic schema
 * PR [#70](https://github.com/treasure-data/embulk-input-jira/pull/70)
