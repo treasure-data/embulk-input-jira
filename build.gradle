@@ -12,7 +12,7 @@ repositories {
     jcenter()
 }
 
-version = "0.2.14"
+version = "0.2.15"
 group = "com.treasuredata.embulk.plugins"
 description = "JIRA Embulk input plugin."
 

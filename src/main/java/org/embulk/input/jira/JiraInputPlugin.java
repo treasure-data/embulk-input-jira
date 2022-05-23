@@ -172,7 +172,7 @@ public class JiraInputPlugin
     public ConfigDiff guess(final ConfigSource config)
     {
         // Reset columns in case already have or missing on configuration
-        config.set("columns", new ObjectMapper().createArrayNode());
+        config.set("columns", new ArrayList<>());
         final PluginTask task = CONFIG_MAPPER.map(config, PluginTask.class);
         JiraUtil.validateTaskConfig(task);
         final JiraClient jiraClient = getJiraClient();
