@@ -5,14 +5,14 @@ plugins {
     id "org.embulk.embulk-plugins" version "0.4.2"
     id "maven"
     id 'maven-publish'
+    id "signing"
 }
 
 repositories {
     mavenCentral()
-    jcenter()
 }
 
-version = "0.2.15"
+version = "0.3.0-SNAPSHOT"
 group = "com.treasuredata.embulk.plugins"
 description = "JIRA Embulk input plugin."
 
@@ -20,6 +20,16 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 def embulkVersion = '0.10.28'
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs << "-Xlint:deprecation" << "-Xlint:unchecked"
+    options.encoding = "UTF-8"
+}
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
 
 dependencies {
     compileOnly "org.embulk:embulk-api:$embulkVersion"
@@ -97,6 +107,102 @@ embulkPlugin {
     mainClass = "org.embulk.input.jira.JiraInputPlugin"
     category = "input"
     type = "jira"
+}
+
+javadoc {
+    options {
+        locale = "en_US"
+        encoding = "UTF-8"
+    }
+}
+
+jar {
+    from rootProject.file("LICENSE")
+}
+
+sourcesJar {
+    from rootProject.file("LICENSE")
+}
+
+javadocJar {
+    from rootProject.file("LICENSE")
+}
+
+// It should not publish a `.module` file in Maven Central.
+// https://docs.gradle.org/current/userguide/publishing_gradle_module_metadata.html#sub:disabling-gmm-publication
+tasks.withType(GenerateModuleMetadata) {
+    enabled = false
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = project.group
+            artifactId = project.name
+
+            from components.java  // Must be "components.java". The dependency modification works only for it.
+            // javadocJar and sourcesJar are added by java.withJavadocJar() and java.withSourcesJar() above.
+            // See: https://docs.gradle.org/current/javadoc/org/gradle/api/plugins/JavaPluginExtension.html
+
+            pom {  // https://central.sonatype.org/pages/requirements.html
+                packaging "jar"
+
+                name = project.name
+                description = project.description
+                url = "https://github.com/treasure-data/embulk-input-jira"
+
+                licenses {
+                    license {
+                        // http://central.sonatype.org/pages/requirements.html#license-information
+                        name = "The Apache License, Version 2.0"
+                        url = "https://www.apache.org/licenses/LICENSE-2.0.txt"
+                    }
+                }
+
+                developers {
+                    // Authors after reimplementing it in Java.
+                    developer {
+                        name = "Phu Nguyen"
+                        email = "phu@treasure-data.com"
+                    }
+                    developer {
+                        name = "Huy Le"
+                        email = "huy.lenq@gmail.com"
+                    }
+                    developer {
+                        name = "Thanh Le"
+                        email = "legiangthanh@gmail.com"
+                    }
+                }
+
+                scm {
+                    connection = "scm:git:git://github.com/treasure-data/embulk-input-jira.git"
+                    developerConnection = "scm:git:git@github.com:treasure-data/embulk-input-jira.git"
+                    url = "https://github.com/treasure-data/embulk-input-jira"
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {  // publishMavenPublicationToMavenCentralRepository
+            name = "mavenCentral"
+            if (project.version.endsWith("-SNAPSHOT")) {
+                url "https://oss.sonatype.org/content/repositories/snapshots"
+            } else {
+                url "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+            }
+
+            credentials {
+                username = project.hasProperty("ossrhUsername") ? ossrhUsername : ""
+                password = project.hasProperty("ossrhPassword") ? ossrhPassword : ""
+            }
+        }
+    }
+}
+
+signing {
+    sign publishing.publications.maven
 }
 
 jacocoTestReport {
