@@ -71,14 +71,6 @@ dependencies {
     compile 'com.google.guava:guava:18.0'
     compile 'org.apache.commons:commons-lang3:3.4'
 
-    testCompile "junit:junit:4.13"
-    testCompile("org.embulk:embulk-core:$embulkVersion") {
-        exclude group: 'com.fasterxml.jackson.core', module: 'jackson-annotations'
-        exclude group: 'com.fasterxml.jackson.core', module: 'jackson-core'
-        exclude group: 'com.fasterxml.jackson.core', module: 'jackson-databind'
-        exclude group: 'com.fasterxml.jackson.datatype', module: 'jackson-datatype-jdk8'
-        exclude group: 'javax.validation', module: 'validation-api'
-    }
     testCompile "junit:junit:4.10"
     testCompile "org.embulk:embulk-junit4:$embulkVersion"
     testCompile "org.embulk:embulk-core:$embulkVersion"
