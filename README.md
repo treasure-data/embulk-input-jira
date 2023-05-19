@@ -48,11 +48,15 @@ in:
 ## Build
 
 ```
-$ ./gradlew gem       # -t to watch change of files and rebuild continuously
+$ ./gradlew checkstyle test jacocoTestReport; ./gradlew gem;
 ```
 
-## Test
-
+## Build and Test With Local File
 ```
-$ ./gradlew checkstyle test jacocoTestReport
+$ rm -rf build; ./gradlew gem; embulk guess -L ./build/gemContents/ {path_to_yaml_file}
+```
+
+## Publish
+```
+$ rm -rf build; ./gradlew gem; ./gradlew publishMavenPublicationToMavenCentralRepository
 ```
