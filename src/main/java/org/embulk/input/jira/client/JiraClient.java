@@ -60,9 +60,7 @@ public class JiraClient
             if (e.getStatusCode() == HttpStatus.SC_UNAUTHORIZED) {
                 throw new ConfigException("Could not authorize with your credential.");
             }
-            else {
-                throw new ConfigException("Could not authorize with your credential due to problems when contacting JIRA API.");
-            }
+            throw new ConfigException("Could not authorize with your credential due to problems when contacting JIRA API.");
         }
     }
 
