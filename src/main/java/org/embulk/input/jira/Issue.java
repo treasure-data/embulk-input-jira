@@ -53,9 +53,7 @@ public class Issue
             }
             return get(arrays, keys);
         }
-        else {
-            return get(json.getAsJsonObject().get(key), keys);
-        }
+        return get(json.getAsJsonObject().get(key), keys);
     }
 
     public synchronized JsonObject getFlatten()

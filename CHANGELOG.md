@@ -1,3 +1,7 @@
+## 0.3.1-SNAPSHOT - 2023-05-19
+* [enhancement] Update library, minor code refactoring
+* PR [#78](https://github.com/treasure-data/embulk-input-jira/pull/78)
+
 ## 0.2.15 - 2022-05-23
 * [enhancement] Catchup with embulk v0.10.32
 * PR [#71](https://github.com/treasure-data/embulk-input-jira/pull/71)

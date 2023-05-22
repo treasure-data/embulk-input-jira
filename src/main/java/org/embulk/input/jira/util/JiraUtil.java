@@ -116,13 +116,12 @@ public final class JiraUtil
                 .builder(pattern, true)
                 .setDefaultZoneFromString("UTC")
                 .build();
-        Instant result = null;
         try {
-            result = formatter.parse(value);
+            return formatter.parse(value);
         }
         catch (final Exception e) {
+            return null;
         }
-        return result;
     }
 
     /*
@@ -131,13 +130,12 @@ public final class JiraUtil
      * */
     private static Long getLongValue(final JsonElement value)
     {
-        Long result = null;
         try {
-            result = value.getAsLong();
+            return value.getAsLong();
         }
         catch (final Exception e) {
+            return null;
         }
-        return result;
     }
 
     /*
@@ -146,13 +144,12 @@ public final class JiraUtil
      * */
     private static Double getDoubleValue(final JsonElement value)
     {
-        Double result = null;
         try {
-            result = value.getAsDouble();
+            return value.getAsDouble();
         }
         catch (final Exception e) {
+            return null;
         }
-        return result;
     }
 
     /*
@@ -161,13 +158,12 @@ public final class JiraUtil
      * */
     private static Boolean getBooleanValue(final JsonElement value)
     {
-        Boolean result = null;
         try {
-            result = value.getAsBoolean();
+            return value.getAsBoolean();
         }
         catch (final Exception e) {
+            return null;
         }
-        return result;
     }
 
     public static void addRecord(final Issue issue, final Schema schema, final PluginTask task, final PageBuilder pageBuilder)
@@ -201,9 +197,7 @@ public final class JiraUtil
                                 if (obj.isJsonPrimitive()) {
                                     return obj.getAsString();
                                 }
-                                else {
-                                    return obj.toString();
-                                }
+                                return obj.toString();
                             })
                             .collect(Collectors.joining(",")));
                 }
