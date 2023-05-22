@@ -1,4 +1,4 @@
-## 0.3.1-SNAPSHOT - 2023-05-19
+## 0.3.1 - 2023-05-19
 * [enhancement] Update library, minor code refactoring
 * PR [#78](https://github.com/treasure-data/embulk-input-jira/pull/78)
 
