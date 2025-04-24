@@ -101,7 +101,27 @@ public class JiraClient
                 @Override
                 public String call() throws Exception
                 {
-                    return authorizeAndRequest(task, JiraUtil.buildSearchUrl(task.getUri()), createSearchIssuesBody(task, startAt, maxResults));
+                    final Optional<String> jql = task.getJQL();
+                    final String url = JiraUtil.buildSearchUrl(task.getUri());
+                    
+                    // JQLクエリが小さい場合はGETリクエストを使用し、大きい場合はPOSTを使用
+                    // 簡単な基準として、JQLの長さを使用
+                    if (jql.isPresent() && jql.get().length() < 1000) {
+                        // GETリクエストの場合、クエリパラメータをURLに追加
+                        StringBuilder queryUrl = new StringBuilder(url);
+                        queryUrl.append("?jql=").append(java.net.URLEncoder.encode(jql.get(), "UTF-8"));
+                        queryUrl.append("&maxResults=").append(maxResults);
+                        queryUrl.append("&startAt=").append(startAt);
+                        
+                        // fieldsパラメータの追加
+                        queryUrl.append("&fields=*all");
+                        
+                        // GETリクエストを実行（bodyはnull）
+                        return authorizeAndRequest(task, queryUrl.toString(), null);
+                    } else {
+                        // 長いJQLの場合は従来通りPOSTリクエストを使用
+                        return authorizeAndRequest(task, url, createSearchIssuesBody(task, startAt, maxResults));
+                    }
                 }
 
                 @Override

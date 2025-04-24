@@ -104,7 +104,7 @@ public class JiraUtilTest
     public void test_buildSearchUrl() throws IOException
     {
         PluginTask task = CONFIG_MAPPER.map(TestHelpers.config(), PluginTask.class);
-        String expected = "https://example.com/rest/api/latest/search";
+        String expected = "https://example.com/rest/api/3/search/jql";
         String actual = JiraUtil.buildSearchUrl(task.getUri());
         assertEquals(expected, actual);
     }
