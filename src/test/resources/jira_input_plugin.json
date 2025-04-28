@@ -10,18 +10,14 @@
     "emptyResult": {
         "statusCode": 200,
         "body": {
-            "startAt": 0,
             "maxResults": 50,
-            "total": 0,
             "issues": []
         }
     },
     "oneRecordResult": {
         "statusCode": 200,
         "body": {
-            "startAt": 0,
             "maxResults": 50,
-            "total": 1,
             "issues": [
                 {
                     "id": "id1",
@@ -42,9 +38,7 @@
     "guessDataResult": {
         "statusCode": 200,
         "body": {
-            "startAt": 0,
             "maxResults": 50,
-            "total": 1,
             "issues": [
                 {
                     "fields": {
@@ -91,9 +85,8 @@
     "2PagesResult": {
         "statusCode": 200,
         "body": {
-            "startAt": 0,
             "maxResults": 50,
-            "total": 51,
+            "nextPageToken": "nextPageToken",
             "issues": [
                 {
                     "id": "id1",

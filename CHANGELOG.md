@@ -1,3 +1,7 @@
+## 0.3.2 - 2025-04-29
+* [enhancement] Use new endpoint rest/api/latest/search/jql
+* PR [#88](https://github.com/treasure-data/embulk-input-jira/pull/88)
+
 ## 0.3.1 - 2023-05-19
 * [enhancement] Update library, minor code refactoring
 * PR [#78](https://github.com/treasure-data/embulk-input-jira/pull/78)

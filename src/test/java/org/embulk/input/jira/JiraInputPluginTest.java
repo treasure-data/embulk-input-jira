@@ -117,8 +117,8 @@ public class JiraInputPluginTest
                 .thenReturn(new StringEntity(searchResponse.get("body").toString()));
 
         plugin.transaction(TestHelpers.dynamicSchemaConfig(), new Control());
-        // Check credential 1 + getTotal 1 + loadData 2
-        verify(jiraClient, times(4)).createHttpClient();
+        // Check credential 1 + loadData 2
+        verify(jiraClient, times(3)).createHttpClient();
         verify(pageBuilder, times(1)).addRecord();
         verify(pageBuilder, times(1)).finish();
     }
@@ -137,8 +137,8 @@ public class JiraInputPluginTest
                 .thenReturn(new StringEntity(searchResponse.get("body").toString()));
 
         plugin.transaction(config, new Control());
-        // Check credential 1 + getTotal 1 + loadData 1
-        verify(jiraClient, times(3)).createHttpClient();
+        // Check credential 1 + loadData 1
+        verify(jiraClient, times(2)).createHttpClient();
         verify(pageBuilder, times(1)).addRecord();
         verify(pageBuilder, times(1)).finish();
     }
@@ -148,18 +148,21 @@ public class JiraInputPluginTest
     {
         final JsonObject authorizeResponse = data.get("authenticateSuccess").getAsJsonObject();
         final JsonObject searchResponse = data.get("2PagesResult").getAsJsonObject();
+        final JsonObject emptyResponse = data.get("emptyResult").getAsJsonObject();
 
         when(statusLine.getStatusCode())
                 .thenReturn(authorizeResponse.get("statusCode").getAsInt())
-                .thenReturn(searchResponse.get("statusCode").getAsInt());
+                .thenReturn(searchResponse.get("statusCode").getAsInt())
+                .thenReturn(emptyResponse.get("statusCode").getAsInt());
         when(response.getEntity())
                 .thenReturn(new StringEntity(authorizeResponse.get("body").toString()))
-                .thenReturn(new StringEntity(searchResponse.get("body").toString()));
+                .thenReturn(new StringEntity(searchResponse.get("body").toString()))
+                .thenReturn(new StringEntity(emptyResponse.get("body").toString()));
 
         plugin.transaction(config, new Control());
-        // Check credential 1 + getTotal 1 + loadData 2
-        verify(jiraClient, times(4)).createHttpClient();
-        verify(pageBuilder, times(2)).addRecord();
+        // Check credential 1 + loadData 2
+        verify(jiraClient, times(3)).createHttpClient();
+        verify(pageBuilder, times(1)).addRecord();
         verify(pageBuilder, times(1)).finish();
     }
 
