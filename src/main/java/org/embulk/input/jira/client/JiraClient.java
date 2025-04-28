@@ -1,11 +1,14 @@
 package org.embulk.input.jira.client;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
@@ -18,8 +21,8 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.embulk.config.ConfigException;
-import org.embulk.input.jira.Issue;
 import org.embulk.input.jira.JiraInputPlugin.PluginTask;
+import org.embulk.input.jira.SearchResult;
 import org.embulk.input.jira.util.JiraException;
 import org.embulk.input.jira.util.JiraUtil;
 import org.embulk.util.retryhelper.RetryExecutor;
@@ -31,18 +34,12 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
-
 import static java.util.Base64.getEncoder;
 import static org.apache.http.HttpHeaders.ACCEPT;
 import static org.apache.http.HttpHeaders.AUTHORIZATION;
 import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static org.embulk.input.jira.Constant.HTTP_TIMEOUT;
-import static org.embulk.input.jira.Constant.MIN_RESULTS;
 
 public class JiraClient
 {
@@ -64,31 +61,25 @@ public class JiraClient
         }
     }
 
-    public List<Issue> searchIssues(final PluginTask task, final int startAt, final int maxResults)
+    public SearchResult searchIssues(final PluginTask task, final String nextPageToken, final int maxResults)
     {
-        final String response = searchJiraAPI(task, startAt, maxResults);
-        final JsonObject result = new JsonParser().parse(response).getAsJsonObject();
-        return StreamSupport.stream(result.get("issues").getAsJsonArray().spliterator(), false)
-                            .map(jsonElement -> {
-                                final JsonObject json = jsonElement.getAsJsonObject();
-                                final JsonObject fields = json.get("fields").getAsJsonObject();
-                                final Set<Entry<String, JsonElement>> entries = fields.entrySet();
-                                json.remove("fields");
-                                // Merged all properties in fields to the object
-                                for (final Entry<String, JsonElement> entry : entries) {
-                                    json.add(entry.getKey(), entry.getValue());
-                                }
-                                return new Issue(json);
-                            })
-                            .collect(Collectors.toList());
+        return new Gson().fromJson(searchJiraAPI(task, nextPageToken, maxResults), SearchResult.class);
+//        return StreamSupport.stream(result.get("issues").getAsJsonArray().spliterator(), false)
+//                            .map(jsonElement -> {
+//                                final JsonObject json = jsonElement.getAsJsonObject();
+//                                final JsonObject fields = json.get("fields").getAsJsonObject();
+//                                final Set<Entry<String, JsonElement>> entries = fields.entrySet();
+//                                json.remove("fields");
+//                                // Merged all properties in fields to the object
+//                                for (final Entry<String, JsonElement> entry : entries) {
+//                                    json.add(entry.getKey(), entry.getValue());
+//                                }
+//                                return new Issue(json);
+//                            })
+//                            .collect(Collectors.toList());
     }
 
-    public int getTotalCount(final PluginTask task)
-    {
-        return new JsonParser().parse(searchJiraAPI(task, 0, MIN_RESULTS)).getAsJsonObject().get("total").getAsInt();
-    }
-
-    private String searchJiraAPI(final PluginTask task, final int startAt, final int maxResults)
+    private String searchJiraAPI(final PluginTask task, final String nextPageToken, final int maxResults)
     {
         try {
             return RetryExecutor.builder()
@@ -101,7 +92,7 @@ public class JiraClient
                 @Override
                 public String call() throws Exception
                 {
-                    return authorizeAndRequest(task, JiraUtil.buildSearchUrl(task.getUri()), createSearchIssuesBody(task, startAt, maxResults));
+                    return authorizeAndRequest(task, JiraUtil.buildSearchUrl(task.getUri()), createSearchIssuesBody(task, nextPageToken, maxResults));
                 }
 
                 @Override
@@ -243,12 +234,14 @@ public class JiraClient
         return request;
     }
 
-    private String createSearchIssuesBody(final PluginTask task, final int startAt, final int maxResults)
+    private String createSearchIssuesBody(final PluginTask task, final String nextPageToken, final int maxResults)
     {
         final JsonObject body = new JsonObject();
         final Optional<String> jql = task.getJQL();
         body.add("jql", new JsonPrimitive(jql.orElse("")));
-        body.add("startAt", new JsonPrimitive(startAt));
+        if (StringUtils.isNotEmpty(nextPageToken)) {
+            body.add("nextPageToken", new JsonPrimitive(nextPageToken));
+        }
         body.add("maxResults", new JsonPrimitive(maxResults));
         final JsonArray fields = new JsonArray();
         fields.add("*all");

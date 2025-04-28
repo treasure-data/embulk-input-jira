@@ -13,6 +13,7 @@ import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
 import org.embulk.input.jira.Issue;
 import org.embulk.input.jira.JiraInputPlugin.PluginTask;
+import org.embulk.input.jira.SearchResult;
 import org.embulk.spi.Column;
 import org.embulk.spi.ColumnVisitor;
 import org.embulk.spi.PageBuilder;
@@ -27,6 +28,8 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -276,5 +279,22 @@ public final class JiraUtil
             }
         }
         return result;
+    }
+
+    public static List<Issue> fromSearchResult(final SearchResult result)
+    {
+      return StreamSupport.stream(result.getIssues().getAsJsonArray().spliterator(), false)
+          .map(jsonElement -> {
+              final JsonObject json = jsonElement.getAsJsonObject();
+              final JsonObject fields = json.get("fields").getAsJsonObject();
+              final Set<Entry<String, JsonElement>> entries = fields.entrySet();
+              json.remove("fields");
+              // Merged all properties in fields to the object
+              for (final Entry<String, JsonElement> entry : entries) {
+                  json.add(entry.getKey(), entry.getValue());
+              }
+              return new Issue(json);
+          })
+          .collect(Collectors.toList());
     }
 }

@@ -37,7 +37,6 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import static org.embulk.input.jira.Constant.GUESS_RECORDS_COUNT;
 import static org.embulk.input.jira.Constant.MAX_RESULTS;
 import static org.embulk.input.jira.Constant.PREVIEW_RECORDS_COUNT;
 
@@ -147,20 +146,19 @@ public class JiraInputPlugin
         jiraClient.checkUserCredentials(task);
         try (final PageBuilder pageBuilder = getPageBuilder(schema, output)) {
             if (isPreview()) {
-                final List<Issue> issues = jiraClient.searchIssues(task, 0, PREVIEW_RECORDS_COUNT);
+                final SearchResult result = jiraClient.searchIssues(task, null, PREVIEW_RECORDS_COUNT);
+                final List<Issue> issues = JiraUtil.fromSearchResult(result);
                 issues.forEach(issue -> JiraUtil.addRecord(issue, schema, task, pageBuilder));
             }
             else {
-                int currentPage = 0;
-                final int totalCount = jiraClient.getTotalCount(task);
-                final int totalPage = JiraUtil.calculateTotalPage(totalCount, MAX_RESULTS);
-                LOGGER.info(String.format("Total pages (%d)", totalPage));
-                while (currentPage < totalPage) {
-                    LOGGER.info(String.format("Fetching page %d/%d", (currentPage + 1), totalPage));
-                    final List<Issue> issues = jiraClient.searchIssues(task, (currentPage * MAX_RESULTS), MAX_RESULTS);
+                String nextPageToken = null;
+                do {
+                    final SearchResult result = jiraClient.searchIssues(task, nextPageToken, MAX_RESULTS);
+                    nextPageToken = result.getNextPageToken();
+                    final List<Issue> issues = JiraUtil.fromSearchResult(result);
                     issues.forEach(issue -> JiraUtil.addRecord(issue, schema, task, pageBuilder));
-                    currentPage++;
                 }
+                while (nextPageToken != null);
             }
             pageBuilder.finish();
         }
@@ -181,7 +179,8 @@ public class JiraInputPlugin
 
     private List<ConfigDiff> getGuessedColumns(final JiraClient jiraClient, final PluginTask task)
     {
-        final List<Issue> issues = jiraClient.searchIssues(task, 0, GUESS_RECORDS_COUNT);
+        final SearchResult result = jiraClient.searchIssues(task, null, PREVIEW_RECORDS_COUNT);
+        final List<Issue> issues = JiraUtil.fromSearchResult(result);
         if (issues.isEmpty()) {
             throw new ConfigException("Could not guess schema due to empty data set");
         }
