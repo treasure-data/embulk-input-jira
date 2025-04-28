@@ -1,5 +1,7 @@
 package org.embulk.input.jira;
 
+import com.google.gson.Gson;
+
 public final class Constant
 {
     public static final int MAX_RESULTS = 50;
@@ -13,6 +15,7 @@ public final class Constant
 
     public static final String CREDENTIAL_URI_PATH = "rest/api/latest/myself";
     public static final String SEARCH_URI_PATH = "rest/api/latest/search/jql";
+    public static final Gson GSON = new Gson();
 
     private Constant(){}
 }

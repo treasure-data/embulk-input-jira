@@ -151,12 +151,15 @@ public class JiraInputPlugin
                 issues.forEach(issue -> JiraUtil.addRecord(issue, schema, task, pageBuilder));
             }
             else {
+                int totalRecords = 0;
                 String nextPageToken = null;
                 do {
                     final SearchResult result = jiraClient.searchIssues(task, nextPageToken, MAX_RESULTS);
                     nextPageToken = result.getNextPageToken();
                     final List<Issue> issues = JiraUtil.fromSearchResult(result);
+                    totalRecords += issues.size();
                     issues.forEach(issue -> JiraUtil.addRecord(issue, schema, task, pageBuilder));
+                    LOGGER.info(String.format("Ingested %d items", totalRecords));
                 }
                 while (nextPageToken != null);
             }

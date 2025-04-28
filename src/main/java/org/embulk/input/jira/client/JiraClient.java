@@ -1,7 +1,6 @@
 package org.embulk.input.jira.client;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -39,6 +38,7 @@ import static java.util.Base64.getEncoder;
 import static org.apache.http.HttpHeaders.ACCEPT;
 import static org.apache.http.HttpHeaders.AUTHORIZATION;
 import static org.apache.http.HttpHeaders.CONTENT_TYPE;
+import static org.embulk.input.jira.Constant.GSON;
 import static org.embulk.input.jira.Constant.HTTP_TIMEOUT;
 
 public class JiraClient
@@ -63,20 +63,7 @@ public class JiraClient
 
     public SearchResult searchIssues(final PluginTask task, final String nextPageToken, final int maxResults)
     {
-        return new Gson().fromJson(searchJiraAPI(task, nextPageToken, maxResults), SearchResult.class);
-//        return StreamSupport.stream(result.get("issues").getAsJsonArray().spliterator(), false)
-//                            .map(jsonElement -> {
-//                                final JsonObject json = jsonElement.getAsJsonObject();
-//                                final JsonObject fields = json.get("fields").getAsJsonObject();
-//                                final Set<Entry<String, JsonElement>> entries = fields.entrySet();
-//                                json.remove("fields");
-//                                // Merged all properties in fields to the object
-//                                for (final Entry<String, JsonElement> entry : entries) {
-//                                    json.add(entry.getKey(), entry.getValue());
-//                                }
-//                                return new Issue(json);
-//                            })
-//                            .collect(Collectors.toList());
+        return GSON.fromJson(searchJiraAPI(task, nextPageToken, maxResults), SearchResult.class);
     }
 
     private String searchJiraAPI(final PluginTask task, final String nextPageToken, final int maxResults)
